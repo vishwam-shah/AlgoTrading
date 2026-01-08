@@ -526,4 +526,5 @@ For issues or questions:
 **Version**: 2.0  
 **Status**: Production Ready ✅
 #   A l g o T r a d i n g  
+ #   A l g o T r a d i n g  
  
