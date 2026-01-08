@@ -1,0 +1,22 @@
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Data Sources and Artifacts}}{10}{table.caption.6}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Feature Engineering Architecture (244 Total Features)}}{12}{table.caption.8}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Model Architecture Specifications}}{14}{table.caption.10}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Hybrid Deep Learning and RL Architecture}}{17}{table.caption.11}%
+\contentsline {table}{\numberline {3.5}{\ignorespaces Training Configuration Details}}{19}{table.caption.12}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Sectoral Distribution of 106 Stocks in Portfolio}}{21}{table.caption.13}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Feature Engineering Architecture (244 Total Features)}}{23}{table.caption.14}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Model Architecture Specifications}}{24}{table.caption.15}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Overall Model Performance Across 106 Stocks}}{25}{table.caption.16}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Best Model Distribution by Stock (N=106)}}{26}{table.caption.17}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Model Performance by Prediction Target (Average across 106 stocks)}}{27}{table.caption.18}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces RELIANCE: Model Performance Comparison}}{28}{table.caption.19}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces Sentiment Impact by Sector}}{47}{table.caption.33}%
+\contentsline {table}{\numberline {4.9}{\ignorespaces Model Stability Analysis (Standard Deviation of Accuracy)}}{48}{table.caption.34}%
+\contentsline {table}{\numberline {4.10}{\ignorespaces Performance Comparison with Literature}}{50}{table.caption.35}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {1}{\ignorespaces Software Dependencies}}{63}{table.caption.38}%

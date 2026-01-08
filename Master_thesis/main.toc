@@ -1,0 +1,113 @@
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{Abstract}{iv}{chapter*.1}%
+\contentsline {chapter}{Contents}{v}{chapter*.1}%
+\contentsline {chapter}{List of Figures}{ix}{chapter*.2}%
+\contentsline {chapter}{List of Tables}{x}{chapter*.3}%
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Project Overview}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Key Features and Innovations}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Research Impact and Applications}{3}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}Key Achievements}{3}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}Practical Applications}{3}{subsection.1.3.2}%
+\contentsline {subsection}{\numberline {1.3.3}Future Research Directions}{4}{subsection.1.3.3}%
+\contentsline {chapter}{\numberline {2}Literature Survey}{5}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Overview}{5}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Deep Learning for Financial Time Series}{5}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}LSTM and Recurrent Architectures}{5}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Gradient Boosting Methods}{6}{subsection.2.2.2}%
+\contentsline {section}{\numberline {2.3}Ensemble Learning and Meta-Learning}{6}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Stacking vs. Bagging vs. Boosting}{6}{subsection.2.3.1}%
+\contentsline {section}{\numberline {2.4}Feature Engineering for Market Prediction}{7}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Sentiment Analysis Integration}{7}{subsection.2.4.1}%
+\contentsline {section}{\numberline {2.5}Validation Methodologies}{7}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Walk-Forward vs. Random Splits}{7}{subsection.2.5.1}%
+\contentsline {section}{\numberline {2.6}Reinforcement Learning for Trading (Future Work)}{8}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Accuracy Progression: From 50\% to 68.28\%}{8}{section.2.7}%
+\contentsline {chapter}{\numberline {3}Dataset and Methodology}{9}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Dataset Acquisition and Description}{9}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Stock Selection Criteria}{9}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Data Sources and Collection}{10}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}Temporal Coverage}{11}{subsection.3.1.3}%
+\contentsline {section}{\numberline {3.2}Preprocessing Pipeline}{11}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Numerical Data Processing}{11}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Textual and Exogenous Data}{12}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}Feature Engineering Framework (244 Features)}{12}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Multi-Target Prediction Framework}{13}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Model Architecture and Training}{13}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}Four-Model Ensemble System}{13}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}Walk-Forward Validation Strategy}{14}{subsection.3.5.2}%
+\contentsline {subsection}{\numberline {3.5.3}Training Configuration}{15}{subsection.3.5.3}%
+\contentsline {section}{\numberline {3.6}Configuration and Orchestration}{16}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Real-Time Prediction and RL Agent}{16}{section.3.7}%
+\contentsline {section}{\numberline {3.8}Model Architecture}{16}{section.3.8}%
+\contentsline {section}{\numberline {3.9}Training Configuration}{18}{section.3.9}%
+\contentsline {chapter}{\numberline {4}Results and Discussion}{20}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Dataset and Stock Selection}{20}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Stock Universe: Sectoral Diversification}{20}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}Data Characteristics}{22}{subsection.4.1.2}%
+\contentsline {section}{\numberline {4.2}Feature Engineering Framework}{22}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Model Architecture and Training}{24}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Multi-Target Ensemble System}{24}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Training Configuration}{25}{subsection.4.3.2}%
+\contentsline {section}{\numberline {4.4}Comprehensive Performance Analysis}{25}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Overall Model Performance Summary}{25}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Best Model Distribution}{26}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Performance by Target Variable}{27}{subsection.4.4.3}%
+\contentsline {section}{\numberline {4.5}Detailed Results: Representative Stock Analysis}{27}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Case Study: RELIANCE (Reliance Industries Limited)}{27}{subsection.4.5.1}%
+\contentsline {subsubsection}{Stock-Specific Performance Metrics}{28}{subsection.4.5.1}%
+\contentsline {subsubsection}{Prediction Visualizations}{29}{table.caption.19}%
+\contentsline {section}{\numberline {4.6}Aggregate Analysis Across All Stocks}{35}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Model Performance Comparison}{36}{subsection.4.6.1}%
+\contentsline {subsection}{\numberline {4.6.2}Direction Accuracy Distribution}{37}{subsection.4.6.2}%
+\contentsline {subsection}{\numberline {4.6.3}$R^{2}$ Score Distribution by Target}{37}{subsection.4.6.3}%
+\contentsline {subsection}{\numberline {4.6.4}Best Model Selection by Metric}{38}{subsection.4.6.4}%
+\contentsline {subsection}{\numberline {4.6.5}Performance Heatmap}{39}{subsection.4.6.5}%
+\contentsline {section}{\numberline {4.7}Why XGBoost Performed Exceptionally Well}{41}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}Algorithmic Advantages}{41}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}Financial Data Compatibility}{42}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}Comparison with Neural Networks}{42}{subsection.4.7.3}%
+\contentsline {section}{\numberline {4.8}Ensemble Model: Strengths and Future Improvements}{43}{section.4.8}%
+\contentsline {subsection}{\numberline {4.8.1}Current Strengths}{43}{subsection.4.8.1}%
+\contentsline {subsection}{\numberline {4.8.2}Identified Limitations}{43}{subsection.4.8.2}%
+\contentsline {subsection}{\numberline {4.8.3}Proposed Future Enhancements}{44}{subsection.4.8.3}%
+\contentsline {subsubsection}{Advanced Neural Architectures}{44}{subsection.4.8.3}%
+\contentsline {subsubsection}{Improved Meta-Learning}{44}{subsection.4.8.3}%
+\contentsline {subsubsection}{Additional Models}{44}{subsection.4.8.3}%
+\contentsline {section}{\numberline {4.9}Role of News Sentiment in Prediction}{45}{section.4.9}%
+\contentsline {subsection}{\numberline {4.9.1}Sentiment Feature Engineering}{45}{subsection.4.9.1}%
+\contentsline {subsection}{\numberline {4.9.2}Impact on Predictions}{45}{subsection.4.9.2}%
+\contentsline {subsection}{\numberline {4.9.3}Sector-Specific Sentiment Patterns}{47}{subsection.4.9.3}%
+\contentsline {subsection}{\numberline {4.9.4}Limitations and Future Work}{47}{subsection.4.9.4}%
+\contentsline {section}{\numberline {4.10}Statistical Significance and Robustness}{48}{section.4.10}%
+\contentsline {subsection}{\numberline {4.10.1}Walk-Forward Validation}{48}{subsection.4.10.1}%
+\contentsline {subsection}{\numberline {4.10.2}Performance Stability}{48}{subsection.4.10.2}%
+\contentsline {section}{\numberline {4.11}Discussion}{49}{section.4.11}%
+\contentsline {subsection}{\numberline {4.11.1}Key Findings}{49}{subsection.4.11.1}%
+\contentsline {subsection}{\numberline {4.11.2}Practical Implications}{49}{subsection.4.11.2}%
+\contentsline {subsection}{\numberline {4.11.3}Limitations}{50}{subsection.4.11.3}%
+\contentsline {subsection}{\numberline {4.11.4}Comparison with Prior Work}{50}{subsection.4.11.4}%
+\contentsline {section}{\numberline {4.12}Summary}{51}{section.4.12}%
+\contentsline {chapter}{\numberline {5}Conclusions and Future Work}{52}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Research Summary}{52}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Key Achievements}{52}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}Research Contributions}{54}{subsection.5.1.2}%
+\contentsline {section}{\numberline {5.2}Limitations and Challenges}{55}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Current Limitations}{55}{subsection.5.2.1}%
+\contentsline {section}{\numberline {5.3}Future Work}{56}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Reinforcement Learning Integration (Priority: High)}{56}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Advanced Neural Architectures (Priority: Medium)}{57}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Enhanced Sentiment Analysis (Priority: High)}{58}{subsection.5.3.3}%
+\contentsline {subsection}{\numberline {5.3.4}Model Improvements (Priority: Medium)}{58}{subsection.5.3.4}%
+\contentsline {subsection}{\numberline {5.3.5}Feature Enhancements (Priority: Low)}{59}{subsection.5.3.5}%
+\contentsline {subsection}{\numberline {5.3.6}System Enhancements (Priority: Low)}{59}{subsection.5.3.6}%
+\contentsline {section}{\numberline {5.4}Final Remarks}{60}{section.5.4}%
+\setcounter {tocdepth}{0}
+\contentsline {chapter}{Appendix: Implementation Overview}{61}{appendix*.36}%
+\contentsline {section}{\numberline {1}Pipeline Architecture}{61}{section.Alph0.1}%
+\contentsline {subsection}{\numberline {1.1}Module 1: Data Acquisition}{61}{subsection.Alph0.1.1}%
+\contentsline {subsection}{\numberline {1.2}Module 2: Feature Construction}{61}{subsection.Alph0.1.2}%
+\contentsline {subsection}{\numberline {1.3}Module 3: Model Training}{62}{subsection.Alph0.1.3}%
+\contentsline {subsection}{\numberline {1.4}Module 4: Inference and Evaluation}{62}{subsection.Alph0.1.4}%
+\contentsline {section}{\numberline {2}Technology Stack}{63}{section.Alph0.2}%
+\contentsline {section}{\numberline {3}Execution Instructions}{63}{section.Alph0.3}%

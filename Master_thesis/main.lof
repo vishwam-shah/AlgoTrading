@@ -1,0 +1,20 @@
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces RELIANCE: Actual vs. Predicted Prices for All Models}}{29}{figure.caption.20}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces RELIANCE: Confusion Matrices for Direction Prediction}}{30}{figure.caption.21}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces RELIANCE: ROC Curves for Direction Prediction}}{31}{figure.caption.22}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces RELIANCE: Precision-Recall Curves}}{32}{figure.caption.23}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces RELIANCE: Top 30 Feature Importance from XGBoost}}{33}{figure.caption.24}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces RELIANCE: Prediction Error Distribution for Close Price}}{34}{figure.caption.25}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces RELIANCE: Actual vs. Predicted Close Prices}}{35}{figure.caption.26}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Model Performance Distribution Across 106 Stocks}}{36}{figure.caption.27}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Direction Accuracy Distribution Across 106 Stocks}}{37}{figure.caption.28}%
+\contentsline {figure}{\numberline {4.10}{\ignorespaces $R^{2}$ Score Distribution for Close, High, and Low Price Predictions}}{37}{figure.caption.29}%
+\contentsline {figure}{\numberline {4.11}{\ignorespaces Best Model Distribution by Performance Metric}}{38}{figure.caption.30}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Direction Accuracy Heatmap: Stocks 1--53 (Top Half)}}{39}{figure.caption.31}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces Direction Accuracy Heatmap: Stocks 54--106 (Bottom Half)}}{40}{figure.caption.32}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {1}{\ignorespaces Complete Pipeline Architecture Overview}}{63}{figure.caption.37}%

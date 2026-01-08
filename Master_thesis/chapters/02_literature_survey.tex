@@ -1,0 +1,68 @@
+\chapter{Literature Survey} \label{chapter2}
+
+\section{Overview}
+
+Financial forecasting has evolved significantly with deep learning advancements, yet most existing approaches suffer from limited feature sets (typically 10--50 features) and single-model architectures vulnerable to specific market regimes. This chapter reviews key literature relevant to our multi-target, ensemble-based approach validated on 106 NSE stocks with 244 features.
+
+\section{Deep Learning for Financial Time Series}
+
+\subsection{LSTM and Recurrent Architectures}
+
+Fischer and Krauss \cite{fischer2018lstm} pioneered LSTM applications to S\&P 500 prediction, achieving 60\% directional accuracy with 20 technical indicators. However, their approach used random train-test splits (vulnerable to lookahead bias) and limited feature diversity.
+
+\textbf{Why LSTM Often Underperforms:} Despite theoretical advantages for sequential data, LSTMs face critical challenges: (1) \textit{Overfitting} --- high capacity networks memorize training patterns without generalizing, (2) \textit{Vanishing Gradients} --- long sequences degrade gradient flow, (3) \textit{Hyperparameter Sensitivity} --- performance heavily depends on tuning, (4) \textit{Data Hunger} --- require thousands of samples per stock. Our experiments confirm this: LSTM/GRU achieved only 50.31\%/50.28\% accuracy despite dropout (0.3), early stopping, and batch normalization.
+
+\subsection{Gradient Boosting Methods}
+
+Chen and Guestrin \cite{chen2016xgboost} introduced XGBoost, demonstrating tree-based learning outperforms neural networks on tabular data through: (1) \textit{Regularization} --- L1/L2 penalties prevent overfitting, (2) \textit{Feature Interaction Discovery} --- tree splits automatically detect patterns, (3) \textit{Missing Data Handling} --- learns optimal imputation strategies.
+
+Zhang et al. \cite{zhang2020xgboost} applied XGBoost to Chinese A-shares with 50 features, achieving 63\% accuracy. Our research extends this to 244 features across 106 NSE stocks, achieving 68.22\% XGBoost accuracy and 68.28\% ensemble accuracy.
+
+\section{Ensemble Learning and Meta-Learning}
+
+\subsection{Stacking vs. Bagging vs. Boosting}
+
+Dietterich \cite{dietterich2000ensemble} formalized ensemble taxonomy: (1) \textit{Bagging} --- trains identical models on data subsets, (2) \textit{Boosting} --- sequential training correcting previous errors, (3) \textit{Stacking} --- trains heterogeneous models with meta-learner combining predictions.
+
+\textbf{Application Studies:} Ensemble methods for stock prediction include:
+\begin{itemize}
+    \item Kumar et al. \cite{kumar2022indian}: Random Forest ensemble on 45 Indian stock features, 62\% accuracy.
+    \item Singh et al. \cite{singh2023ml}: Transformer-based model with 18 features, 59\% accuracy on NIFTY 50.
+    \item Shah et al. \cite{shah2021ensemble}: LSTM-only approach with 12 features, 56\% accuracy.
+\end{itemize}
+
+\section{Feature Engineering for Market Prediction}
+
+\subsection{Sentiment Analysis Integration}
+
+Bollen et al. \cite{bollen2011twitter} demonstrated Twitter sentiment predicts market movements with 87\% accuracy for aggregated indices. Loughran and McDonald \cite{loughran2011sentiment} developed finance-specific sentiment lexicons superior to general-purpose dictionaries.
+
+\textbf{Our Approach:} 15 sentiment features from financial news APIs including: raw scores, sentiment momentum (1d, 5d, 20d), sentiment divergence, market-wide sentiment, and sentiment volatility.
+
+\section{Validation Methodologies}
+
+\subsection{Walk-Forward vs. Random Splits}
+
+Bailey et al. \cite{bailey2014lookahead} highlighted lookahead bias in financial ML research --- random train-test splits allow models to learn from future data. Prado \cite{prado2018walkforward} advocated walk-forward validation ensuring temporal causality.
+
+\textbf{Our Implementation:} Chronological 60\%-20\%-20\% split with StandardScaler fitted independently per fold. Models train on 2015--2020 data, validate on 2020--2022, test on 2022--2025.
+
+\section{Reinforcement Learning for Trading (Future Work)}
+
+Moody and Saffell \cite{moody2001rl} pioneered RL for portfolio optimization using direct reinforcement. Deng et al. \cite{deng2016rl} applied Deep Q-Networks (DQN) to Chinese stocks, achieving 15\% annual returns.
+
+\textbf{Recent Applications:}
+\begin{itemize}
+    \item Theate and Ernst \cite{theate2021dqn}: DQN for Indian stock trading, achieving 12\% returns vs. 8\% buy-and-hold.
+    \item Zhang et al. \cite{zhang2020xgboost}: Composite investor sentiment with DQN, 18\% returns on Chinese A-shares.
+\end{itemize}
+
+\section{Accuracy Progression: From 50\% to 68.28\%}
+
+\textbf{Phase 1 --- Baseline (50\% Accuracy):} LSTM and GRU with 72 features achieved 50.31\%/50.28\% accuracy --- equivalent to random coin flip.
+
+\textbf{Phase 2 --- Feature Expansion (58\% Accuracy):} Expanded to 150 features. LSTM improved to 55\%, GRU to 54\%.
+
+\textbf{Phase 3 --- XGBoost Integration (65\% Accuracy):} Tree-based learning achieved 65.12\% accuracy, first positive predictive power.
+
+\textbf{Phase 4 --- Final System (68.28\% Accuracy):} Ensemble stacking with 244 features achieved 68.28\% accuracy. Ensemble wins on 58/106 stocks (54.7\%).

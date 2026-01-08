@@ -1,0 +1,32 @@
+\frametitle{Backup: Complete Model Parameters}
+\footnotesize
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{XGBoost Full Config}
+                \texttt{n\_estimators = 200}\\
+                \texttt{max\_depth = 5}\\
+                \texttt{learning\_rate = 0.01}\\
+                \texttt{subsample = 0.8}\\
+                \texttt{colsample\_bytree = 0.8}\\
+                \texttt{min\_child\_weight = 1}\\
+                \texttt{gamma = 0}\\
+                \texttt{reg\_lambda = 1.0}\\
+                \texttt{early\_stopping = 20}\\
+                \texttt{eval\_metric = logloss}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{LSTM/GRU Full Config}
+                \texttt{layers = [128, 64]}\\
+                \texttt{dropout = 0.3}\\
+                \texttt{recurrent\_dropout = 0.2}\\
+                \texttt{sequence\_length = 10}\\
+                \texttt{activation = tanh}\\
+                \texttt{optimizer = Adam(0.001)}\\
+                \texttt{batch\_size = 32}\\
+                \texttt{epochs = 50}\\
+                \texttt{early\_stopping = 10}\\
+                \texttt{loss = mse / binary\_ce}
+            \end{block}
+        \end{column}
+    \end{columns}

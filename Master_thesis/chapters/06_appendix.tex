@@ -1,0 +1,92 @@
+﻿\appendix
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+\chapter*{Appendix: Implementation Overview}
+\addcontentsline{toc}{chapter}{Appendix: Implementation Overview}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
+\setcounter{section}{0}
+    
+    This appendix provides a high-level description of the software implementation. The complete source code repository is available upon request for academic verification purposes.
+
+    \section{Pipeline Architecture}
+
+    The prediction system consists of four interconnected modules organized as a sequential processing pipeline:
+
+    \subsection{Module 1: Data Acquisition}
+    
+    The data collection component interfaces with financial data providers to retrieve historical trading records. Key responsibilities include:
+    \begin{itemize}
+        \item Establishing API connections to Yahoo Finance for OHLCV retrieval
+        \item Implementing rate limiting and retry logic for reliable data fetching
+        \item Storing raw datasets in structured CSV format within the data repository
+        \item Logging collection timestamps and data quality metrics
+    \end{itemize}
+
+    \subsection{Module 2: Feature Construction}
+    
+    The feature engineering component transforms raw price data into predictive signals:
+    \begin{itemize}
+        \item Technical indicator computation using established quantitative libraries
+        \item Price-derived metrics including returns, ratios, and momentum measures
+        \item Volatility quantification through multiple statistical approaches
+        \item Temporal encoding for calendar-based patterns
+        \item Cross-feature interaction terms for capturing non-linear relationships
+    \end{itemize}
+
+    \subsection{Module 3: Model Training}
+    
+    The learning component trains multiple algorithmic approaches:
+    \begin{itemize}
+        \item Gradient boosting classifiers configured for direction prediction
+        \item Recurrent neural architectures for sequence-to-value regression
+        \item Meta-learning aggregator combining individual model outputs
+        \item Walk-forward validation ensuring temporal integrity
+    \end{itemize}
+
+    \subsection{Module 4: Inference and Evaluation}
+    
+    The prediction component generates forecasts and performance assessments:
+    \begin{itemize}
+        \item Batch inference across the complete stock universe
+        \item Classification and regression metric computation
+        \item Result persistence in JSON and CSV formats
+        \item Visualization generation for qualitative analysis
+    \end{itemize}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{images/image.png}
+        \caption{Complete Pipeline Architecture Overview}
+        \label{fig:pipeline_architecture}
+    \end{figure}
+
+    \section{Technology Stack}
+
+    \begin{table}[H]
+        \centering
+        \caption{Software Dependencies}
+        \begin{tabular}{|l|l|l|}
+            \hline
+            \textbf{Category} & \textbf{Library} & \textbf{Purpose} \\
+            \hline
+            Data Processing & Pandas, NumPy & Tabular manipulation and numerical computation \\
+            Technical Analysis & TA-Lib, Pandas-TA & Indicator calculation \\
+            Machine Learning & Scikit-learn, XGBoost & Classical algorithms \\
+            Deep Learning & TensorFlow/Keras & Neural network implementation \\
+            Visualization & Matplotlib, Seaborn & Chart generation \\
+            \hline
+        \end{tabular}
+    \end{table}
+
+    \section{Execution Instructions}
+
+    The pipeline executes through a master orchestration script that sequentially invokes each module:
+    \begin{enumerate}
+        \item Configure stock universe in the settings file
+        \item Execute data collection for specified date range
+        \item Run feature engineering on collected data
+        \item Train models with specified hyperparameters
+        \item Generate predictions and evaluation reports
+    \end{enumerate}
+
+    Average processing time per stock is approximately four to five minutes on standard computational hardware, with the complete 106-stock universe requiring roughly eight hours for full retraining.

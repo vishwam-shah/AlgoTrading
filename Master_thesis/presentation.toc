@@ -1,0 +1,11 @@
+\beamer@sectionintoc {1}{Introduction \& Motivation}{3}{0}{1}
+\beamer@sectionintoc {2}{Dataset \& Stock Selection}{4}{0}{2}
+\beamer@sectionintoc {3}{Feature Engineering (244 Features)}{6}{0}{3}
+\beamer@sectionintoc {4}{Multi-Target Prediction Framework}{8}{0}{4}
+\beamer@sectionintoc {5}{Model Architecture}{9}{0}{5}
+\beamer@sectionintoc {6}{Results \& Performance}{12}{0}{6}
+\beamer@sectionintoc {7}{Case Study: RELIANCE}{15}{0}{7}
+\beamer@sectionintoc {8}{Aggregate Analysis}{16}{0}{8}
+\beamer@sectionintoc {9}{Why XGBoost Excels}{19}{0}{9}
+\beamer@sectionintoc {10}{Literature Comparison}{20}{0}{10}
+\beamer@sectionintoc {11}{Conclusions \& Future Work}{21}{0}{11}

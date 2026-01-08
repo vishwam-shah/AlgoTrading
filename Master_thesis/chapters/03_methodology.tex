@@ -1,0 +1,305 @@
+\chapter[Dataset and Methodology]{Dataset and Methodology} \label{chapter3}
+
+This chapter details the systematic research methodology employed to develop and validate the multi-target stock prediction system, from data acquisition through model evaluation.
+
+\section{Dataset Acquisition and Description}
+
+\subsection{Stock Selection Criteria}
+
+The system was evaluated on \textbf{106 carefully selected stocks} from the National Stock Exchange (NSE) of India, representing 11 diverse sectors to ensure robust generalization:
+
+\begin{itemize}
+    \item \textbf{Liquidity Threshold:} Average daily trading volume > 100,000 shares to ensure sufficient market depth and minimize slippage
+    \item \textbf{Market Capitalization:} Mid-cap to large-cap stocks (>INR 5,000 crores) to focus on stable, well-established companies
+    \item \textbf{Data Quality:} Complete OHLCV (Open-High-Low-Close-Volume) data available for 2015--2025 period (10 years, approximately 2,500--2,700 trading days)
+    \item \textbf{Sectoral Balance:} Representation from all major NSE sectors (banking, IT, pharma, energy, metals, consumer goods, automotive, construction, cement, telecom)
+    \item \textbf{Index Constituents:} Primarily NIFTY 50, NIFTY 100, and sectoral indices (BANKNIFTY, NIFTY IT, NIFTY PHARMA)
+\end{itemize}
+
+\subsection{Data Sources and Collection}
+
+Data collection is automated via \texttt{01\_data\_collection.py} script:
+
+\begin{table}[H]
+\centering
+\small
+\begin{threeparttable}
+\caption{Data Sources and Artifacts}
+\label{tab:data_sources}
+\renewcommand{\arraystretch}{1.4}
+
+\begin{tabularx}{\textwidth}{l X l}
+\toprule
+\textbf{Data Type} & \textbf{Source} & \textbf{Storage Location} \\
+\midrule
+Historical OHLCV & NSE API, Yahoo Finance & \texttt{data/raw/\{STOCK\}.csv} \\
+Market Indices & NSE (BANKNIFTY, NIFTY) & \texttt{data/market/BANKNIFTY.csv} \\
+Sentiment Scores & Financial News APIs & \texttt{data/sentiment/} \\
+Technical Indicators & Computed (\texttt{ta-lib}, \texttt{pandas-ta}) & \texttt{data/features/} \\
+Processed Features & Feature engineering output & \texttt{data/processed/} \\
+\bottomrule
+\end{tabularx}
+
+\end{threeparttable}
+\end{table}
+
+
+\textbf{Data Cleaning Pipeline:}
+\begin{itemize}
+    \item \textbf{Missing Value Imputation:} Sequential gaps are addressed by propagating the most recent valid observation forward, while sporadic missing entries are estimated through linear interpolation between neighboring values
+    \item \textbf{Outlier Detection:} Winsorization at 1st/99th percentiles to cap extreme returns (flash crashes, circuit breakers)
+    \item \textbf{Volume Normalization:} Log-transformation to handle skewed volume distributions
+    \item \textbf{Corporate Actions Adjustment:} Split-adjusted and bonus-adjusted prices to ensure data consistency
+\end{itemize}
+
+\subsection{Temporal Coverage}
+
+\begin{itemize}
+    \item \textbf{Timeframe:} January 2015 to December 2025 (10 years)
+    \item \textbf{Training Period:} 2015--2020 (60\%, approximately 1,500 trading days)
+    \item \textbf{Validation Period:} 2020--2022 (20\%, approximately 500 trading days)
+    \item \textbf{Testing Period:} 2022--2025 (20\%, approximately 525 trading days)
+    \item \textbf{Total Data Points:} 106 stocks × 2,500 days × 244 features = 64.7 million data points
+\end{itemize}
+
+\section{Preprocessing Pipeline}
+
+\subsection{Numerical Data Processing}
+
+\begin{itemize}
+    \item Raw CSVs are cleaned: missing values are imputed, outliers are removed, and columns are standardized.
+    \item The feature construction module (\texttt{2\_professional\_feature\_engineering.py}) derives historical price dependencies at multiple time horizons, trend-following smoothed indicators, risk quantification metrics, and binary markers for significant market occurrences.
+    \item Processed features are saved in \texttt{data/processed/enhanced\_features\_dataset.csv} for each stock.
+\end{itemize}
+
+\subsection{Textual and Exogenous Data}
+
+\begin{itemize}
+    \item Economic indicators and event flags are merged with price data.
+    \item Sentiment features (if available) are integrated from external sources and stored in feature CSVs.
+\end{itemize}
+
+\section{Feature Engineering Framework (244 Features)}
+
+Feature engineering is the cornerstone of this research, responsible for the accuracy improvement from 50\% (baseline 72 features) to 68.28\% (final 244 features). The feature engineering pipeline (\texttt{02\_feature\_engineering.py}) implements 8 categories of professionally curated indicators as detailed in Table~\ref{tab:feature_categories}.
+
+\begin{table}[H]
+\centering
+\small
+\begin{threeparttable}
+\caption{Feature Engineering Architecture (244 Total Features)}
+\label{tab:feature_categories}
+\renewcommand{\arraystretch}{1.5}
+
+\begin{tabularx}{\textwidth}{l c X}
+\toprule
+\textbf{Category} & \textbf{Count} & \textbf{Description} \\
+\midrule
+Technical Indicators & 87 & SMA, EMA, MACD, RSI, Bollinger, ATR, ADX \\
+Price Features & 24 & Returns, log returns, price ratios, VWAP \\
+Volatility Indicators & 18 & Historical, Parkinson, Garman–Klass volatility \\
+Volume Analysis & 22 & OBV, CMF, volume moving averages, volume RSI \\
+Market Regime & 31 & Trend strength, support/resistance, breakouts \\
+Temporal Features & 12 & Day-of-week, month, quarter patterns \\
+Sentiment Features & 15 & News sentiment, momentum, divergence \\
+Interaction Features & 35 & Price–volume interactions, RSI–MACD features \\
+\midrule
+\textbf{Total} & \textbf{244} & \\
+\bottomrule
+\end{tabularx}
+
+\end{threeparttable}
+\end{table}
+
+
+\textbf{Feature Selection Process:}
+\begin{enumerate}
+    \item Correlation analysis to remove redundant features (threshold: 0.95)
+    \item Recursive Feature Elimination (RFE) with XGBoost to identify predictive subsets
+    \item Domain expertise validation for market relevance
+    \item Walk-forward feature stability testing
+\end{enumerate}
+
+\section{Multi-Target Prediction Framework}
+
+The system simultaneously predicts four targets rather than single-point estimates:
+
+\begin{itemize}
+    \item \textbf{Closing Price Return:} Next-day closing price percentage change
+    \item \textbf{High Price Return:} Next-day daily high percentage change
+    \item \textbf{Low Price Return:} Next-day daily low percentage change
+    \item \textbf{Direction (Classification):} Binary up/down movement ($>0\%$ = up, $\leq 0\%$ = down)
+\end{itemize}
+
+\textbf{Multi-Task Learning Benefits:} Shared representations across targets improve generalization compared to isolated single-target models. Correlation analysis enables risk assessment (e.g., high volatility days show wider high-low spreads).
+
+\section{Model Architecture and Training}
+
+\subsection{Four-Model Ensemble System}
+
+Four distinct models train independently on each stock's 244 features, then combine via meta-learning:
+
+\begin{table}[H]
+\centering
+\small
+\begin{threeparttable}
+\caption{Model Architecture Specifications}
+\label{tab:model_specs}
+\renewcommand{\arraystretch}{1.4}
+
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{Model} & \textbf{Configuration} \\
+\midrule
+XGBoost & Tree-based gradient boosting with 200 estimators, depth 5, 
+learning rate 0.01, 80\% row/column subsampling, L2 regularization 1.0,
+20-round early stopping, binary log-loss objective. \\
+
+LSTM & Two-layer recurrent network (128 → 64 hidden units), dropout 30\%, 
+10-timestep windows, tanh activations, Adam optimizer (0.001), 
+batch size 32, 50 epochs. \\
+
+GRU & Two stacked GRU layers (128 → 64), same dropout configuration, 
+10-day context window, tanh activation, Adam (0.001), batch size 32,
+50 epochs. \\
+
+Ensemble & Penalized linear regression (L2 = 1.0) combining model predictions 
+through learned weighting. \\
+\bottomrule
+\end{tabularx}
+
+\end{threeparttable}
+\end{table}
+
+
+\subsection{Walk-Forward Validation Strategy}
+
+\textbf{Why Walk-Forward:} Traditional random train-test splits allow models to \"peek\" into future data through shuffling, inflating reported accuracies. Walk-forward validation ensures temporal causality --- models train only on past data and predict strictly future periods, mimicking real deployment.
+
+\textbf{Implementation:}
+\begin{enumerate}
+    \item \textbf{Chronological Split:} 60\% training (2015--2020), 20\% validation (2020--2022), 20\% testing (2022--2025)
+    \item \textbf{Independent Scaling:} StandardScaler fitted only on training data, transformed validation/test independently to prevent lookahead
+    \item \textbf{No Shuffling:} Temporal order strictly preserved
+    \item \textbf{Multi-Fold Rolling:} For robustness, 5-fold rolling windows tested (each fold advances by 6 months)
+\end{enumerate}
+
+\subsection{Training Configuration}
+
+\begin{itemize}
+    \item \textbf{Optimization:} The adaptive moment estimation algorithm manages gradient updates, with an intelligent scheduler that halves the step size when validation improvement stagnates for five consecutive epochs
+    \item \textbf{Regularization:} Overfitting countermeasures include randomly deactivating 30\% of neurons during training, penalizing large weight magnitudes with coefficient 0.0001, and terminating training when validation metrics plateau for ten epochs
+    \item \textbf{Loss Functions:} MSE for regression (close/high/low prices), binary cross-entropy for classification (direction)
+    \item \textbf{Batch Size:} 32 (balances memory efficiency and gradient stability)
+    \item \textbf{Epochs:} Maximum 50 with early stopping (typical convergence at 25--35 epochs)
+    \item \textbf{Hardware:} CPU-based training (Intel Xeon, 32 cores), average 4--5 minutes per stock
+    \item \textbf{Reproducibility:} All stochastic processes are initialized with deterministic seeds (value 42) across numerical computation and deep learning frameworks to ensure identical results across experimental runs
+\end{itemize}
+
+Prediction scripts (\texttt{4\_professional\_ensemble\_prediction.py}) use these trained models to forecast next-day opening and closing prices, storing results in per-stock JSON and CSV files. Aggregated results are managed centrally for analysis and benchmarking.
+
+\section{Configuration and Orchestration}
+
+\begin{itemize}
+    \item The pipeline is orchestrated via master scripts (\texttt{master\_pipeline.py}, \texttt{run\_master\_pipeline.py}), which automate all steps for multiple stocks.
+    \item Configurations for each stock are stored in JSON files, specifying symbols, data sources, and processing options.
+    \item Directory structures are created dynamically to organize data, models, and results for each stock.
+\end{itemize}
+
+\section{Real-Time Prediction and RL Agent}
+
+\begin{itemize}
+    \item The RL agent is trained to leverage ensemble model outputs for adaptive, real-time prediction.
+    \item Real-time forecasts are provided via API endpoints, enabling integration with trading systems and dashboards.
+    \item The system supports rapid inference and continuous learning as new data arrives.
+\end{itemize}
+
+
+\section{Model Architecture}
+
+The forecasting system employs a hybrid deep learning and reinforcement learning architecture, integrating both numerical and textual features for robust prediction:
+
+\begin{itemize}
+    \item \textbf{Input 1:} Temporal sequences capturing past trading activity alongside derived quantitative signals, aggregated and cleansed from diverse financial data providers.
+    \item \textbf{Input 2:} Market mood quantifications computed at daily intervals through automated text analytics applied to business journalism and investor discussion platforms.
+    \item \textbf{Feature Fusion:} Technical indicators and sentiment embeddings are combined into a unified feature set.
+    \item \textbf{Deep Ensemble Predictions:} Multiple deep learning models (LSTM, GRU, BiLSTM) are trained on the fused features. Their outputs are aggregated using a meta-ensemble approach for improved accuracy.
+    \item \textbf{Reinforcement Agent:} A DQN-based RL agent utilizes the ensemble predictions to make action-based decisions (Buy/Sell/Hold) and refine the next-day price forecast.
+    \item \textbf{Output:} The system produces T+1 price predictions and recommended trading actions.
+\end{itemize}
+
+% Figure placeholder - uncomment when image is available
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.5\linewidth]{image.png}
+%     \caption{Model Architecture Pipeline}
+%     \label{fig:Model_Architecture_Pipeline}
+% \end{figure}
+
+   \begin{table}[H]
+    \centering
+    \caption{Hybrid Deep Learning and RL Architecture}
+    \label{tab:hybrid_arch}
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Layer/Module} & \textbf{Configuration} & \textbf{Output Shape} \\
+        \hline
+        Primary Recurrent Block & 128 memory cells with sequence propagation & (batch, seq, 128) \\
+        Secondary Recurrent Block & 64 condensed hidden states & (batch, 64) \\
+        Fully Connected Transform & 64 activated neurons & (batch, 64) \\
+        Stochastic Regularization & 20\% random deactivation & (batch, 64) \\
+        Opinion Encoding & Pre-trained language model embeddings & (batch, 64) \\
+        Multi-Modal Combination & Numerical and textual stream merger & (batch, 128) \\
+        Consensus Aggregation & Cross-model prediction synthesis & (batch, 1) \\
+        Decision Agent & Trading action determination module & (batch, 1) \\
+        Forecast Generator & Next-day price regression head & (batch, 1) \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+   \section{Training Configuration}
+
+The models in the pipeline were trained using the following configuration:
+
+\begin{itemize}
+    \item \textbf{Optimizer:} Adam (with decoupled weight decay for deep models)
+    \item \textbf{Learning Rate:} 0.001 (with dynamic adjustment via ReduceLROnPlateau)
+    \item \textbf{Weight Decay:} 1e-4
+    \item \textbf{LR Scheduler:} ReduceLROnPlateau, reducing learning rate on validation plateau
+    \item \textbf{Loss Function:} Price prediction tasks minimize the average squared deviation between forecasts and actuals, while directional classification optimizes the negative log-likelihood of correct class assignments
+    \item \textbf{Batch Size:} 16
+    \item \textbf{Epochs:} 25
+    \item \textbf{Regularization:} Dropout (0.5), Batch Normalization, Gradient Clipping (max norm 1.0)
+    \item \textbf{Feature Selection:} Top 30--40 features selected for efficient training
+    \item \textbf{Early Stopping:} Patience = 5 epochs
+    \item \textbf{Hardware:} CUDA-enabled GPU for accelerated training
+\end{itemize}
+
+\begin{table}[H]
+    \centering
+    \caption{Training Configuration Details}
+    \label{tab:training_config}
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Parameter} & \textbf{Value / Technique} \\
+        \hline
+        Gradient Handler & Adaptive moment estimation \\
+        Step Size & One-thousandth base rate \\
+        Coefficient Penalty & 0.0001 magnitude constraint \\
+        Rate Adaptation & Plateau-triggered reduction \\
+        Objective Function & Squared error (prices), Log-likelihood (direction) \\
+        Sample Grouping & 16 instances per update \\
+        Training Iterations & 25 complete passes \\
+        Complexity Control & 50\% neuron masking, normalization layers, gradient bounds \\
+        Predictor Subset & Leading 30--40 ranked attributes \\
+        Convergence Criterion & Five-epoch patience threshold \\
+        Compute Platform & Graphics accelerator enabled \\
+        \hline
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+The Adam optimizer was selected for its robust convergence properties. ReduceLROnPlateau scheduler dynamically lowers the learning rate when validation loss plateaus. Dropout and batch normalization help prevent overfitting, while gradient clipping ensures stable training. Early stopping halts training when no improvement is observed.

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(dir \"C:\\Users\\Home\\Documents\\AI_IN_STOCK_V2\\models\\lstm\\HDFCBANK\")",
+      "Bash(dir /s /b \"C:\\Users\\Home\\Documents\\AI_IN_STOCK_V2\\models\\lstm\\HDFCBANK\")",
+      "Bash(dir /s /b \"C:\\Users\\Home\\Documents\\AI_IN_STOCK_V2\\results\")",
+      "Bash(ls:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

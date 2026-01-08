@@ -1,0 +1,6 @@
+Performance Tier,Stock Count,Percentage,Avg Accuracy (%),Avg MAPE (%)
+Excellent (70%),43,40.6,73.06,1.28
+Good (65-70%),35,33,67.93,1.27
+Above Average (60-65%),20,18.9,63.54,1.27
+Average (55-60%),7,6.6,58.28,1.17
+Below Average (<55%),1,0.9,52.62,1.03

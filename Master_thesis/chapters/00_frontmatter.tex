@@ -1,0 +1,122 @@
+% ================== FRONT MATTER ==================
+    % Title page
+    \pagestyle{plain}\clearpage
+    \thispagestyle{empty}
+    \begin{titlepage}
+        \centering
+        \vspace*{0.1cm}
+    {\fontsize{18pt}{20pt}\selectfont \bfseries Development of Positional Trading Strategy Using Deep Learning and Its Training, Testing, and Implementation on a Real-Time Platform Using API}
+
+        
+        \vspace{0.5cm}
+        {\large A Master's End Sem Phase 1 Project Report} 
+        \vspace{0.5cm}
+        
+        {\large Master of Technology in Artificial Intelligence}\\
+        
+        {\large by}\\
+        
+        {\Large\bfseries Vishwam K. Shah}
+        
+        {\large 24MAI022}\\
+        \vspace{0.7cm}
+       {\large Under the guidance of}\\
+{\large \textbf{Dr. Jigarkumar Shah}}\\
+{\large Department of Information and Communication Technology}\\
+
+        \vspace{0.3cm}
+        \vfill
+        {\centering \includegraphics[width=0.21\textwidth]{pdeulogo.png}}\\
+        {\large School of Technology}\\
+        {\large Pandit Deendayal Energy University}\\
+        {\large Gandhinagar -- 382426. Gujarat - India}\\
+        {\large December, 2025}
+    \end{titlepage}
+
+    % Roman numbering for front matter
+    \pagenumbering{roman}
+    \clearpage
+    \begin{center}
+    \textbf{\large Approval Sheet}
+    \end{center}
+	
+    This Project Report entitled \textbf{\enquote{Development Of Positional Trading Strategy Using Deep Learning and its Training, Testing and Implementation on Real Time Platform Using API}} by \textbf{Vishwam Shah} is recommended for the degree of \textbf{M.Tech} in \textbf{Artificial Intelligence}.
+    \vspace{0.8cm}
+
+    \hspace{9cm}Examiners 
+    \begin{flushright} 
+    \vspace{0.5cm}
+     \vspace{0.5cm}
+        \makebox[1.8in]{\hrulefill}\\
+        Panel Member 1,\\
+         \vspace{0.5cm}
+         \makebox[1.8in]{\hrulefill}\\
+        Panel Member 2,\\
+         \vspace{0.5cm}
+          \makebox[1.8in]{\hrulefill}\\
+        Panel Member 3,\\
+        \vspace{0.5cm}
+         \makebox[1.8in]{\hrulefill}\\
+        Dr. Jigarkumar Shah,\\
+         \makebox[1.8in]{\hrulefill}\\
+        Dr. Paawan Sharma,\\
+         HOD, ICT \\
+        
+       
+       
+    \end{flushright}
+    \vspace{0.5cm}
+
+    \vfill
+    
+    
+    \newpage
+    \begin{center}
+	    \textbf{\large Student Declaration}
+    \end{center}
+
+    I, \textcolor{internationalkleinblue}{\textbf{Vishwam Shah}}, hereby declare that this written submission represents my ideas in my own words, and where others' ideas or words have been included, I have adequately cited and referenced the original sources. I also declare that I have adhered to all principles of academic honesty and integrity and have not misrepresented or fabricated, or falsified any idea/data/fact/source in my submission. I understand that any violation of the above will be cause for disciplinary action by the Pandit Deendayal Energy University and can also evoke penal action from the sources which have thus not been properly cited or from whom proper permission has not been taken when needed.
+    \vspace{0.8cm}
+    \vspace{0.8cm}
+    \begin{flushright}
+        \makebox[1.8in]{\hrulefill}\\
+        Vishwam Shah\\
+        Roll No: 24MAI022\\
+    \end{flushright}
+    \vfill
+    \begin{flushleft}
+	    Date: \makebox[1.8in]{\hrulefill}
+    \end{flushleft} 
+
+    % Acknowledgment section
+    \section*{\textbf{Acknowledgment}}
+    While the student's name appears as the sole contributor to the finished master's thesis, it's crucial to acknowledge that the collaborative efforts and guidance of numerous individuals facilitated its completion. This thesis is a collective endeavor, shaped by the input of many people, and I want to express my gratitude to him. I extend my deepest appreciation to my internal guide, Dr. Jigarkumar Shah. His consistent guidance, encouragement, and insightful suggestions were instrumental in bringing this project to fruition. Their faith in my abilities has been a source of confidence and determination. Dr. Jigarkumar Shah provision of valuable time, and access to university facilities were integral to the accomplishment of my goals. I am profoundly thankful for the unwavering support of my parents. Their continuous inspiration, moral backing, and blessings have been the foundation of my journey. Their understanding and encouragement have been priceless, and I am truly fortunate to have had their steadfast support throughout this undertaking.
+
+    \begin{flushright}
+    \textbf{Vishwam Shah}\\
+    \end{flushright}
+    
+    % Abstract
+    \chapter*{Abstract}
+    \addcontentsline{toc}{chapter}{Abstract}
+    \pagestyle{fancy}
+    This thesis presents a multi-target deep learning ensemble system for stock market prediction, achieving 68.28\% directional accuracy through advanced feature engineering and model stacking. The research predicts four simultaneous targets --- closing price, high price, low price, and directional movement --- for 106 NSE stocks spanning 11 sectors.
+
+    The pipeline comprises: (1) Automated Data Collection via Yahoo Finance and NSE APIs, (2) Feature Engineering generating 244 features per stock, (3) Multi-Model Training using XGBoost, LSTM, GRU, and Ensemble meta-learners, and (4) Walk-Forward Validation ensuring no lookahead bias. Feature expansion from 72 to 244 indicators (87 technical, 24 price, 18 volatility, 22 volume, 31 market regime, 15 sentiment, 35 interaction features) drove accuracy improvements from 50\% baseline to 68.28\%.
+
+    XGBoost emerged as the strongest individual model (68.22\% accuracy), leveraging tree-based learning for non-linear market dynamics, while LSTM/GRU exhibited overfitting (approximately 50\% accuracy). The ensemble stacking approach with Ridge Regression meta-learner combines model strengths, achieving positive $R^{2}$ (0.0270) for close price prediction and winning on 54.7\% of stocks (58/106).
+
+    Walk-forward validation with chronological splits (60\%-20\%-20\%) ensures realistic evaluation. This work contributes a production-ready, reproducible solution for multi-target stock prediction with extensibility for future reinforcement learning enhancements.
+    \clearpage
+
+    % Table of contents
+    \addcontentsline{toc}{chapter}{Contents}
+    \tableofcontents
+    \addcontentsline{toc}{chapter}{List of Figures}
+    \listoffigures
+    \addcontentsline{toc}{chapter}{List of Tables}
+    \listoftables
+
+    % Start main content with Arabic numbering
+    \cleardoublepage\pagenumbering{arabic}
+    \pagestyle{fancy}
