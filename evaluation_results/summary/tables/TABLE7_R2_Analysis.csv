@@ -1,6 +1,0 @@
-Category,Stock Count,Avg R²,Avg Direction Acc (%)
-Excellent (R² ≥ 0.5),1,0.7833,95.22
-Good (0.2 ≤ R² < 0.5),2,0.228,71.82
-Moderate (0.1 ≤ R² < 0.2),14,0.1367,71.64
-Weak (0 ≤ R² < 0.1),56,0.0338,68.63
-Negative (R² < 0),33,-0.0902,65.62

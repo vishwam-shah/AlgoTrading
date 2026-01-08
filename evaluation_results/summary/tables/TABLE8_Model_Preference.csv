@@ -1,6 +1,0 @@
-Performance Tier,XGBoost Count,Ensemble Count,Total Stocks
-Excellent (≥70%),21,22,43
-Good (65-70%),18,17,35
-Above Avg (60-65%),11,9,20
-Average (55-60%),4,3,7
-Below Avg (<55%),0,1,1
