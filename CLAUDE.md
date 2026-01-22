@@ -4,99 +4,105 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI Stock Prediction System - Multi-Task Deep Learning for NSE Stock Market Prediction. Research-grade implementation of a 4-target prediction system for 100 NSE stocks using XGBoost, LSTM, and Transformer models.
+AI Stock Prediction System - XGBoost/LightGBM Ensemble for NSE Stock Market Prediction with walk-forward backtesting and Google News RSS sentiment.
+
+## Quick Start - Production Commands
+
+```bash
+# Run backtest on stocks
+python main.py backtest --symbols SBIN HDFCBANK AXISBANK --capital 100000
+
+# Download fresh data
+python main.py data --fresh --period 2y
+
+# Paper trading mode
+python main.py paper --symbols SBIN HDFCBANK --capital 100000
+
+# Run optimization
+python main.py optimize
+```
+
+## Current System Status (Jan 2026)
+
+### Best Performing Stocks
+- **SBIN**: +0.66% return, 80% win rate, Sharpe 1.54, Profit Factor 2.08
+- **AXISBANK**: +0.16%, 75% win rate, Sharpe 1.11, **Profit Factor 7.02**
+
+### Architecture
+- **Models**: XGBoost + LightGBM ensemble (50-60% direction accuracy)
+- **Features**: 118 features (technical + sentiment)
+- **Sentiment**: Google News RSS (100 articles in <2s, no rate limits)
+- **Risk Management**: ATR-based stops (3x ATR), trailing stops (2% trail after 3% profit)
+- **Position Sizing**: Volatility-adjusted, max 15% per position
+
+### Key Parameters
+- Data lookback: 1000 calendar days (~680 trading days)
+- Test split: 20% out-of-sample (walk-forward validation)
+- Min confidence: 0.50
+- Entry filters: RSI 30-70, MACD bullish, trend + volume confirmation
+
+## Architecture
+
+### Production Folder Structure
+```
+production/
+├── orchestrator.py    # Main pipeline coordinator
+├── feature_engine.py  # 118 feature computation
+├── models.py          # XGBoost/LightGBM ensemble
+├── backtester.py      # Walk-forward backtesting
+├── signals.py         # Signal generation
+├── broker.py          # Trade execution
+└── utils/
+    └── fast_sentiment.py  # Google News RSS sentiment
+```
+
+### Data Pipeline
+1. `collect_data()` → yfinance download (1000 days default)
+2. `compute_features()` → 118 features (technical + sentiment)
+3. `train_model()` → XGBoost + LightGBM ensemble (80% train)
+4. `run_backtest()` → Test on 20% out-of-sample data
+
+### Feature Categories
+- **Technical**: SMA, EMA, RSI, MACD, Bollinger Bands
+- **Volatility**: ATR, Keltner, historical volatility
+- **Volume**: OBV, VWAP, volume ratios
+- **Momentum**: ROC, Williams %R, CCI, ADX
+- **Statistical**: Skewness, kurtosis, z-scores
+- **Alpha signals**: Mean reversion, momentum, gap signals
+- **Sentiment**: Google News RSS (8 features - score, ma_7d, ma_30d, trend, bullish/bearish ratios)
 
 ## Common Commands
 
-### Running the Pipeline
-
 ```bash
-# Phase 1: Data collection (10 proof-of-concept stocks)
-python main.py --phase 1 --step data
+# Full backtest with logging
+python main.py backtest --symbols SBIN HDFCBANK ICICIBANK TCS INFY RELIANCE AXISBANK --capital 100000
 
-# Phase 1: Feature engineering
-python main.py --phase 1 --step features
+# Download fresh data (2 years)
+python main.py data --fresh --period 2y
 
-# Phase 1: Train models
-python main.py --phase 1 --step train
-
-# Phase 1: Complete pipeline (all steps)
-python main.py --phase 1 --step all
-
-# Phase 2: Scale to 100 stocks
-python main.py --phase 2 --step all
+# Paper trading
+python main.py paper --symbols SBIN HDFCBANK --capital 100000
 ```
 
-### Testing Individual Modules
+## Configuration
 
-```bash
-# Test data collection
-python src/data_collection.py
+Key settings in `production/orchestrator.py`:
+- `days = 1000` - Data lookback period
+- `min_confidence = 0.50` - Signal confidence threshold
+- `include_sentiment = True` - Enabled (fast RSS-based)
+- `include_market_context = False` - Disabled (yfinance issues)
 
-# Test target computation
-python src/target_computation.py
+Backtester settings in `production/backtester.py`:
+- `stop_loss_atr_mult = 3.0` - Stop at 3x ATR
+- `take_profit_atr_mult = 5.0` - Target at 5x ATR
+- `max_holding_days = 30` - Max hold period
+- `trailing_stop_activation = 0.03` - Trail after 3% profit
 
-# Test feature engineering
-python src/feature_engineering.py
-
-# Test model architectures
-python src/models.py
-```
-
-### Environment Setup
-
-```bash
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-## Architecture Overview
-
-### 4-Target Multi-Task Learning System
-
-This system predicts 4 targets simultaneously:
-
-1. **Direction** (5-class classification): Strong Bear / Weak Bear / Neutral / Weak Bull / Strong Bull
-2. **Intraday High** (regression): log(high_tomorrow / open_tomorrow) - for profit targets
-3. **Intraday Low** (regression): log(low_tomorrow / open_tomorrow) - for stop loss
-4. **Closing Price** (regression): log(close_tomorrow / close_today) - for swing decisions
-
-All regression targets use log returns for normalization and stationarity.
-
-### Core Architecture Patterns
-
-**Data Pipeline Flow:**
-1. `DataCollector` (data_collection.py) → Downloads OHLCV data from yfinance
-2. `FeatureEngineer` (feature_engineering.py) → Computes 202 features across 10 categories
-3. `TargetComputer` (target_computation.py) → Computes 4 targets with consistency validation
-4. Models (models.py) → XGBoost (4 separate), LSTM multi-task, Transformer multi-task
-5. Ensemble (ensemble.py) → Stacking meta-learners combine base models
-
-**Model Architecture:**
-- **XGBoostMultiTask**: 4 separate XGBoost models (1 classifier for direction, 3 regressors)
-- **LSTMMultiTask**: Single LSTM backbone with attention, 4 output heads
-- **TransformerMultiTask**: Transformer encoder with positional encoding, 4 output heads
-
-All deep learning models:
-- Take sequences of length 60 (configurable via `config.SEQUENCE_LENGTH`)
-- Use StandardScaler for feature normalization
-- Share backbone architecture with task-specific heads
-- Trained with weighted multi-task loss (weights in `config.LOSS_WEIGHTS`)
-
-### Configuration System
-
-All parameters centralized in `config.py`:
-- **Stock universe**: `SECTORS` dict organizes 100 stocks across 13 sectors
-- **Phase control**: `PHASE1_STOCKS` (10 stocks) vs `ALL_STOCKS` (100 stocks)
-- **Model hyperparameters**: `XGBOOST_PARAMS`, `LSTM_PARAMS`, `TRANSFORMER_PARAMS`
-- **Target thresholds**: `DIRECTION_THRESHOLDS` for 5-class classification
-- **Trading strategy**: `MIN_CONFIDENCE`, `RISK_PER_TRADE`, `MAX_POSITIONS`
-- **Paths**: All data/model/results directories defined at top
+Entry conditions (need core + 2 of 4 supporting):
+- Core: ML prediction = bullish, RSI 30-70
+- Supporting: Volume confirmed, Trend (SMA_20), MACD bullish, Sentiment not bearish
+2. **Market context disabled**: yfinance issues with index data
+3. **Average loss > Average win**: Need better entry timing
 
 Never hardcode parameters - always reference `config.py`.
 

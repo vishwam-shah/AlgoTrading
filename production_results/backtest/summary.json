@@ -1,0 +1,77 @@
+{
+  "total_symbols": 7,
+  "successful": 7,
+  "failed": 0,
+  "timestamp": "2026-01-22T16:52:30.554033",
+  "avg_total_return": -0.004313760363677304,
+  "std_total_return": 0.007095000896897301,
+  "min_total_return": -0.01705566631008609,
+  "max_total_return": 0.0066315734246597275,
+  "avg_sharpe_ratio": -0.8393187893994616,
+  "std_sharpe_ratio": 1.6509256150364904,
+  "min_sharpe_ratio": -3.217813076007524,
+  "max_sharpe_ratio": 1.5404658569095895,
+  "avg_max_drawdown": -0.008411285346143287,
+  "std_max_drawdown": 0.004215258055266634,
+  "min_max_drawdown": -0.01687661178220435,
+  "max_max_drawdown": -0.0019152681857119462,
+  "avg_win_rate": 0.55578231292517,
+  "std_win_rate": 0.20071889401209556,
+  "min_win_rate": 0.2857142857142857,
+  "max_win_rate": 0.8,
+  "avg_total_trades": 5.0,
+  "std_total_trades": 1.4142135623730951,
+  "min_total_trades": 3.0,
+  "max_total_trades": 7.0,
+  "by_symbol": {
+    "SBIN": {
+      "total_return": 0.0066315734246597275,
+      "sharpe_ratio": 1.5404658569095895,
+      "max_drawdown": -0.008267439452554329,
+      "win_rate": 0.8,
+      "total_trades": 5
+    },
+    "HDFCBANK": {
+      "total_return": -0.002570544533275097,
+      "sharpe_ratio": -0.6822226937080444,
+      "max_drawdown": -0.00571267615492938,
+      "win_rate": 0.75,
+      "total_trades": 4
+    },
+    "AXISBANK": {
+      "total_return": 0.0015961682210364962,
+      "sharpe_ratio": 1.1105349689307116,
+      "max_drawdown": -0.0019152681857119462,
+      "win_rate": 0.75,
+      "total_trades": 4
+    },
+    "TCS": {
+      "total_return": -0.006176569452464028,
+      "sharpe_ratio": -1.153700759466556,
+      "max_drawdown": -0.008857742834742407,
+      "win_rate": 0.5714285714285714,
+      "total_trades": 7
+    },
+    "RELIANCE": {
+      "total_return": -0.003085306455763348,
+      "sharpe_ratio": -0.6817648421299842,
+      "max_drawdown": -0.00741523425855866,
+      "win_rate": 0.3333333333333333,
+      "total_trades": 3
+    },
+    "ICICIBANK": {
+      "total_return": -0.009535977439848794,
+      "sharpe_ratio": -2.790730980324423,
+      "max_drawdown": -0.009834024754301935,
+      "win_rate": 0.4,
+      "total_trades": 5
+    },
+    "INFY": {
+      "total_return": -0.01705566631008609,
+      "sharpe_ratio": -3.217813076007524,
+      "max_drawdown": -0.01687661178220435,
+      "win_rate": 0.2857142857142857,
+      "total_trades": 7
+    }
+  }
+}

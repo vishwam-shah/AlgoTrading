@@ -27,6 +27,8 @@ ta==0.11.0  # Pure Python technical analysis library
 transformers==4.33.0
 nltk==3.8.1
 textblob==0.17.1
+gnews>=0.3.7                  # Google News scraper
+vaderSentiment>=3.3.2         # VADER sentiment analysis
 
 # Visualization
 matplotlib==3.7.2
@@ -58,8 +60,23 @@ python-dotenv==1.0.0
 loguru==0.7.0
 
 # Broker APIs (for live trading)
-# kiteconnect (install separately: pip install kiteconnect)
-# upstox-python (install separately)
+smartapi-python>=1.5.5        # Angel One SmartAPI
+websocket-client>=1.6.0       # WebSocket for streaming quotes
+pyotp>=2.9.0                  # TOTP generation for Angel One auth
+
+# Reinforcement Learning
+gym>=0.26.0                   # OpenAI Gym environments
+gymnasium>=0.29.0             # Modern Gym API
+stable-baselines3>=2.2.0      # Pre-built RL algorithms (DQN, PPO, SAC)
+sb3-contrib>=2.2.0            # Additional algorithms
+
+# Portfolio Optimization & Backtesting
+pyportfolioopt>=1.5.0         # Portfolio optimization
+empyrical>=0.5.5              # Performance metrics
+quantstats>=0.0.62            # Detailed trading analytics
+
+# Hyperparameter Optimization
+optuna>=3.4.0                 # Bayesian hyperparameter optimization
 
 # Additional
 openpyxl==3.1.2  # For Excel file support
