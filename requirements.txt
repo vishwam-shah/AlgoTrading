@@ -1,82 +1,88 @@
+# ============================================================================
+# AI STOCK TRADING SYSTEM - PYTHON DEPENDENCIES (Updated Jan 2026)
+# ============================================================================
+
 # Core Data Science Libraries
-numpy==1.24.3
-pandas==2.0.3
-scipy==1.11.1
+numpy==2.2.1
+pandas==2.2.3
+scipy==1.15.1
 
 # Machine Learning
-scikit-learn==1.3.0
-xgboost==2.0.0
-lightgbm==4.1.0
+scikit-learn==1.6.1
+xgboost==2.1.3
+lightgbm==4.5.0
+imbalanced-learn==0.12.4  # NEW: For SMOTE class balancing
 
 # Deep Learning
-tensorflow==2.13.0
-keras==2.13.1
-torch==2.0.1
+tensorflow==2.20.0  # UPDATED: Latest version (Aug 2025)
+keras==3.8.0  # UPDATED: Keras 3 (standalone)
+torch==2.6.0  # UPDATED: PyTorch 2.6
 
 # Stock Market Data
-yfinance==0.2.28
-nsepy==0.8
+yfinance==0.2.50
 pandas-datareader==0.10.0
 
 # Technical Analysis
-# ta-lib==0.4.28  # Commented out - requires C++ compiler
 ta==0.11.0  # Pure Python technical analysis library
-# We'll implement indicators manually using pandas/numpy
 
-# NLP for Sentiment Analysis
-transformers==4.33.0
-nltk==3.8.1
-textblob==0.17.1
-gnews>=0.3.7                  # Google News scraper
-vaderSentiment>=3.3.2         # VADER sentiment analysis
+# NLP for Sentiment Analysis (FinBERT)
+transformers==4.48.0  # UPDATED: Latest transformers
+nltk==3.9.1
+textblob==0.18.0
+gnews>=0.3.7
+vaderSentiment>=3.3.2
 
 # Visualization
-matplotlib==3.7.2
-seaborn==0.12.2
-plotly==5.16.1
+matplotlib==3.10.0
+seaborn==0.13.2
+plotly==5.24.1
 
 # Model Explainability
-shap==0.42.1
+shap==0.46.0
 
 # Utilities
-tqdm==4.66.1
-joblib==1.3.2
-python-dateutil==2.8.2
+tqdm==4.67.1
+joblib==1.4.2
+python-dateutil==2.9.0
 
 # API & Web
-requests==2.31.0
-beautifulsoup4==4.12.2
+requests==2.32.3
+beautifulsoup4==4.13.0
+fastapi==0.128.0  # UPDATED: Latest FastAPI (Dec 2025)
+uvicorn[standard]==0.34.0  # ASGI server
+pydantic==2.10.5  # Data validation
 
 # Jupyter
-jupyter==1.0.0
-ipykernel==6.25.1
-ipywidgets==8.1.0
+jupyter==1.1.1
+ipykernel==6.29.5
+ipywidgets==8.1.5
 
 # Configuration
-pyyaml==6.0.1
-python-dotenv==1.0.0
+pyyaml==6.0.2
+python-dotenv==1.0.1
 
 # Logging
-loguru==0.7.0
+loguru==0.7.3
 
-# Broker APIs (for live trading)
-smartapi-python>=1.5.5        # Angel One SmartAPI
-websocket-client>=1.6.0       # WebSocket for streaming quotes
-pyotp>=2.9.0                  # TOTP generation for Angel One auth
-
-# Reinforcement Learning
-gym>=0.26.0                   # OpenAI Gym environments
-gymnasium>=0.29.0             # Modern Gym API
-stable-baselines3>=2.2.0      # Pre-built RL algorithms (DQN, PPO, SAC)
-sb3-contrib>=2.2.0            # Additional algorithms
+# WebSocket for Real-time Data
+websocket-client>=1.8.0
+python-socketio==5.12.0  # For WebSocket server
 
 # Portfolio Optimization & Backtesting
-pyportfolioopt>=1.5.0         # Portfolio optimization
-empyrical>=0.5.5              # Performance metrics
-quantstats>=0.0.62            # Detailed trading analytics
+pyportfolioopt>=1.5.0
+empyrical>=0.5.5
+quantstats>=0.0.62
 
 # Hyperparameter Optimization
-optuna>=3.4.0                 # Bayesian hyperparameter optimization
+optuna>=4.1.0  # Bayesian optimization
 
 # Additional
-openpyxl==3.1.2  # For Excel file support
+openpyxl==3.1.5  # Excel support
+
+# ============================================================================
+# INSTALLATION NOTES
+# ============================================================================
+# Install with: pip install -r requirements.txt
+# For GPU support (TensorFlow): pip install tensorflow[and-cuda]
+# For TA-Lib (optional, requires C++ compiler): pip install TA-Lib
+

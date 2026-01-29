@@ -1,0 +1,212 @@
+{
+  "BRITANNIA": {
+    "action": "HOLD",
+    "current_weight": 0.08706246807231593,
+    "target_weight": 0.08706246807231593,
+    "weight_change": 0.0,
+    "current_price": 5835.0,
+    "factor_scores": {
+      "value": 0.5317576275689363,
+      "momentum": 0.6403996043464593,
+      "quality": 0.7885680842040491,
+      "low_vol": 0.6861331919771287,
+      "combined": 0.6617146270241434
+    }
+  },
+  "SBIN": {
+    "action": "HOLD",
+    "current_weight": 0.05485161793542178,
+    "target_weight": 0.05485161793542178,
+    "weight_change": 0.0,
+    "current_price": 1029.5,
+    "factor_scores": {
+      "value": 0.41963256965142437,
+      "momentum": 0.7942866684478758,
+      "quality": 0.8365856471866006,
+      "low_vol": 0.7204249013978472,
+      "combined": 0.692732446670937
+    }
+  },
+  "HDFCBANK": {
+    "action": "HOLD",
+    "current_weight": 0.07193341577176213,
+    "target_weight": 0.07193341577176213,
+    "weight_change": 0.0,
+    "current_price": 916.0999755859375,
+    "factor_scores": {
+      "value": 0.5809355792623876,
+      "momentum": 0.6233110458536656,
+      "quality": 0.7680435075809161,
+      "low_vol": 0.7429274202917729,
+      "combined": 0.6788043882471855
+    }
+  },
+  "RELIANCE": {
+    "action": "HOLD",
+    "current_weight": 0.06773657542238241,
+    "target_weight": 0.06773657542238241,
+    "weight_change": 0.0,
+    "current_price": 1386.0999755859375,
+    "factor_scores": {
+      "value": 0.5890365114645993,
+      "momentum": 0.6019533252097408,
+      "quality": 0.7537349401173179,
+      "low_vol": 0.6910267383531633,
+      "combined": 0.6589378787862054
+    }
+  },
+  "ICICIBANK": {
+    "action": "HOLD",
+    "current_weight": 0.06936267032272503,
+    "target_weight": 0.06936267032272503,
+    "weight_change": 0.0,
+    "current_price": 1343.4000244140625,
+    "factor_scores": {
+      "value": 0.5690448090160761,
+      "momentum": 0.61367737001598,
+      "quality": 0.6649690574929175,
+      "low_vol": 0.737390095670365,
+      "combined": 0.6462703330488346
+    }
+  },
+  "AXISBANK": {
+    "action": "HOLD",
+    "current_weight": 0.05996425998240174,
+    "target_weight": 0.05996425998240174,
+    "weight_change": 0.0,
+    "current_price": 1258.0,
+    "factor_scores": {
+      "value": 0.49583678117126,
+      "momentum": 0.703083009553802,
+      "quality": 0.6925934315963884,
+      "low_vol": 0.6808719694773748,
+      "combined": 0.6430962979497064
+    }
+  },
+  "BHARTIARTL": {
+    "action": "HOLD",
+    "current_weight": 0.07843410129181116,
+    "target_weight": 0.07843410129181116,
+    "weight_change": 0.0,
+    "current_price": 1984.699951171875,
+    "factor_scores": {
+      "value": 0.5366195237880552,
+      "momentum": 0.6758759691771926,
+      "quality": 0.8874855628140151,
+      "low_vol": 0.7166834407360456,
+      "combined": 0.7041661241288272
+    }
+  },
+  "M&M": {
+    "action": "HOLD",
+    "current_weight": 0.04959374656926335,
+    "target_weight": 0.04959374656926335,
+    "weight_change": 0.0,
+    "current_price": 3543.39990234375,
+    "factor_scores": {
+      "value": 0.510483288587669,
+      "momentum": 0.6649588709228418,
+      "quality": 0.7459940440230849,
+      "low_vol": 0.6545159628965013,
+      "combined": 0.6439880416075242
+    }
+  },
+  "LT": {
+    "action": "HOLD",
+    "current_weight": 0.06198504965880951,
+    "target_weight": 0.06198504965880951,
+    "weight_change": 0.0,
+    "current_price": 3743.800048828125,
+    "factor_scores": {
+      "value": 0.5494419439748625,
+      "momentum": 0.572142735029673,
+      "quality": 0.8019241407754727,
+      "low_vol": 0.672182967512291,
+      "combined": 0.6489229468230748
+    }
+  },
+  "BAJFINANCE": {
+    "action": "HOLD",
+    "current_weight": 0.048073259829628116,
+    "target_weight": 0.048073259829628116,
+    "weight_change": 0.0,
+    "current_price": 927.8499755859375,
+    "factor_scores": {
+      "value": 0.5951344012553558,
+      "momentum": 0.6583471785700402,
+      "quality": 0.6793951781272237,
+      "low_vol": 0.6272484859640822,
+      "combined": 0.6400313109791754
+    }
+  },
+  "SBILIFE": {
+    "action": "HOLD",
+    "current_weight": 0.07386712623605268,
+    "target_weight": 0.07386712623605268,
+    "weight_change": 0.0,
+    "current_price": 2002.5999755859375,
+    "factor_scores": {
+      "value": 0.4886035379010067,
+      "momentum": 0.7603966559191886,
+      "quality": 0.7944609542472842,
+      "low_vol": 0.6940958383017969,
+      "combined": 0.6843892465923191
+    }
+  },
+  "NESTLEIND": {
+    "action": "HOLD",
+    "current_weight": 0.08587568961766061,
+    "target_weight": 0.08587568961766061,
+    "weight_change": 0.0,
+    "current_price": 1293.800048828125,
+    "factor_scores": {
+      "value": 0.48182920075780983,
+      "momentum": 0.6187735666668813,
+      "quality": 0.8146251735724945,
+      "low_vol": 0.7094364563518828,
+      "combined": 0.6561660993372671
+    }
+  },
+  "HEROMOTOCO": {
+    "action": "HOLD",
+    "current_weight": 0.067622619205713,
+    "target_weight": 0.067622619205713,
+    "weight_change": 0.0,
+    "current_price": 5384.0,
+    "factor_scores": {
+      "value": 0.5380376968219208,
+      "momentum": 0.7362466365554998,
+      "quality": 0.6809673957450536,
+      "low_vol": 0.597503344809962,
+      "combined": 0.638188768483109
+    }
+  },
+  "MARUTI": {
+    "action": "HOLD",
+    "current_weight": 0.07099743240702934,
+    "target_weight": 0.07099743240702934,
+    "weight_change": 0.0,
+    "current_price": 15469.0,
+    "factor_scores": {
+      "value": 0.5147844513314447,
+      "momentum": 0.7226059962796306,
+      "quality": 0.8224487874977685,
+      "low_vol": 0.6979527437780128,
+      "combined": 0.6894479947217141
+    }
+  },
+  "JSWSTEEL": {
+    "action": "HOLD",
+    "current_weight": 0.052639967677023246,
+    "target_weight": 0.052639967677023246,
+    "weight_change": 0.0,
+    "current_price": 1170.0,
+    "factor_scores": {
+      "value": 0.48190172615469856,
+      "momentum": 0.6479837203085027,
+      "quality": 0.8170382654395626,
+      "low_vol": 0.6434770374864004,
+      "combined": 0.6476001873472911
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "JSWSTEEL": {
+    "action": "SELL",
+    "confidence": 0.555,
+    "direction_probability": 0.472,
+    "expected_return": -0.00086,
+    "current_price": 1170.0
+  },
+  "HINDALCO": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.493,
+    "expected_return": -0.00086,
+    "current_price": 950.3
+  },
+  "TATASTEEL": {
+    "action": "SELL",
+    "confidence": 0.554,
+    "direction_probability": 0.473,
+    "expected_return": -0.00086,
+    "current_price": 187.61
+  },
+  "VEDL": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.495,
+    "expected_return": -0.00086,
+    "current_price": 684.15
+  },
+  "COALINDIA": {
+    "action": "SELL",
+    "confidence": 0.574,
+    "direction_probability": 0.463,
+    "expected_return": -0.00086,
+    "current_price": 418.4
+  }
+}

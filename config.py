@@ -154,6 +154,60 @@ DIRECTION_THRESHOLDS = {
 }
 
 # ============================================================================
+# ROBUST MODE CONFIGURATION (Anti-Overfitting)
+# ============================================================================
+# Enable this when you have limited data (< 500 samples)
+# This mode prevents overfitting by:
+# 1. Reducing features from 118 to ~20 curated ones
+# 2. Using heavy regularization on models
+# 3. Requiring statistical significance in backtests
+# 4. Using walk-forward cross-validation
+
+ROBUST_MODE = True  # Set to True for statistically sound results
+
+# Feature Selection Mode
+# 'strict':     20 features max - safest, for < 600 samples
+# 'moderate':   40 features max - balanced, for 600-1200 samples  
+# 'aggressive': 60 features max - risky, needs 1800+ samples
+# 'auto':       Automatically choose based on sample count
+FEATURE_MODE = 'moderate'  # Using moderate for more features with ~700 samples
+
+# Feature Selection (Robust Mode)
+ROBUST_MAX_FEATURES = 20        # Maximum features to use (rule of thumb: samples/30)
+ROBUST_MIN_SAMPLES_PER_FEATURE = 30  # Minimum samples needed per feature
+
+# Auto-mode thresholds (samples needed for each mode)
+AUTO_MODE_THRESHOLDS = {
+    'strict': 0,        # Always available
+    'moderate': 1200,   # Need 1200+ samples (40 × 30)
+    'aggressive': 1800, # Need 1800+ samples (60 × 30)
+}
+
+# Statistical Validation
+MIN_BACKTEST_TRADES = 30        # Minimum trades for statistical significance
+RECOMMENDED_BACKTEST_TRADES = 100  # Recommended for reliable results
+MIN_WIN_RATE_SIGNIFICANCE = 0.55   # Win rate must be significantly > 50%
+SIGNIFICANCE_LEVEL = 0.05       # p-value threshold (95% confidence)
+
+# Walk-Forward Cross-Validation
+WALK_FORWARD_FOLDS = 5          # Number of CV folds
+WALK_FORWARD_PURGE_DAYS = 5     # Days gap between train/test (prevent leakage)
+WALK_FORWARD_EMBARGO_DAYS = 5   # Days to skip after test fold
+
+# Model Complexity Limits (Robust Mode)
+ROBUST_MODEL_PARAMS = {
+    'max_depth': 3,             # Shallow trees (prevents overfitting)
+    'n_estimators': 100,        # Fewer trees
+    'min_samples_leaf': 50,     # Higher minimum samples per leaf
+    'reg_alpha': 1.0,           # L1 regularization (10x higher)
+    'reg_lambda': 5.0,          # L2 regularization (5x higher)
+}
+
+# Data Requirements
+MIN_SAMPLES_FOR_TRAINING = 250  # At least 1 year of data
+RECOMMENDED_SAMPLES = 750       # 3 years for reliable results
+
+# ============================================================================
 # FEATURE ENGINEERING PARAMETERS
 # ============================================================================
 # Sequence length for LSTM

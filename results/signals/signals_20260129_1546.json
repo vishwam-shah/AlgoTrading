@@ -1,0 +1,37 @@
+{
+  "TCS": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.489,
+    "expected_return": 0.000106,
+    "current_price": 3158.0
+  },
+  "INFY": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.505,
+    "expected_return": 0.000106,
+    "current_price": 1682.7
+  },
+  "HCLTECH": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.496,
+    "expected_return": 0.000106,
+    "current_price": 1720.2
+  },
+  "WIPRO": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.501,
+    "expected_return": 0.000106,
+    "current_price": 234.8
+  },
+  "TECHM": {
+    "action": "BUY",
+    "confidence": 0.561,
+    "direction_probability": 0.53,
+    "expected_return": 0.000106,
+    "current_price": 1745.1
+  }
+}

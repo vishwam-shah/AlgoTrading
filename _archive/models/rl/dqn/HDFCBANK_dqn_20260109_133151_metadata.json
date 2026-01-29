@@ -1,0 +1,9 @@
+{
+  "agent_type": "dqn",
+  "model_name": "HDFCBANK_dqn_20260109_133151",
+  "total_timesteps": 50000,
+  "episodes": 0,
+  "seed": 42,
+  "config": "DQNConfig(hidden_layers=[128, 64, 32], activation='relu', learning_rate=0.0003, gamma=0.99, batch_size=64, buffer_size=100000, epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995, epsilon_decay_steps=10000, target_update_freq=100, tau=0.005, use_per=True, per_alpha=0.6, per_beta_start=0.4, per_beta_end=1.0, use_double_dqn=True, use_dueling=True)",
+  "saved_at": "2026-01-09T13:44:20.311816"
+}

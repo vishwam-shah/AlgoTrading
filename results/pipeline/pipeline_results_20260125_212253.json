@@ -1,0 +1,883 @@
+{
+  "config": {
+    "symbols": [
+      "HDFCBANK",
+      "ICICIBANK",
+      "KOTAKBANK",
+      "SBIN",
+      "AXISBANK",
+      "INDUSINDBK",
+      "BAJFINANCE",
+      "BAJAJFINSV",
+      "PNB",
+      "BANKBARODA",
+      "TCS",
+      "INFY",
+      "HCLTECH",
+      "WIPRO",
+      "TECHM",
+      "MARUTI",
+      "TATAMOTORS",
+      "M&M",
+      "BAJAJ-AUTO",
+      "HEROMOTOCO",
+      "SUNPHARMA",
+      "DRREDDY",
+      "CIPLA",
+      "DIVISLAB",
+      "APOLLOHOSP",
+      "RELIANCE",
+      "ONGC",
+      "NTPC",
+      "POWERGRID",
+      "ADANIGREEN",
+      "TATASTEEL",
+      "JSWSTEEL",
+      "HINDALCO",
+      "VEDL",
+      "COALINDIA",
+      "HINDUNILVR",
+      "ITC",
+      "NESTLEIND",
+      "BRITANNIA",
+      "TATACONSUM",
+      "LT",
+      "ADANIENT",
+      "ADANIPORTS",
+      "ULTRACEMCO",
+      "GRASIM",
+      "BHARTIARTL",
+      "ASIANPAINT",
+      "TITAN",
+      "HDFCLIFE",
+      "SBILIFE"
+    ],
+    "start_date": "2022-01-01",
+    "end_date": "2026-01-25",
+    "n_holdings": 15,
+    "initial_capital": 1000000,
+    "optimization_method": "risk_parity"
+  },
+  "steps": {
+    "data_collection": {
+      "symbols_collected": 49,
+      "market_data_collected": 4,
+      "quality_report": {
+        "INDUSINDBK": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "BAJFINANCE": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "BAJAJFINSV": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "PNB": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "BANKBARODA": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "TCS": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "INFY": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "HCLTECH": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "WIPRO": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "TECHM": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "MARUTI": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "M&M": {
+          "original_rows": 1007,
+          "clean_rows": 1001,
+          "missing_pct": 0.5958291956305859,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1001
+        },
+        "BAJAJ-AUTO": {
+          "original_rows": 1007,
+          "clean_rows": 1001,
+          "missing_pct": 0.5958291956305859,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1001
+        },
+        "HEROMOTOCO": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "SUNPHARMA": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "DRREDDY": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "CIPLA": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "DIVISLAB": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "APOLLOHOSP": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "RELIANCE": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "ONGC": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "NTPC": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "POWERGRID": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "ADANIGREEN": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "TATASTEEL": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "JSWSTEEL": {
+          "original_rows": 1007,
+          "clean_rows": 1000,
+          "missing_pct": 0.6951340615690168,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1000
+        },
+        "HINDALCO": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "VEDL": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "COALINDIA": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "HINDUNILVR": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "ITC": {
+          "original_rows": 1007,
+          "clean_rows": 1003,
+          "missing_pct": 0.3972194637537239,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1003
+        },
+        "NESTLEIND": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "BRITANNIA": {
+          "original_rows": 1006,
+          "clean_rows": 1000,
+          "missing_pct": 0.5964214711729622,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1000
+        },
+        "TATACONSUM": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "LT": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "ADANIENT": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "ADANIPORTS": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "ULTRACEMCO": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "GRASIM": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "BHARTIARTL": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "ASIANPAINT": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "TITAN": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "HDFCLIFE": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "SBILIFE": {
+          "original_rows": 1007,
+          "clean_rows": 1002,
+          "missing_pct": 0.49652432969215493,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00",
+          "trading_days": 1002
+        },
+        "summary": {
+          "total_symbols": 49,
+          "total_rows": 49093,
+          "avg_rows_per_symbol": 1001.8979591836735,
+          "unique_dates": 1003,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00"
+        }
+      }
+    },
+    "feature_engineering": {
+      "features_computed": 82,
+      "symbols_processed": 49,
+      "summary": {
+        "total_features": 82,
+        "feature_categories": {
+          "trend": 15,
+          "momentum": 12,
+          "volatility": 10,
+          "volume": 8,
+          "price_patterns": 10,
+          "market_relative": 5,
+          "time_based": 5,
+          "sentiment_proxy": 3
+        },
+        "symbols_processed": 49,
+        "computation_stats": {
+          "HDFCBANK": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "ICICIBANK": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "KOTAKBANK": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "SBIN": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "AXISBANK": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "INDUSINDBK": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "BAJFINANCE": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "BAJAJFINSV": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "PNB": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "BANKBARODA": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "TCS": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "INFY": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "HCLTECH": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "WIPRO": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "TECHM": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "MARUTI": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "M&M": {
+            "rows": 1001,
+            "features": 82,
+            "success": true
+          },
+          "BAJAJ-AUTO": {
+            "rows": 1001,
+            "features": 82,
+            "success": true
+          },
+          "HEROMOTOCO": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "SUNPHARMA": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "DRREDDY": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "CIPLA": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "DIVISLAB": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "APOLLOHOSP": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "RELIANCE": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "ONGC": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "NTPC": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "POWERGRID": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "ADANIGREEN": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "TATASTEEL": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "JSWSTEEL": {
+            "rows": 1000,
+            "features": 82,
+            "success": true
+          },
+          "HINDALCO": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "VEDL": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "COALINDIA": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "HINDUNILVR": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "ITC": {
+            "rows": 1003,
+            "features": 82,
+            "success": true
+          },
+          "NESTLEIND": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "BRITANNIA": {
+            "rows": 1000,
+            "features": 82,
+            "success": true
+          },
+          "TATACONSUM": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "LT": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "ADANIENT": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "ADANIPORTS": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "ULTRACEMCO": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "GRASIM": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "BHARTIARTL": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "ASIANPAINT": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "TITAN": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "HDFCLIFE": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          },
+          "SBILIFE": {
+            "rows": 1002,
+            "features": 82,
+            "success": true
+          }
+        }
+      }
+    },
+    "factor_analysis": {
+      "stocks_analyzed": 49,
+      "factors": [
+        "value",
+        "momentum",
+        "quality",
+        "low_vol",
+        "sentiment"
+      ],
+      "weights": {
+        "value": 0.2,
+        "momentum": 0.2,
+        "quality": 0.2,
+        "low_vol": 0.2,
+        "sentiment": 0.2
+      },
+      "top_stocks": [
+        {
+          "symbol": "SBIN",
+          "combined_score": 0.6098025053956269,
+          "combined_rank": 1,
+          "value_score": 0.13890995658752373,
+          "momentum_score": 0.9901649161599411,
+          "quality_score": 0.5980127181533679,
+          "low_vol_score": 0.7660943292577549,
+          "sentiment_score": 0.5558306068195465
+        },
+        {
+          "symbol": "HINDALCO",
+          "combined_score": 0.5925429228999239,
+          "combined_rank": 2,
+          "value_score": 0.0734025886452699,
+          "momentum_score": 0.9920634920634921,
+          "quality_score": 0.494999262696383,
+          "low_vol_score": 0.704368953551664,
+          "sentiment_score": 0.6978803175428107
+        },
+        {
+          "symbol": "VEDL",
+          "combined_score": 0.5805598385388031,
+          "combined_rank": 3,
+          "value_score": 0.015543626809935152,
+          "momentum_score": 1.0,
+          "quality_score": 0.4922019791208571,
+          "low_vol_score": 0.6786010309100216,
+          "sentiment_score": 0.7164525558532014
+        },
+        {
+          "symbol": "TITAN",
+          "combined_score": 0.5776330169032484,
+          "combined_rank": 4,
+          "value_score": 0.26469533679098545,
+          "momentum_score": 0.8768836114234195,
+          "quality_score": 0.6127503253351585,
+          "low_vol_score": 0.7532291109876565,
+          "sentiment_score": 0.38060669997902224
+        },
+        {
+          "symbol": "ASIANPAINT",
+          "combined_score": 0.5691572908876611,
+          "combined_rank": 5,
+          "value_score": 0.3748797572768037,
+          "momentum_score": 0.8721155322277798,
+          "quality_score": 0.5031278340119502,
+          "low_vol_score": 0.7294001650252785,
+          "sentiment_score": 0.366263165896493
+        },
+        {
+          "symbol": "TATASTEEL",
+          "combined_score": 0.5686253546700719,
+          "combined_rank": 6,
+          "value_score": 0.17430275304807483,
+          "momentum_score": 0.7892479544703026,
+          "quality_score": 0.5556209080572323,
+          "low_vol_score": 0.700583195647197,
+          "sentiment_score": 0.6233719621275532
+        },
+        {
+          "symbol": "BANKBARODA",
+          "combined_score": 0.5684597250013355,
+          "combined_rank": 7,
+          "value_score": 0.19804000978682268,
+          "momentum_score": 0.9687577645756587,
+          "quality_score": 0.5665265127854541,
+          "low_vol_score": 0.7029362281122464,
+          "sentiment_score": 0.4060381097464955
+        },
+        {
+          "symbol": "NESTLEIND",
+          "combined_score": 0.5683575211216281,
+          "combined_rank": 8,
+          "value_score": 0.2850204189863997,
+          "momentum_score": 0.6976401871546938,
+          "quality_score": 0.6260155037129066,
+          "low_vol_score": 0.7699690891292155,
+          "sentiment_score": 0.4631424066249245
+        },
+        {
+          "symbol": "SBILIFE",
+          "combined_score": 0.5651689753199634,
+          "combined_rank": 9,
+          "value_score": 0.23467784369575292,
+          "momentum_score": 0.8824999490344387,
+          "quality_score": 0.63983444480157,
+          "low_vol_score": 0.7709259999199551,
+          "sentiment_score": 0.2979066391481
+        },
+        {
+          "symbol": "TCS",
+          "combined_score": 0.563017644577225,
+          "combined_rank": 10,
+          "value_score": 0.4988150745056561,
+          "momentum_score": 0.5551529898814562,
+          "quality_score": 0.5724731266044295,
+          "low_vol_score": 0.7577750953179868,
+          "sentiment_score": 0.4308719365765962
+        },
+        {
+          "symbol": "AXISBANK",
+          "combined_score": 0.5611473984042747,
+          "combined_rank": 11,
+          "value_score": 0.28353421616808233,
+          "momentum_score": 0.79803579586937,
+          "quality_score": 0.559165227307371,
+          "low_vol_score": 0.7469529538669819,
+          "sentiment_score": 0.41804879880956847
+        },
+        {
+          "symbol": "MARUTI",
+          "combined_score": 0.5557311770572189,
+          "combined_rank": 12,
+          "value_score": 0.2638269626133019,
+          "momentum_score": 0.7425089879464956,
+          "quality_score": 0.6770784050243025,
+          "low_vol_score": 0.7473384812964846,
+          "sentiment_score": 0.34790304840550984
+        },
+        {
+          "symbol": "TATACONSUM",
+          "combined_score": 0.5547582836752574,
+          "combined_rank": 13,
+          "value_score": 0.3069142824754554,
+          "momentum_score": 0.7558326256409793,
+          "quality_score": 0.5718408773487716,
+          "low_vol_score": 0.7421233696716729,
+          "sentiment_score": 0.3970802632394075
+        },
+        {
+          "symbol": "HCLTECH",
+          "combined_score": 0.5518333854521359,
+          "combined_rank": 14,
+          "value_score": 0.24771442042044467,
+          "momentum_score": 0.7880696624211148,
+          "quality_score": 0.4182558650081326,
+          "low_vol_score": 0.738697360247276,
+          "sentiment_score": 0.5664296191637112
+        },
+        {
+          "symbol": "DRREDDY",
+          "combined_score": 0.5489928873254922,
+          "combined_rank": 15,
+          "value_score": 0.37410832727945637,
+          "momentum_score": 0.43545308102583064,
+          "quality_score": 0.5140808663431928,
+          "low_vol_score": 0.743305685822937,
+          "sentiment_score": 0.6780164761560442
+        }
+      ]
+    },
+    "portfolio_optimization": {
+      "method": "risk_parity",
+      "expected_return": 0.15054474222399544,
+      "expected_volatility": 0.13421978010429922,
+      "sharpe_ratio": 0.7491052521905813,
+      "n_positions": 15,
+      "weights": {
+        "SBIN": 0.05689077484316048,
+        "HINDALCO": 0.04637878396145114,
+        "VEDL": 0.045808904463884796,
+        "TITAN": 0.06816011978459453,
+        "ASIANPAINT": 0.08328779263297484,
+        "TATASTEEL": 0.04469287498785536,
+        "BANKBARODA": 0.042761878121000525,
+        "NESTLEIND": 0.09034398198681622,
+        "SBILIFE": 0.07152746021771404,
+        "TCS": 0.07850612360582068,
+        "AXISBANK": 0.06643838233983318,
+        "MARUTI": 0.07480782031455047,
+        "TATACONSUM": 0.0710424387041804,
+        "HCLTECH": 0.06966647251794163,
+        "DRREDDY": 0.08968619151822176
+      },
+      "risk_contributions": {
+        "SBIN": 0.06473138741038559,
+        "HINDALCO": 0.06631604011984217,
+        "VEDL": 0.06989475590632274,
+        "TITAN": 0.06832546184705358,
+        "ASIANPAINT": 0.06808372546672767,
+        "TATASTEEL": 0.0656995511504079,
+        "BANKBARODA": 0.06082972343185019,
+        "NESTLEIND": 0.06254408699483249,
+        "SBILIFE": 0.06840214670277683,
+        "TCS": 0.06804574319299478,
+        "AXISBANK": 0.06683732653710872,
+        "MARUTI": 0.0682564707429809,
+        "TATACONSUM": 0.06923962945868249,
+        "HCLTECH": 0.06904026410988404,
+        "DRREDDY": 0.06375368692814987
+      }
+    },
+    "backtest": {
+      "total_return": 0.6883970979121743,
+      "annual_return": 0.14079912679233098,
+      "benchmark_return": 0.4068126193468218,
+      "excess_return": 0.03848697102845963,
+      "volatility": 0.13258288884701558,
+      "downside_volatility": 0.09510469806458485,
+      "max_drawdown": 0.1899744222499202,
+      "max_drawdown_duration": 279,
+      "sharpe_ratio": 0.6848480040067768,
+      "sortino_ratio": 0.9547280906214538,
+      "calmar_ratio": 0.7411478088724132,
+      "information_ratio": 0.6342304684925559,
+      "n_trades": 24,
+      "n_rebalances": 6,
+      "win_rate": 0.6666666666666666,
+      "profit_factor": 2.121114963788958,
+      "var_95": -0.013080571438228383,
+      "cvar_95": -0.019185063359214726,
+      "final_value": 1685885.8194860842,
+      "initial_capital": 1000000
+    }
+  },
+  "errors": [],
+  "success": true
+}

@@ -1,0 +1,70 @@
+{
+  "EXP_20260125_1326_77b9b728": {
+    "name": "Factor Strategy - Risk Parity",
+    "timestamp": "2026-01-25 13:26:45.512102",
+    "status": "completed",
+    "config_hash": "77b9b728",
+    "sharpe": 1146.1824460580096,
+    "annual_return": 196.04045044416978
+  },
+  "EXP_20260125_1328_77b9b728": {
+    "name": "Factor Strategy v2 - Risk Parity",
+    "timestamp": "2026-01-25 13:28:13.119948",
+    "status": "completed",
+    "config_hash": "77b9b728",
+    "sharpe": 0.7899887641779905,
+    "annual_return": 0.19507653799407532
+  },
+  "EXP_20260125_1844_23ee4c52": {
+    "name": "Backtest 20260125",
+    "timestamp": "2026-01-25 18:44:22.496542",
+    "status": "completed",
+    "config_hash": "23ee4c52",
+    "sharpe": 0.6565650196287419,
+    "annual_return": 0.17905968344141954
+  },
+  "EXP_20260125_1846_7e4308fe": {
+    "name": "Backtest 20260125",
+    "timestamp": "2026-01-25 18:46:19.973771",
+    "status": "completed",
+    "config_hash": "7e4308fe",
+    "sharpe": 0.81608292507782,
+    "annual_return": 0.20060536312168398
+  },
+  "EXP_20260125_1853_4ea8150b": {
+    "name": "Backtest 20260125",
+    "timestamp": "2026-01-25 18:53:15.209961",
+    "status": "running",
+    "config_hash": "4ea8150b"
+  },
+  "EXP_20260125_1857_f045b91f": {
+    "name": "Backtest 20260125",
+    "timestamp": "2026-01-25 18:57:06.186715",
+    "status": "running",
+    "config_hash": "f045b91f"
+  },
+  "EXP_20260125_1901_81b04c90": {
+    "name": "Backtest 20260125",
+    "timestamp": "2026-01-25 19:01:15.836316",
+    "status": "completed",
+    "config_hash": "81b04c90",
+    "sharpe": 0.6800561495406617,
+    "annual_return": 0.17115713770066132
+  },
+  "EXP_20260125_1905_2e47eb79": {
+    "name": "Backtest 20260125",
+    "timestamp": "2026-01-25 19:05:25.246757",
+    "status": "completed",
+    "config_hash": "2e47eb79",
+    "sharpe": 0.6395370986756722,
+    "annual_return": 0.17168797828585203
+  },
+  "EXP_20260125_2017_81b04c90": {
+    "name": "Backtest 20260125",
+    "timestamp": "2026-01-25 20:17:46.016335",
+    "status": "completed",
+    "config_hash": "81b04c90",
+    "sharpe": 0.6800561033802562,
+    "annual_return": 0.17115713706069102
+  }
+}

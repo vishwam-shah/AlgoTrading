@@ -1,0 +1,16 @@
+{
+  "HDFCBANK": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.507,
+    "expected_return": -0.000432,
+    "current_price": 926.4
+  },
+  "ICICIBANK": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.492,
+    "expected_return": -0.000432,
+    "current_price": 1361.4
+  }
+}

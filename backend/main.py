@@ -56,8 +56,8 @@ class SafeJSONEncoder(json.JSONEncoder):
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from production.orchestrator import TradingOrchestrator
-from production.utils.fast_sentiment import FastSentimentEngine
+from engine.orchestrator import UnifiedOrchestrator
+from engine.sentiment import FastSentimentEngine
 
 # Create FastAPI app with API versioning
 app = FastAPI(
@@ -187,8 +187,26 @@ class StockInfo(BaseModel):
     sector: str
 
 
+class PipelineRunRequest(BaseModel):
+    symbols: Optional[List[str]] = None
+    sectors: Optional[List[str]] = None  # Select stocks by sector
+    capital: float = 100000
+    optimization_method: str = "risk_parity"
+    n_holdings: int = 15
+    start_date: str = "2022-01-01"
+    force_download: bool = True
+    models_to_train: Optional[List[str]] = None
+
+
+class RebalanceRequest(BaseModel):
+    target_weights: Optional[Dict[str, float]] = None
+
+
 # Store current configuration
 current_config: Dict = DEFAULT_CONFIG.copy()
+
+# Pipeline orchestrators keyed by job_id
+pipeline_orchestrators: Dict[str, UnifiedOrchestrator] = {}
 
 
 @app.get("/")
@@ -204,56 +222,34 @@ async def root():
 
 @app.get("/api/v1/stocks")
 async def get_available_stocks():
-    """Get list of available stocks for trading."""
-    stock_info = {
-        "SBIN": {"name": "State Bank of India", "sector": "Banking"},
-        "HDFCBANK": {"name": "HDFC Bank", "sector": "Banking"},
-        "ICICIBANK": {"name": "ICICI Bank", "sector": "Banking"},
-        "AXISBANK": {"name": "Axis Bank", "sector": "Banking"},
-        "KOTAKBANK": {"name": "Kotak Mahindra Bank", "sector": "Banking"},
-        "TCS": {"name": "Tata Consultancy Services", "sector": "IT"},
-        "INFY": {"name": "Infosys", "sector": "IT"},
-        "WIPRO": {"name": "Wipro", "sector": "IT"},
-        "HCLTECH": {"name": "HCL Technologies", "sector": "IT"},
-        "TECHM": {"name": "Tech Mahindra", "sector": "IT"},
-        "RELIANCE": {"name": "Reliance Industries", "sector": "Energy"},
-        "TATAMOTORS": {"name": "Tata Motors", "sector": "Auto"},
-        "TATASTEEL": {"name": "Tata Steel", "sector": "Metals"},
-        "ITC": {"name": "ITC Limited", "sector": "FMCG"},
-        "LT": {"name": "Larsen & Toubro", "sector": "Infrastructure"},
-        "BHARTIARTL": {"name": "Bharti Airtel", "sector": "Telecom"},
-        "HINDUNILVR": {"name": "Hindustan Unilever", "sector": "FMCG"},
-        "MARUTI": {"name": "Maruti Suzuki", "sector": "Auto"},
-        "BAJFINANCE": {"name": "Bajaj Finance", "sector": "Finance"},
-        "ADANIENT": {"name": "Adani Enterprises", "sector": "Conglomerate"},
-        "ADANIPORTS": {"name": "Adani Ports", "sector": "Infrastructure"},
-        "ASIANPAINT": {"name": "Asian Paints", "sector": "Paints"},
-        "SUNPHARMA": {"name": "Sun Pharma", "sector": "Pharma"},
-    }
+    """Get list of available stocks for trading with sector information."""
+    import config
     
-    return {
-        "stocks": [
-            {"symbol": s, **stock_info.get(s, {"name": s, "sector": "Other"})}
-            for s in AVAILABLE_STOCKS
-        ]
-    }
+    # Build stock list from config.STOCK_SECTOR_MAP
+    stocks = []
+    for symbol in config.ALL_STOCKS:
+        sector = config.STOCK_SECTOR_MAP.get(symbol, 'Other')
+        stocks.append({
+            "symbol": symbol,
+            "name": symbol,  # Could be enhanced with company names
+            "sector": sector
+        })
+    
+    return {"stocks": stocks}
+
 
 
 @app.get("/api/v1/sentiment/{symbol}")
 async def get_sentiment(symbol: str):
     """Get real-time sentiment for a stock."""
-    if symbol not in AVAILABLE_STOCKS:
-        raise HTTPException(status_code=404, detail=f"Stock {symbol} not found")
-    
     try:
+        if symbol not in AVAILABLE_STOCKS:
+            return JSONResponse(status_code=404, content={"error": f"Stock {symbol} not found"})
         engine = FastSentimentEngine()
         scores = engine.get_sentiment_scores(symbol)
-        
-        # Format response for frontend
         bullish = scores.get('bullish_ratio', 0)
         bearish = scores.get('bearish_ratio', 0)
         neutral = 1.0 - bullish - bearish
-        
         current_sentiment = scores.get('current', 0)
         if current_sentiment > 0.1:
             label = "Bullish"
@@ -261,8 +257,7 @@ async def get_sentiment(symbol: str):
             label = "Bearish"
         else:
             label = "Neutral"
-        
-        return sanitize_dict({
+        return JSONResponse(content=sanitize_dict({
             "symbol": symbol,
             "sentiment": {
                 "overall_sentiment": current_sentiment,
@@ -274,9 +269,9 @@ async def get_sentiment(symbol: str):
                 "avg_7d": scores.get('avg_7d', 0)
             },
             "timestamp": datetime.now().isoformat()
-        })
+        }))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 @app.post("/api/v1/backtest")
@@ -315,73 +310,68 @@ async def run_backtest(request: BacktestRequest, background_tasks: BackgroundTas
 
 
 async def execute_backtest(job_id: str, symbols: List[str], capital: float, days: int):
-    """Execute backtest in background."""
+    """Execute backtest in background using UnifiedOrchestrator pipeline."""
     try:
         running_jobs[job_id]["status"] = "running"
-        running_jobs[job_id]["message"] = "Running backtest..."
-        
+        running_jobs[job_id]["message"] = "Running pipeline..."
+
+        start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+
+        def progress_cb(step_status):
+            running_jobs[job_id]["message"] = f"Step {step_status.step_number}/8: {step_status.name} ({step_status.status})"
+            running_jobs[job_id]["progress"] = int((step_status.step_number / 8) * 100)
+
+        orchestrator = UnifiedOrchestrator(
+            symbols=symbols,
+            initial_capital=capital,
+            paper_trading=True,
+            progress_callback=progress_cb
+        )
+
+        pipeline_result = orchestrator.run_pipeline(
+            start_date=start_date,
+            force_download=True
+        )
+
+        # Store orchestrator for later queries
+        pipeline_orchestrators[job_id] = orchestrator
+
+        # Format results from backtest step
+        backtest_data = orchestrator.get_backtest_results()
         all_results = []
-        
-        for i, symbol in enumerate(symbols):
-            running_jobs[job_id]["progress"] = int((i / len(symbols)) * 100)
-            running_jobs[job_id]["message"] = f"Processing {symbol}..."
-            
-            try:
-                # Run orchestrator for single symbol
-                orchestrator = TradingOrchestrator(
-                    symbols=[symbol],
-                    paper_trading=True,
-                    initial_capital=capital
-                )
-                
-                # Collect data - force fresh download
-                orchestrator.collect_data(days=days, force_download=True)
-                
-                # Compute features
-                orchestrator.compute_features()
-                
-                # Train model
-                orchestrator.train_model(symbol)
-                
-                # Run backtest
-                result = orchestrator.run_backtest(symbol)
-                
-                if result:
-                    all_results.append(sanitize_dict({
-                        "symbol": symbol,
-                        "total_return": result.get("total_return", 0),
-                        "sharpe_ratio": result.get("sharpe_ratio", 0),
-                        "max_drawdown": result.get("max_drawdown", 0),
-                        "win_rate": result.get("win_rate", 0),
-                        "total_trades": result.get("total_trades", 0),
-                        "profit_factor": result.get("profit_factor", 0),
-                        "equity_curve": result.get("equity_curve", []),
-                        "trades": result.get("trades", [])
-                    }))
-                    
-            except Exception as e:
-                all_results.append({
+        for symbol, r in backtest_data.items():
+            if 'error' in r:
+                all_results.append({"symbol": symbol, "error": r["error"],
+                                    "total_return": 0, "sharpe_ratio": 0,
+                                    "max_drawdown": 0, "win_rate": 0, "total_trades": 0})
+            else:
+                all_results.append(sanitize_dict({
                     "symbol": symbol,
-                    "error": str(e),
-                    "total_return": 0,
-                    "sharpe_ratio": 0,
-                    "max_drawdown": 0,
-                    "win_rate": 0,
-                    "total_trades": 0
-                })
-        
+                    "total_return": r.get("total_return", 0),
+                    "sharpe_ratio": r.get("sharpe_ratio", 0),
+                    "max_drawdown": r.get("max_drawdown", 0),
+                    "win_rate": r.get("win_rate", 0),
+                    "total_trades": r.get("total_trades", 0),
+                    "profit_factor": r.get("profit_factor", 0),
+                    "equity_curve": r.get("equity_curve", []),
+                    "trades": r.get("trades", [])
+                }))
+
         running_jobs[job_id]["status"] = "completed"
         running_jobs[job_id]["progress"] = 100
-        running_jobs[job_id]["message"] = "Backtest completed"
+        running_jobs[job_id]["message"] = "Pipeline completed"
         running_jobs[job_id]["result"] = {
             "results": all_results,
             "summary": compute_summary(all_results),
+            "pipeline_status": orchestrator.get_status(),
+            "signals": orchestrator.get_signals(),
+            "allocation": orchestrator.get_allocation(),
             "timestamp": datetime.now().isoformat()
         }
-        
+
         # Cache results
         results_cache[job_id] = running_jobs[job_id]["result"]
-        
+
     except Exception as e:
         running_jobs[job_id]["status"] = "failed"
         running_jobs[job_id]["message"] = str(e)
@@ -676,6 +666,394 @@ async def get_model_performance():
     return {"models": available_models, "timestamp": datetime.now().isoformat()}
 
 
+# ==================== UNIFIED PIPELINE ENDPOINTS ====================
+
+@app.post("/api/v1/pipeline/run")
+async def run_pipeline(request: PipelineRunRequest, background_tasks: BackgroundTasks):
+    """Start full 8-step pipeline (background execution)."""
+    import config as cfg
+
+    job_id = f"pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+    # Determine symbols from request
+    symbols = request.symbols or []
+    if request.sectors:
+        # Add stocks from selected sectors
+        for sector in request.sectors:
+            sector_stocks = [s for s, sec in cfg.STOCK_SECTOR_MAP.items() if sec == sector]
+            symbols.extend(sector_stocks)
+        symbols = list(set(symbols))  # Dedupe
+
+    if not symbols:
+        symbols = cfg.ALL_STOCKS[:10]  # Default to first 10
+
+    # Validate symbols
+    invalid = [s for s in symbols if s not in cfg.ALL_STOCKS]
+    if invalid:
+        raise HTTPException(status_code=400, detail=f"Invalid symbols: {invalid}")
+
+    running_jobs[job_id] = {
+        "status": "pending",
+        "progress": 0,
+        "message": "Initializing pipeline...",
+        "symbols": symbols,
+        "capital": request.capital,
+        "config": {
+            "optimization_method": request.optimization_method,
+            "n_holdings": request.n_holdings,
+            "start_date": request.start_date
+        },
+        "steps": [],
+        "result": None
+    }
+
+    background_tasks.add_task(
+        execute_pipeline,
+        job_id,
+        symbols,
+        request.capital,
+        request.optimization_method,
+        request.n_holdings,
+        request.start_date,
+        request.force_download,
+        request.models_to_train
+    )
+
+    return {"job_id": job_id, "status": "started", "symbols": symbols}
+
+
+async def execute_pipeline(
+    job_id: str,
+    symbols: List[str],
+    capital: float,
+    optimization_method: str,
+    n_holdings: int,
+    start_date: str,
+    force_download: bool,
+    models_to_train: Optional[List[str]]
+):
+    """Execute full pipeline in background."""
+    try:
+        running_jobs[job_id]["status"] = "running"
+
+        def progress_cb(step_status):
+            step_info = {
+                "step": step_status.step_number,
+                "name": step_status.name,
+                "status": step_status.status,
+                "duration": step_status.duration_seconds,
+                "details": step_status.details
+            }
+            # Update steps list
+            steps = running_jobs[job_id].get("steps", [])
+            # Replace or append step
+            existing = [i for i, s in enumerate(steps) if s["step"] == step_status.step_number]
+            if existing:
+                steps[existing[0]] = step_info
+            else:
+                steps.append(step_info)
+            running_jobs[job_id]["steps"] = steps
+            running_jobs[job_id]["message"] = f"Step {step_status.step_number}/8: {step_status.name}"
+            running_jobs[job_id]["progress"] = int((step_status.step_number / 8) * 100)
+
+        orchestrator = UnifiedOrchestrator(
+            symbols=symbols,
+            initial_capital=capital,
+            paper_trading=True,
+            progress_callback=progress_cb
+        )
+
+        pipeline_result = orchestrator.run_pipeline(
+            optimization_method=optimization_method,
+            n_holdings=n_holdings,
+            start_date=start_date,
+            force_download=force_download,
+            models_to_train=models_to_train
+        )
+
+        # Store orchestrator
+        pipeline_orchestrators[job_id] = orchestrator
+
+        running_jobs[job_id]["status"] = pipeline_result.status
+        running_jobs[job_id]["progress"] = 100
+        running_jobs[job_id]["message"] = f"Pipeline {pipeline_result.status}"
+        running_jobs[job_id]["result"] = sanitize_dict({
+            "backtest_results": orchestrator.get_backtest_results(),
+            "signals": orchestrator.get_signals(),
+            "allocation": orchestrator.get_allocation(),
+            "pipeline_status": orchestrator.get_status(),
+            "timestamp": datetime.now().isoformat()
+        })
+
+        results_cache[job_id] = running_jobs[job_id]["result"]
+
+    except Exception as e:
+        running_jobs[job_id]["status"] = "failed"
+        running_jobs[job_id]["message"] = str(e)
+
+
+@app.get("/api/v1/pipeline/{job_id}/status")
+async def get_pipeline_status(job_id: str):
+    """Get per-step progress with details for a pipeline job."""
+    if job_id not in running_jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job = running_jobs[job_id]
+
+    # If orchestrator exists, get live status
+    if job_id in pipeline_orchestrators:
+        orchestrator = pipeline_orchestrators[job_id]
+        status = orchestrator.get_status()
+        return sanitize_dict({
+            "job_id": job_id,
+            "status": job.get("status"),
+            "progress": job.get("progress", 0),
+            "message": job.get("message", ""),
+            "symbols": job.get("symbols", []),
+            "config": job.get("config", {}),
+            "steps": status.get("steps", []),
+            "current_step": status.get("current_step", 0),
+            "total_steps": status.get("total_steps", 8),
+            "timestamp": datetime.now().isoformat(),
+            "result": job.get("result")
+        })
+
+    return sanitize_dict({
+        "job_id": job_id,
+        "status": job.get("status"),
+        "progress": job.get("progress", 0),
+        "message": job.get("message", ""),
+        "symbols": job.get("symbols", []),
+        "config": job.get("config", {}),
+        "steps": job.get("steps", []),
+        "timestamp": datetime.now().isoformat(),
+        "result": job.get("result")
+    })
+
+
+@app.get("/api/v1/stock/{symbol}/analysis")
+async def get_stock_analysis(symbol: str):
+    """Get full analysis for a stock: factors + ML + backtest + sentiment."""
+    import config as cfg
+
+    if symbol not in cfg.ALL_STOCKS and symbol not in AVAILABLE_STOCKS:
+        raise HTTPException(status_code=404, detail=f"Stock {symbol} not found")
+
+    analysis = {
+        "symbol": symbol,
+        "sector": cfg.STOCK_SECTOR_MAP.get(symbol, "Other"),
+        "timestamp": datetime.now().isoformat()
+    }
+
+    # Get sentiment
+    try:
+        engine = FastSentimentEngine()
+        scores = engine.get_sentiment_scores(symbol)
+        analysis["sentiment"] = sanitize_dict({
+            "score": scores.get('current', 0),
+            "avg_7d": scores.get('avg_7d', 0),
+            "bullish_ratio": scores.get('bullish_ratio', 0),
+            "bearish_ratio": scores.get('bearish_ratio', 0),
+            "news_count": scores.get('news_count', 0)
+        })
+    except Exception as e:
+        analysis["sentiment"] = {"error": str(e)}
+
+    # Get from any completed pipeline that has this symbol
+    for job_id, orchestrator in pipeline_orchestrators.items():
+        if symbol in orchestrator.features_cache:
+            # Factor scores
+            for fs in orchestrator.factor_scores:
+                if fs.symbol == symbol:
+                    analysis["factors"] = sanitize_dict({
+                        "value": fs.value_score,
+                        "momentum": fs.momentum_score,
+                        "quality": fs.quality_score,
+                        "low_vol": fs.low_vol_score,
+                        "sentiment": fs.sentiment_score,
+                        "combined": fs.combined_score
+                    })
+                    break
+
+            # Backtest results
+            if symbol in orchestrator.backtest_results:
+                analysis["backtest"] = sanitize_dict(orchestrator.backtest_results[symbol])
+
+            # Signals
+            if orchestrator.signals and symbol in orchestrator.signals:
+                analysis["signal"] = sanitize_dict(orchestrator.signals[symbol])
+
+            break
+
+    return analysis
+
+
+@app.get("/api/v1/portfolio/current")
+async def get_current_portfolio():
+    """Get current allocation, sector weights, and signals from latest pipeline."""
+    import config as cfg
+
+    # Find most recent completed pipeline
+    latest_orchestrator = None
+    latest_job_id = None
+    for job_id in sorted(pipeline_orchestrators.keys(), reverse=True):
+        orch = pipeline_orchestrators[job_id]
+        if orch.pipeline_status and orch.pipeline_status.status == 'completed':
+            latest_orchestrator = orch
+            latest_job_id = job_id
+            break
+
+    if not latest_orchestrator:
+        return {
+            "message": "No completed pipeline found. Run a pipeline first.",
+            "allocation": {},
+            "signals": {},
+            "timestamp": datetime.now().isoformat()
+        }
+
+    allocation = latest_orchestrator.get_allocation()
+    signals = latest_orchestrator.get_signals()
+
+    # Compute sector weights
+    sector_weights = {}
+    if allocation and 'weights' in allocation:
+        for symbol, weight in allocation['weights'].items():
+            sector = cfg.STOCK_SECTOR_MAP.get(symbol, 'Other')
+            sector_weights[sector] = sector_weights.get(sector, 0) + weight
+
+    return sanitize_dict({
+        "job_id": latest_job_id,
+        "allocation": allocation,
+        "sector_weights": sector_weights,
+        "signals": signals,
+        "holdings_count": len(allocation.get('weights', {})) if allocation else 0,
+        "timestamp": datetime.now().isoformat()
+    })
+
+
+@app.post("/api/v1/portfolio/rebalance")
+async def rebalance_portfolio(request: RebalanceRequest):
+    """Auto-execute trades to match target weights from pipeline allocation."""
+    global wallet_state
+    import config as cfg
+
+    # Get target weights
+    target_weights = request.target_weights
+    if not target_weights:
+        # Use latest pipeline allocation
+        for job_id in sorted(pipeline_orchestrators.keys(), reverse=True):
+            orch = pipeline_orchestrators[job_id]
+            allocation = orch.get_allocation()
+            if allocation and 'weights' in allocation:
+                target_weights = allocation['weights']
+                break
+
+    if not target_weights:
+        raise HTTPException(status_code=400, detail="No target weights provided and no pipeline allocation found")
+
+    # Calculate current portfolio value
+    update_portfolio_prices()
+    total_value = wallet_state["balance"] + sum(
+        h.get("current_value", h["shares"] * h["avg_price"])
+        for h in wallet_state["portfolio"].values()
+    )
+
+    trades_executed = []
+
+    # Calculate target positions
+    for symbol, target_weight in target_weights.items():
+        target_value = total_value * target_weight
+        current_value = 0
+        current_shares = 0
+
+        if symbol in wallet_state["portfolio"]:
+            holding = wallet_state["portfolio"][symbol]
+            current_shares = holding["shares"]
+            current_value = holding.get("current_value", current_shares * holding["avg_price"])
+
+        diff_value = target_value - current_value
+
+        # Get current price
+        price = get_current_price(symbol)
+        if price <= 0:
+            continue
+
+        shares_diff = int(diff_value / price)
+
+        if shares_diff > 0:
+            # Buy
+            cost = shares_diff * price
+            if cost <= wallet_state["balance"]:
+                try:
+                    result = await execute_trade(TradeAction(
+                        symbol=symbol, action="buy", quantity=shares_diff
+                    ))
+                    trades_executed.append({"action": "BUY", "symbol": symbol, "shares": shares_diff, "result": result})
+                except Exception as e:
+                    trades_executed.append({"action": "BUY", "symbol": symbol, "shares": shares_diff, "error": str(e)})
+        elif shares_diff < 0:
+            # Sell
+            shares_to_sell = min(abs(shares_diff), current_shares)
+            if shares_to_sell > 0:
+                try:
+                    result = await execute_trade(TradeAction(
+                        symbol=symbol, action="sell", quantity=shares_to_sell
+                    ))
+                    trades_executed.append({"action": "SELL", "symbol": symbol, "shares": shares_to_sell, "result": result})
+                except Exception as e:
+                    trades_executed.append({"action": "SELL", "symbol": symbol, "shares": shares_to_sell, "error": str(e)})
+
+    return sanitize_dict({
+        "status": "completed",
+        "trades_executed": len(trades_executed),
+        "trades": trades_executed,
+        "new_balance": wallet_state["balance"],
+        "timestamp": datetime.now().isoformat()
+    })
+
+
+@app.get("/api/v1/models/comparison")
+async def get_models_comparison():
+    """Compare all model metrics side by side from pipeline results."""
+    comparisons = []
+
+    for job_id, orchestrator in pipeline_orchestrators.items():
+        if orchestrator.pipeline_status and orchestrator.pipeline_status.status == 'completed':
+            # Get ML training step details
+            for step in orchestrator.pipeline_status.steps:
+                if step.name == 'ML Model Training' and step.details:
+                    comparisons.append({
+                        "job_id": job_id,
+                        "symbols_count": len(orchestrator.symbols),
+                        "samples_trained": step.details.get('samples_trained', 0),
+                        "features_used": step.details.get('features_used', 0),
+                        "metrics": step.details.get('metrics', {})
+                    })
+
+    # Also aggregate backtest metrics across jobs
+    backtest_summary = {}
+    for job_id, orchestrator in pipeline_orchestrators.items():
+        results = orchestrator.get_backtest_results()
+        for symbol, r in results.items():
+            if 'error' not in r:
+                if symbol not in backtest_summary:
+                    backtest_summary[symbol] = []
+                backtest_summary[symbol].append({
+                    "job_id": job_id,
+                    "return": r.get('total_return', 0),
+                    "sharpe": r.get('sharpe_ratio', 0),
+                    "win_rate": r.get('win_rate', 0),
+                    "trades": r.get('total_trades', 0)
+                })
+
+    return sanitize_dict({
+        "model_training": comparisons,
+        "backtest_by_symbol": backtest_summary,
+        "total_pipelines": len(comparisons),
+        "timestamp": datetime.now().isoformat()
+    })
+
+
 # ==================== WALLET & PORTFOLIO ENDPOINTS ====================
 
 class TradeAction(BaseModel):
@@ -929,30 +1307,32 @@ async def execute_trade(trade: TradeAction):
 
 @app.post("/api/v1/wallet/auto-trade")
 async def auto_trade_from_signal(symbol: str):
-    """Auto-execute trade based on AI model signal."""
+    """Auto-execute trade based on AI model signal from latest pipeline."""
     global wallet_state
-    
+
     if symbol not in AVAILABLE_STOCKS:
         raise HTTPException(status_code=400, detail=f"Invalid symbol: {symbol}")
-    
+
     try:
-        # Get prediction from orchestrator
-        orchestrator = TradingOrchestrator(
-            symbols=[symbol],
-            paper_trading=True,
-            initial_capital=wallet_state["balance"]
-        )
-        
-        # Get current prediction
-        orchestrator.collect_data(days=100, force_download=True)
-        orchestrator.compute_features()
-        
-        signal = orchestrator.get_signal(symbol)
-        
+        # First check if we have a signal from an existing pipeline
+        signal = None
+        for job_id in sorted(pipeline_orchestrators.keys(), reverse=True):
+            orchestrator = pipeline_orchestrators[job_id]
+            signals = orchestrator.get_signals()
+            if signals and symbol in signals:
+                signal = signals[symbol]
+                break
+
+        if not signal:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No signal found for {symbol}. Run a pipeline first that includes this symbol."
+            )
+
         current_price = get_current_price(symbol)
         if current_price <= 0:
             raise HTTPException(status_code=400, detail="Could not fetch price")
-        
+
         result = {
             "symbol": symbol,
             "signal": signal,
@@ -960,13 +1340,13 @@ async def auto_trade_from_signal(symbol: str):
             "action_taken": None,
             "timestamp": datetime.now().isoformat()
         }
-        
+
         # Execute based on signal
         if signal.get("action") == "BUY" and signal.get("confidence", 0) > current_config.get("min_confidence", 0.55):
             # Calculate position size based on config
             max_position = wallet_state["balance"] * current_config.get("max_position_pct", 0.15)
             quantity = int(max_position / current_price)
-            
+
             if quantity > 0 and wallet_state["balance"] >= quantity * current_price:
                 trade_result = await execute_trade(TradeAction(
                     symbol=symbol,
@@ -978,7 +1358,7 @@ async def auto_trade_from_signal(symbol: str):
             else:
                 result["executed"] = False
                 result["reason"] = "Insufficient balance or position too small"
-                
+
         elif signal.get("action") == "SELL" and symbol in wallet_state["portfolio"]:
             trade_result = await execute_trade(TradeAction(
                 symbol=symbol,
@@ -986,11 +1366,11 @@ async def auto_trade_from_signal(symbol: str):
             ))
             result["action_taken"] = trade_result
             result["executed"] = True
-            
+
         else:
             result["executed"] = False
             result["reason"] = f"Signal is {signal.get('action', 'HOLD')} - no action needed"
-        
+
         return sanitize_dict(result)
         
     except Exception as e:

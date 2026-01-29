@@ -1,0 +1,185 @@
+{
+  "config": {
+    "symbols": [
+      "HDFCBANK",
+      "ICICIBANK",
+      "KOTAKBANK",
+      "SBIN",
+      "AXISBANK"
+    ],
+    "start_date": "2022-01-01",
+    "end_date": "2026-01-25",
+    "n_holdings": 15,
+    "initial_capital": 1000000,
+    "optimization_method": "risk_parity"
+  },
+  "steps": {
+    "data_collection": {
+      "symbols_collected": 5,
+      "market_data_collected": 4,
+      "quality_report": {
+        "summary": {
+          "total_symbols": 5,
+          "total_rows": 5010,
+          "avg_rows_per_symbol": 1002.0,
+          "unique_dates": 1002,
+          "date_range": "2022-01-04 00:00:00 to 2026-01-23 00:00:00"
+        }
+      }
+    },
+    "feature_engineering": {
+      "features_computed": 0,
+      "symbols_processed": 0,
+      "summary": {
+        "total_features": 0,
+        "feature_categories": {
+          "trend": 15,
+          "momentum": 12,
+          "volatility": 10,
+          "volume": 8,
+          "price_patterns": 10,
+          "market_relative": 5,
+          "time_based": 5,
+          "sentiment_proxy": 3
+        },
+        "symbols_processed": 5,
+        "computation_stats": {
+          "HDFCBANK": {
+            "success": false,
+            "error": "'numpy.ndarray' object has no attribute 'rolling'"
+          },
+          "ICICIBANK": {
+            "success": false,
+            "error": "'numpy.ndarray' object has no attribute 'rolling'"
+          },
+          "KOTAKBANK": {
+            "success": false,
+            "error": "'numpy.ndarray' object has no attribute 'rolling'"
+          },
+          "SBIN": {
+            "success": false,
+            "error": "'numpy.ndarray' object has no attribute 'rolling'"
+          },
+          "AXISBANK": {
+            "success": false,
+            "error": "'numpy.ndarray' object has no attribute 'rolling'"
+          }
+        }
+      }
+    },
+    "factor_analysis": {
+      "stocks_analyzed": 5,
+      "factors": [
+        "value",
+        "momentum",
+        "quality",
+        "low_vol",
+        "sentiment"
+      ],
+      "weights": {
+        "value": 0.2,
+        "momentum": 0.2,
+        "quality": 0.2,
+        "low_vol": 0.2,
+        "sentiment": 0.2
+      },
+      "top_stocks": [
+        {
+          "symbol": "SBIN",
+          "combined_score": 0.6098025053956269,
+          "combined_rank": 1,
+          "value_score": 0.13890995658752373,
+          "momentum_score": 0.9901649161599411,
+          "quality_score": 0.5980127181533679,
+          "low_vol_score": 0.7660943292577549,
+          "sentiment_score": 0.5558306068195465
+        },
+        {
+          "symbol": "AXISBANK",
+          "combined_score": 0.5611473984042747,
+          "combined_rank": 2,
+          "value_score": 0.28353421616808233,
+          "momentum_score": 0.79803579586937,
+          "quality_score": 0.559165227307371,
+          "low_vol_score": 0.7469529538669819,
+          "sentiment_score": 0.41804879880956847
+        },
+        {
+          "symbol": "KOTAKBANK",
+          "combined_score": 0.5440486281278217,
+          "combined_rank": 3,
+          "value_score": 0.3355927676013953,
+          "momentum_score": 0.6412734231340803,
+          "quality_score": 0.49428409002037216,
+          "low_vol_score": 0.7550421385602208,
+          "sentiment_score": 0.4940507213230398
+        },
+        {
+          "symbol": "HDFCBANK",
+          "combined_score": 0.515652772588964,
+          "combined_rank": 4,
+          "value_score": 0.3862864374629051,
+          "momentum_score": 0.5234628463976596,
+          "quality_score": 0.589909161360315,
+          "low_vol_score": 0.7773660183176714,
+          "sentiment_score": 0.30123939940626887
+        },
+        {
+          "symbol": "ICICIBANK",
+          "combined_score": 0.476330060911669,
+          "combined_rank": 5,
+          "value_score": 0.3499261284725668,
+          "momentum_score": 0.4400727479882149,
+          "quality_score": 0.5200723167082358,
+          "low_vol_score": 0.7638815782226926,
+          "sentiment_score": 0.30769753316663484
+        }
+      ]
+    },
+    "portfolio_optimization": {
+      "method": "risk_parity",
+      "expected_return": 0.14266952580271472,
+      "expected_volatility": 0.1642167146289587,
+      "sharpe_ratio": 0.5643123844737603,
+      "n_positions": 5,
+      "weights": {
+        "SBIN": 0.2,
+        "AXISBANK": 0.2,
+        "KOTAKBANK": 0.2,
+        "HDFCBANK": 0.2,
+        "ICICIBANK": 0.2
+      },
+      "risk_contributions": {
+        "SBIN": 0.22116130057957906,
+        "AXISBANK": 0.22406755132317485,
+        "KOTAKBANK": 0.19177712514354173,
+        "HDFCBANK": 0.17794268799909918,
+        "ICICIBANK": 0.1850513349546051
+      }
+    },
+    "backtest": {
+      "total_return": 0.6640020455050395,
+      "annual_return": 0.1366310941257638,
+      "benchmark_return": 0.4068126193468218,
+      "excess_return": 0.034318938361892454,
+      "volatility": 0.16025374528928363,
+      "downside_volatility": 0.11758728007166587,
+      "max_drawdown": 0.14657926589208342,
+      "max_drawdown_duration": 129,
+      "sharpe_ratio": 0.5405870169797331,
+      "sortino_ratio": 0.7367386512636808,
+      "calmar_ratio": 0.9321311120930036,
+      "information_ratio": 0.38897930756657423,
+      "n_trades": 18,
+      "n_rebalances": 13,
+      "win_rate": 0.5625,
+      "profit_factor": 1.9893625496231782,
+      "var_95": -0.01485614392564727,
+      "cvar_95": -0.022285025676113297,
+      "final_value": 1662006.6947088472,
+      "initial_capital": 1000000
+    }
+  },
+  "errors": [],
+  "success": true
+}

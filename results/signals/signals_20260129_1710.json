@@ -1,0 +1,72 @@
+{
+  "HDFCBANK": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.491,
+    "expected_return": -0.000251,
+    "current_price": 926.4
+  },
+  "ICICIBANK": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.498,
+    "expected_return": -0.000251,
+    "current_price": 1361.4
+  },
+  "KOTAKBANK": {
+    "action": "SELL",
+    "confidence": 0.569,
+    "direction_probability": 0.465,
+    "expected_return": -0.000251,
+    "current_price": 408.7
+  },
+  "SBIN": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.496,
+    "expected_return": -0.000251,
+    "current_price": 1053.15
+  },
+  "AXISBANK": {
+    "action": "SELL",
+    "confidence": 0.595,
+    "direction_probability": 0.453,
+    "expected_return": -0.000251,
+    "current_price": 1315.8
+  },
+  "INDUSINDBK": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.484,
+    "expected_return": -0.000251,
+    "current_price": 894.75
+  },
+  "BAJFINANCE": {
+    "action": "SELL",
+    "confidence": 0.573,
+    "direction_probability": 0.463,
+    "expected_return": -0.000251,
+    "current_price": 914.7
+  },
+  "BAJAJFINSV": {
+    "action": "SELL",
+    "confidence": 0.574,
+    "direction_probability": 0.463,
+    "expected_return": -0.000251,
+    "current_price": 1917.7
+  },
+  "PNB": {
+    "action": "SELL",
+    "confidence": 0.544,
+    "direction_probability": 0.478,
+    "expected_return": -0.000251,
+    "current_price": 122.95
+  },
+  "BANKBARODA": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.498,
+    "expected_return": -0.000251,
+    "current_price": 302.0
+  }
+}

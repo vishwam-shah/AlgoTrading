@@ -1,0 +1,43 @@
+{
+  "experiment_id": "EXP_20260125_1857_f045b91f",
+  "name": "Backtest 20260125",
+  "description": "Factor-based strategy with risk_parity optimization",
+  "timestamp": "2026-01-25 18:57:06.186715",
+  "status": "running",
+  "config": {
+    "strategy_type": "factor",
+    "factors": [
+      "value",
+      "momentum",
+      "quality",
+      "low_vol"
+    ],
+    "factor_weights": {
+      "value": 0.25,
+      "momentum": 0.25,
+      "quality": 0.25,
+      "low_vol": 0.25
+    },
+    "universe": "Custom (1 stocks)",
+    "n_holdings": 15,
+    "optimization_method": "risk_parity",
+    "rebalance_frequency": "monthly",
+    "max_position": 0.1,
+    "max_sector": 0.3,
+    "start_date": "2022-01-01",
+    "end_date": "2026-01-25",
+    "initial_capital": 100000.0,
+    "transaction_cost": 0.001,
+    "model_type": null,
+    "model_params": null,
+    "features": null
+  },
+  "results": null,
+  "validation": null,
+  "conclusion": "",
+  "next_steps": "",
+  "tags": [
+    "backtest",
+    "risk_parity"
+  ]
+}

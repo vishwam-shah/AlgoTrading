@@ -1,0 +1,37 @@
+{
+  "MARUTI": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.502,
+    "expected_return": -0.000411,
+    "current_price": 15245.0
+  },
+  "TATAMOTORS": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.499,
+    "expected_return": -0.000411,
+    "current_price": 356.45
+  },
+  "M&M": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.5,
+    "expected_return": -0.000411,
+    "current_price": 3393.5
+  },
+  "BAJAJ-AUTO": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.5,
+    "expected_return": -0.000411,
+    "current_price": 9492.0
+  },
+  "HEROMOTOCO": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.5,
+    "expected_return": -0.000411,
+    "current_price": 5380.0
+  }
+}
