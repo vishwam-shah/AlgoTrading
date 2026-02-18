@@ -31,6 +31,7 @@ interface ProgressProps {
 
 export const ProgressComponent: React.FC<ProgressProps> = ({ isRunning, pipelineStatus }) => {
     if (!isRunning || !pipelineStatus) return null;
+    const steps = Array.isArray(pipelineStatus.steps) ? pipelineStatus.steps : [];
 
     return (
         <AnimatePresence>
@@ -60,8 +61,8 @@ export const ProgressComponent: React.FC<ProgressProps> = ({ isRunning, pipeline
                     </div>
 
                     {/* Step Indicators */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
-                        {pipelineStatus.steps.map((step) => {
+                    <div className={`grid grid-cols-2 md:grid-cols-4 ${steps.length <= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-8'} gap-2`}>
+                        {steps.map((step) => {
                             const isActive = step.step === pipelineStatus.current_step;
                             const isCompleted = step.status === 'completed';
                             const isFailed = step.status === 'failed';

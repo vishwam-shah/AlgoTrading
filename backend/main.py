@@ -12,7 +12,9 @@ import json
 import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
-from pathlib import Path
+from fastapi import Path
+from pathlib import Path as FilePath  # Only use this alias for file paths, not FastAPI params
+
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -82,6 +84,7 @@ app.add_middleware(
 running_jobs: Dict[str, Dict] = {}
 results_cache: Dict[str, Dict] = {}
 paper_trading_state: Dict[str, Dict] = {}
+v3_jobs: Dict[str, Dict] = {}
 websocket_connections: List[WebSocket] = []
 
 # Wallet and Portfolio State (persistent during server runtime)
@@ -222,21 +225,39 @@ async def root():
 
 @app.get("/api/v1/stocks")
 async def get_available_stocks():
-    """Get list of available stocks for trading with sector information."""
-    import config
+    """Get list of available stocks for trading."""
+    stock_info = {
+        "SBIN": {"name": "State Bank of India", "sector": "Banking"},
+        "HDFCBANK": {"name": "HDFC Bank", "sector": "Banking"},
+        "ICICIBANK": {"name": "ICICI Bank", "sector": "Banking"},
+        "AXISBANK": {"name": "Axis Bank", "sector": "Banking"},
+        "KOTAKBANK": {"name": "Kotak Mahindra Bank", "sector": "Banking"},
+        "TCS": {"name": "Tata Consultancy Services", "sector": "IT"},
+        "INFY": {"name": "Infosys", "sector": "IT"},
+        "WIPRO": {"name": "Wipro", "sector": "IT"},
+        "HCLTECH": {"name": "HCL Technologies", "sector": "IT"},
+        "TECHM": {"name": "Tech Mahindra", "sector": "IT"},
+        "RELIANCE": {"name": "Reliance Industries", "sector": "Energy"},
+        "TATAMOTORS": {"name": "Tata Motors", "sector": "Auto"},
+        "TATASTEEL": {"name": "Tata Steel", "sector": "Metals"},
+        "ITC": {"name": "ITC Limited", "sector": "FMCG"},
+        "LT": {"name": "Larsen & Toubro", "sector": "Infrastructure"},
+        "BHARTIARTL": {"name": "Bharti Airtel", "sector": "Telecom"},
+        "HINDUNILVR": {"name": "Hindustan Unilever", "sector": "FMCG"},
+        "MARUTI": {"name": "Maruti Suzuki", "sector": "Auto"},
+        "BAJFINANCE": {"name": "Bajaj Finance", "sector": "Finance"},
+        "ADANIENT": {"name": "Adani Enterprises", "sector": "Conglomerate"},
+        "ADANIPORTS": {"name": "Adani Ports", "sector": "Infrastructure"},
+        "ASIANPAINT": {"name": "Asian Paints", "sector": "Paints"},
+        "SUNPHARMA": {"name": "Sun Pharma", "sector": "Pharma"},
+    }
     
-    # Build stock list from config.STOCK_SECTOR_MAP
-    stocks = []
-    for symbol in config.ALL_STOCKS:
-        sector = config.STOCK_SECTOR_MAP.get(symbol, 'Other')
-        stocks.append({
-            "symbol": symbol,
-            "name": symbol,  # Could be enhanced with company names
-            "sector": sector
-        })
-    
-    return {"stocks": stocks}
-
+    return {
+        "stocks": [
+            {"symbol": s, **stock_info.get(s, {"name": s, "sector": "Other"})}
+            for s in AVAILABLE_STOCKS
+        ]
+    }
 
 
 @app.get("/api/v1/sentiment/{symbol}")
@@ -311,7 +332,12 @@ async def run_backtest(request: BacktestRequest, background_tasks: BackgroundTas
 
 async def execute_backtest(job_id: str, symbols: List[str], capital: float, days: int):
     """Execute backtest in background using UnifiedOrchestrator pipeline."""
+    import logging
     try:
+        # Log state before pipeline run
+        logging.basicConfig(level=logging.INFO)
+        logging.info(f"[Pipeline Start] job_id={job_id} running_jobs={running_jobs.get(job_id)} results_cache={results_cache.get(job_id)} pipeline_orchestrators={pipeline_orchestrators.get(job_id)}")
+
         running_jobs[job_id]["status"] = "running"
         running_jobs[job_id]["message"] = "Running pipeline..."
 
@@ -372,9 +398,13 @@ async def execute_backtest(job_id: str, symbols: List[str], capital: float, days
         # Cache results
         results_cache[job_id] = running_jobs[job_id]["result"]
 
+        # Log state after pipeline run
+        logging.info(f"[Pipeline End] job_id={job_id} running_jobs={running_jobs.get(job_id)} results_cache={results_cache.get(job_id)} pipeline_orchestrators={pipeline_orchestrators.get(job_id)}")
+
     except Exception as e:
         running_jobs[job_id]["status"] = "failed"
         running_jobs[job_id]["message"] = str(e)
+        logging.error(f"[Pipeline Error] job_id={job_id} error={e}")
 
 
 def compute_summary(results: List[Dict]) -> Dict:
@@ -1051,6 +1081,129 @@ async def get_models_comparison():
         "backtest_by_symbol": backtest_summary,
         "total_pipelines": len(comparisons),
         "timestamp": datetime.now().isoformat()
+    })
+
+
+# ==================== V3 PIPELINE ENDPOINTS ====================
+
+class V3RunRequest(BaseModel):
+    symbols: List[str] = []
+    capital: float = 100000
+
+
+@app.post("/api/v1/v3/run")
+async def run_v3(request: V3RunRequest, background_tasks: BackgroundTasks):
+    """Start V3 regression pipeline (background execution)."""
+    job_id = f"v3_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+    symbols = request.symbols
+    if not symbols:
+        symbols = ['SBIN', 'HDFCBANK', 'ICICIBANK', 'TCS', 'INFY']
+
+    v3_jobs[job_id] = {
+        "status": "pending",
+        "progress": 0,
+        "message": "Initializing V3 pipeline...",
+        "symbols": symbols,
+        "steps": [],
+        "current_step": 0,
+        "total_steps": 4,
+        "result": None,
+    }
+
+    background_tasks.add_task(execute_v3, job_id, symbols)
+    return {"job_id": job_id, "status": "started", "symbols": symbols}
+
+
+def execute_v3(job_id: str, symbols: List[str]):
+    """Execute V3 pipeline in background."""
+    import logging
+    try:
+        v3_jobs[job_id]["status"] = "running"
+
+        # V3 step names
+        v3_step_names = {
+            1: "Data Collection",
+            2: "Feature Engineering",
+            3: "Model Training",
+            4: "Evaluation",
+        }
+
+        def progress_cb(step: int, total: int, message: str):
+            v3_jobs[job_id]["current_step"] = step
+            v3_jobs[job_id]["total_steps"] = total
+            v3_jobs[job_id]["progress"] = int((step / total) * 100)
+            v3_jobs[job_id]["message"] = message
+
+            # Update steps list
+            step_info = {
+                "step": step,
+                "name": v3_step_names.get(step, f"Step {step}"),
+                "status": "running",
+                "duration": 0,
+                "details": message,
+            }
+            steps = v3_jobs[job_id].get("steps", [])
+            # Mark previous steps completed
+            for s in steps:
+                if s["step"] < step:
+                    s["status"] = "completed"
+            existing = [i for i, s in enumerate(steps) if s["step"] == step]
+            if existing:
+                steps[existing[0]] = step_info
+            else:
+                steps.append(step_info)
+            v3_jobs[job_id]["steps"] = steps
+
+        # Import and run V3 pipeline
+        from V3.pipeline import run_pipeline_api
+
+        result = run_pipeline_api(
+            symbols=symbols,
+            progress_callback=progress_cb,
+        )
+
+        # Mark all steps completed
+        for s in v3_jobs[job_id].get("steps", []):
+            s["status"] = "completed"
+
+        v3_jobs[job_id]["status"] = "completed"
+        v3_jobs[job_id]["progress"] = 100
+        v3_jobs[job_id]["message"] = "V3 pipeline completed"
+        v3_jobs[job_id]["result"] = sanitize_dict({
+            "backtest_results": result["backtest_results"],
+            "signals": result["signals"],
+            "allocation": {},
+            "pipeline_status": {"status": "completed"},
+            "timestamp": datetime.now().isoformat(),
+        })
+
+        results_cache[job_id] = v3_jobs[job_id]["result"]
+
+    except Exception as e:
+        v3_jobs[job_id]["status"] = "failed"
+        v3_jobs[job_id]["message"] = str(e)
+        logging.error(f"[V3 Pipeline Error] job_id={job_id} error={e}")
+
+
+@app.get("/api/v1/v3/{job_id}/status")
+async def get_v3_status(job_id: str = Path(...)):
+    """Get V3 pipeline status with step details."""
+    if job_id not in v3_jobs:
+        raise HTTPException(status_code=404, detail="V3 job not found")
+
+    job = v3_jobs[job_id]
+    return sanitize_dict({
+        "job_id": job_id,
+        "status": job.get("status"),
+        "progress": job.get("progress", 0),
+        "message": job.get("message", ""),
+        "symbols": job.get("symbols", []),
+        "steps": job.get("steps", []),
+        "current_step": job.get("current_step", 0),
+        "total_steps": job.get("total_steps", 4),
+        "timestamp": datetime.now().isoformat(),
+        "result": job.get("result"),
     })
 
 

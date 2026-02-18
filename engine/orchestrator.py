@@ -44,6 +44,12 @@ from engine.signal_generator import SignalGenerator
 from engine.broker import create_broker
 from engine.csv_logger import ProfessionalCSVLogger  # NEW: CSV Logger
 
+# Phase 1: Strategy Optimization Components
+from engine.entry_optimizer import EntryOptimizer
+from engine.exit_optimizer import ExitOptimizer
+from engine.position_sizer import PositionSizer
+from engine.risk_manager import RiskManager
+
 
 @dataclass
 class StepStatus:
@@ -112,8 +118,15 @@ class UnifiedOrchestrator:
         self.signal_generator = SignalGenerator()
         self.broker = None
         self.csv_logger = ProfessionalCSVLogger()  # NEW: Initialize CSV logger
+        
+        # Phase 1: Strategy Optimization Components
+        self.entry_optimizer = EntryOptimizer(min_confidence=0.60, min_quality_score=0.70)
+        self.exit_optimizer = ExitOptimizer(atr_multiplier=1.5, max_holding_days=5)
+        self.position_sizer = PositionSizer(total_capital=initial_capital, max_position_pct=0.10)
+        self.risk_manager = RiskManager(initial_capital=initial_capital, max_risk_per_trade=0.01)
 
         # State / caches
+        self.run_id = datetime.now().strftime('%Y%m%d_%H%M%S')  # Unique run identifier
         self.data_cache: Dict[str, pd.DataFrame] = {}
         self.market_data: Dict[str, pd.DataFrame] = {}
         self.features_cache: Dict[str, pd.DataFrame] = {}
@@ -138,6 +151,59 @@ class UnifiedOrchestrator:
         """Notify progress callback."""
         if self.progress_callback:
             self.progress_callback(step)
+
+
+    def _create_pipeline_summary_csv(self, status: PipelineStatus):
+        """Create a comprehensive summary CSV combining all pipeline steps."""
+        summary_dir = os.path.join(self.results_dir, 'pipeline_summaries')
+        os.makedirs(summary_dir, exist_ok=True)
+        
+        # Collect all step results
+        summary_data = []
+        
+        for step in status.steps:
+            row = {
+                'run_id': self.run_id,
+                'pipeline_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'step_number': step.step_number,
+                'step_name': step.name,
+                'step_status': step.status,
+                'duration_seconds': step.duration_seconds
+            }
+            
+            # Add step-specific metrics
+            if step.details:
+                for key, value in step.details.items():
+                    # Convert nested dicts to strings
+                    if isinstance(value, dict):
+                        row[f'{step.name}_{key}'] = str(value)
+                    elif isinstance(value, (int, float, str)):
+                        row[f'{step.name}_{key}'] = value
+            
+            summary_data.append(row)
+        
+        # Create DataFrame
+        summary_df = pd.DataFrame(summary_data)
+        
+        # Save summary CSV
+        summary_filename = f"pipeline_summary_{self.run_id}.csv"
+        summary_filepath = os.path.join(summary_dir, summary_filename)
+        summary_df.to_csv(summary_filepath, index=False)
+        
+        logger.info(f"✅ Pipeline summary saved -> {summary_filepath}")
+        
+        # Also create a master CSV that appends to history
+        master_filepath = os.path.join(summary_dir, "all_pipeline_runs.csv")
+        
+        # Append to master file
+        if os.path.exists(master_filepath):
+            summary_df.to_csv(master_filepath, mode='a', header=False, index=False)
+        else:
+            summary_df.to_csv(master_filepath, index=False)
+        
+        logger.info(f"✅ Master pipeline history updated -> {master_filepath}")
+        
+        return summary_filepath
 
     def run_pipeline(
         self,
@@ -221,6 +287,9 @@ class UnifiedOrchestrator:
 
             self.pipeline_status.status = 'completed'
             self.pipeline_status.completed_at = datetime.now().isoformat()
+            
+            # Create comprehensive pipeline summary CSV
+            self._create_pipeline_summary_csv(self.pipeline_status)
 
         except Exception as e:
             logger.error(f"Pipeline failed: {e}")
@@ -293,11 +362,29 @@ class UnifiedOrchestrator:
 
         self.data_cache = price_data
         self.market_data = market_data
+        
+        # Save per-stock collected data to CSV
+        data_dir = os.path.join(self.results_dir, 'data_collected')
+        os.makedirs(data_dir, exist_ok=True)
+        
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        for symbol, df in price_data.items():
+            if len(df) > 0:
+                df_save = df.copy()
+                df_save['collection_timestamp'] = timestamp
+                df_save['run_id'] = self.run_id
+                
+                filename = f"{symbol}_{timestamp}.csv"
+                filepath = os.path.join(data_dir, filename)
+                df_save.to_csv(filepath, index=False)
+                logger.info(f"Saved {symbol} data: {len(df)} rows -> {filepath}")
 
         return {
             'symbols_collected': len(price_data),
             'market_indices': len(market_data),
             'total_rows': sum(len(df) for df in price_data.values()),
+            'csv_saved': len(price_data),
             'date_range': {
                 sym: f"{df['timestamp'].iloc[0]} to {df['timestamp'].iloc[-1]}"
                 for sym, df in list(price_data.items())[:3]
@@ -315,11 +402,35 @@ class UnifiedOrchestrator:
                 self.features_cache[symbol] = feature_df
             except Exception as e:
                 logger.error(f"Features failed for {symbol}: {e}")
+        
+        # Save combined features to CSV
+        if self.features_cache:
+            features_dir = os.path.join(self.results_dir, 'features_combined')
+            os.makedirs(features_dir, exist_ok=True)
+            
+            # Combine all features with symbol column
+            combined_dfs = []
+            for symbol, df in self.features_cache.items():
+                df_copy = df.copy()
+                df_copy['symbol'] = symbol
+                df_copy['run_id'] = self.run_id
+                df_copy['feature_engineering_timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                combined_dfs.append(df_copy)
+            
+            combined_features = pd.concat(combined_dfs, ignore_index=True)
+            
+            # Save to CSV
+            filename = f"features_combined_{self.run_id}.csv"
+            filepath = os.path.join(features_dir, filename)
+            combined_features.to_csv(filepath, index=False)
+            
+            logger.info(f"Saved combined features: {len(combined_features)} rows, {len(combined_features.columns)} columns -> {filepath}")
 
         return {
             'symbols_processed': len(self.features_cache),
             'avg_features': int(np.mean([len(df.columns) for df in self.features_cache.values()])) if self.features_cache else 0,
-            'avg_samples': int(np.mean([len(df) for df in self.features_cache.values()])) if self.features_cache else 0
+            'avg_samples': int(np.mean([len(df) for df in self.features_cache.values()])) if self.features_cache else 0,
+            'csv_saved': 1 if self.features_cache else 0
         }
 
     def _step_sentiment_analysis(self) -> Dict:
@@ -377,51 +488,149 @@ class UnifiedOrchestrator:
         }
 
     def _step_ml_training(self, models_to_train: List[str] = None) -> Dict:
-        """Step 5: Train ML models."""
+        """Step 5: Train ML models with proper temporal splits."""
         if not self.features_cache:
             return {'status': 'skipped', 'reason': 'No features available'}
 
-        # Combine all symbol data for training
-        dfs = []
+        # CRITICAL FIX: Split each stock FIRST, then combine training portions only
+        # This prevents mixing recent data from Stock A with old data from Stock B
+        
+        train_dfs = []
+        val_dfs = []
+        test_dfs = []
+        
+        logger.info("Performing per-symbol temporal splits...")
+        
         for sym, df in self.features_cache.items():
             df_copy = df.copy()
             df_copy['_symbol'] = sym
-            dfs.append(df_copy)
-        train_df = pd.concat(dfs, ignore_index=True)
+            
+            # Preserve temporal order with index
+            df_copy = df_copy.reset_index(drop=True)
+            df_copy['_index'] = range(len(df_copy))
+            
+            # 70% train, 15% val, 15% test (chronological)
+            n = len(df_copy)
+            train_end = int(n * 0.70)
+            val_end = int(n * 0.85)
+            
+            train_portion = df_copy.iloc[:train_end]
+            val_portion = df_copy.iloc[train_end:val_end]
+            test_portion = df_copy.iloc[val_end:]
+            
+            if len(train_portion) > 0:
+                train_dfs.append(train_portion)
+            if len(val_portion) > 0:
+                val_dfs.append(val_portion)
+            if len(test_portion) > 0:
+                test_dfs.append(test_portion)
+            
+            logger.info(f"  {sym}: train={len(train_portion)}, val={len(val_portion)}, test={len(test_portion)}")
+        
+        # Combine AFTER splitting
+        train_df = pd.concat(train_dfs, ignore_index=True)
+        val_df = pd.concat(val_dfs, ignore_index=True)
+        
+        logger.info(f"Combined: train={len(train_df)}, val={len(val_df)}")
 
         # Get feature columns
         exclude_cols = ['open', 'high', 'low', 'close', 'volume', 'timestamp',
-                       'date', 'symbol', '_symbol'] + [c for c in train_df.columns if c.startswith('target_')]
+                       'date', 'symbol', '_symbol', '_index'] + [c for c in train_df.columns if c.startswith('target_')]
         feature_cols = [c for c in train_df.columns if c not in exclude_cols]
 
-        X = train_df[feature_cols].values
-        close_return = train_df['target_close_return'].values.copy()
-        close_return = np.nan_to_num(close_return, nan=0.0, posinf=0.0, neginf=0.0)
+        X_train = train_df[feature_cols].values
+        X_val = val_df[feature_cols].values
+        
+        # Prepare targets
+        close_return_train = train_df['target_close_return'].values.copy()
+        close_return_val = val_df['target_close_return'].values.copy()
+        close_return_train = np.nan_to_num(close_return_train, nan=0.0, posinf=0.0, neginf=0.0)
+        close_return_val = np.nan_to_num(close_return_val, nan=0.0, posinf=0.0, neginf=0.0)
 
-        close_return_5d = None
+        close_return_5d_train = None
+        close_return_5d_val = None
         if 'target_close_return' in train_df:
-            close_return_5d = train_df['target_close_return'].rolling(5, min_periods=1).sum().values
-            close_return_5d = np.nan_to_num(close_return_5d, nan=0.0, posinf=0.0, neginf=0.0)
+            close_return_5d_train = train_df['target_close_return'].rolling(5, min_periods=1).sum().values
+            close_return_5d_val = val_df['target_close_return'].rolling(5, min_periods=1).sum().values
+            close_return_5d_train = np.nan_to_num(close_return_5d_train, nan=0.0, posinf=0.0, neginf=0.0)
+            close_return_5d_val = np.nan_to_num(close_return_5d_val, nan=0.0, posinf=0.0, neginf=0.0)
 
-        y = {
+        y_train = {
             'direction': train_df['target_direction'].values,
-            'close_return': close_return,
-            'close_return_5d': close_return_5d
+            'close_return': close_return_train,
+            'close_return_5d': close_return_5d_train
         }
+        
+        y_val = {
+            'direction': val_df['target_direction'].values,
+            'close_return': close_return_val,
+            'close_return_5d': close_return_5d_val
+        }
+        
+        # Log class balance
+        n_up = (y_train['direction'] == 1).sum()
+        n_down = (y_train['direction'] == 0).sum()
+        logger.info(f"Class balance: UP={n_up} ({n_up/len(y_train['direction'])*100:.1f}%), DOWN={n_down} ({n_down/len(y_train['direction'])*100:.1f}%)")
+        
+        # ============================================================================
+        # CRITICAL: Force fresh model training - delete old models and reset state
+        # ============================================================================
+        model_dir = os.path.join(self.results_dir, 'models', 'combined')
+        
+        # Delete all old model files to prevent loading leaked models
+        if os.path.exists(model_dir):
+            logger.warning(f"Deleting old models from {model_dir} to prevent data leakage...")
+            try:
+                import shutil
+                shutil.rmtree(model_dir)
+                logger.success("Old models deleted successfully")
+            except Exception as e:
+                logger.error(f"Failed to delete old models: {e}")
+        
+        # Create fresh model directory
+        os.makedirs(model_dir, exist_ok=True)
+        
+        # Create FRESH ProductionModel instance with new scalers
+        from engine.ml_models import ProductionModel
+        self.production_model = ProductionModel()  # Fresh instance, no loaded state
+        logger.info("Created fresh ProductionModel instance with new scalers")
 
-        # Train/val split
-        split_idx = int(len(X) * 0.8)
-        X_train, X_val = X[:split_idx], X[split_idx:]
-        y_train = {k: v[:split_idx] if v is not None else None for k, v in y.items()}
-        y_val = {k: v[split_idx:] if v is not None else None for k, v in y.items()}
-
-        # Train production model
+        # Train production model from scratch
         metrics = self.production_model.train(X_train, y_train, X_val, y_val,
                                              feature_names=feature_cols)
 
         # Save model
-        model_dir = os.path.join(self.results_dir, 'models', 'combined')
         self.production_model.save(model_dir)
+        
+        # Save training metrics to CSV
+        metrics_dir = os.path.join(self.results_dir, 'training_metrics')
+        os.makedirs(metrics_dir, exist_ok=True)
+        
+        # Create comprehensive metrics DataFrame
+        metrics_data = {
+            'run_id': [self.run_id],
+            'timestamp': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+            'samples_trained': [len(X_train)],
+            'samples_validated': [len(X_val)],
+            'features_used': [len(feature_cols)],
+            'n_up': [n_up],
+            'n_down': [n_down],
+            'class_balance_pct': [f"{n_up/len(y_train['direction'])*100:.1f}% UP / {n_down/len(y_train['direction'])*100:.1f}% DOWN"]
+        }
+        
+        # Add all model metrics
+        for key, value in metrics.items():
+            if isinstance(value, (int, float)):
+                metrics_data[key] = [round(value, 4) if isinstance(value, float) else value]
+        
+        metrics_df = pd.DataFrame(metrics_data)
+        
+        # Save to CSV (append mode to track all runs)
+        metrics_filename = f"training_metrics_{self.run_id}.csv"
+        metrics_filepath = os.path.join(metrics_dir, metrics_filename)
+        metrics_df.to_csv(metrics_filepath, index=False)
+        
+        logger.info(f"Saved training metrics -> {metrics_filepath}")
 
         # Always include 'direction_accuracy' as ensemble accuracy for frontend
         metrics_out = {k: round(v, 4) if isinstance(v, float) else v for k, v in metrics.items()}
@@ -429,9 +638,12 @@ class UnifiedOrchestrator:
             metrics_out['direction_accuracy'] = metrics['direction_accuracy_ensemble']
         elif 'direction_accuracy_xgb' in metrics:
             metrics_out['direction_accuracy'] = metrics['direction_accuracy_xgb']
+        
         return {
             'samples_trained': len(X_train),
+            'samples_validated': len(X_val),
             'features_used': len(feature_cols),
+            'class_balance': f"{n_up}/{n_down}",
             'metrics': metrics_out
         }
 
@@ -623,8 +835,9 @@ class UnifiedOrchestrator:
         }
 
     def _step_signal_generation(self) -> Dict:
-        """Step 8: Generate trading signals."""
+        """Step 8: Generate trading signals with Phase 1 optimization."""
         signals = {}
+        filtered_count = 0
         
         # Get feature names from model
         trained_features = self.production_model.feature_names
@@ -650,21 +863,105 @@ class UnifiedOrchestrator:
                 pred = self.production_model.predict_single(X)
 
                 if pred.direction_probability > 0.52:
+                    direction = 1  # BUY
                     action = "BUY"
                     confidence = min((pred.direction_probability - 0.5) * 2 + 0.5, 0.95)
                 elif pred.direction_probability < 0.48:
+                    direction = -1  # SELL
                     action = "SELL"
                     confidence = min((0.5 - pred.direction_probability) * 2 + 0.5, 0.95)
                 else:
+                    direction = 0  # HOLD
                     action = "HOLD"
                     confidence = 0.5
+
+                # NEW: Calculate Phase 1 metrics for ALL signals (even HOLD)
+                quality_score = 0.5
+                entry_reasons = ["Model neutral (HOLD)"]
+                position_size_usd = 0
+                risk_pct = 0
+                approved = False  # HOLD signals are not approved for entry
+                
+                current_price = float(latest.get('close', 0))
+                atr = latest.get('atr_pct', 0.015)
+                
+                # Always evaluate quality to show why it's HOLD or BUY/SELL
+                if direction == 0:
+                    # HOLD signal - still calculate what quality would be for BUY
+                    # This helps user see if they should wait or if stock is just neutral
+                    test_direction = 1  # Test as if BUY
+                    entry_signal = self.entry_optimizer.evaluate(
+                        prediction={'direction': test_direction, 'confidence': 0.5},
+                        features=latest,
+                        market_data=None
+                    )
+                    quality_score = entry_signal.quality_score
+                    entry_reasons = ["HOLD: " + r for r in entry_signal.reasons[:2]]
+                else:
+                    # BUY/SELL signal - run full optimization
+                    # Evaluate entry quality
+                    entry_signal = self.entry_optimizer.evaluate(
+                        prediction={'direction': direction, 'confidence': confidence},
+                        features=latest,
+                        market_data=None  # Could add NIFTY data here
+                    )
+                    
+                    quality_score = entry_signal.quality_score
+                    entry_reasons = entry_signal.reasons[:3]  # Top 3 reasons
+                    
+                    if not entry_signal.should_enter:
+                        # Filter out low-quality signals
+                        action = "HOLD"
+                        filtered_count += 1
+                        approved = False
+                    else:
+                        # Calculate stop loss
+                        stop_loss = self.exit_optimizer.calculate_initial_stop_loss(
+                            current_price, direction, atr
+                        )
+                        
+                        # Calculate position size
+                        size_result = self.position_sizer.calculate_position_size(
+                            symbol=symbol,
+                            entry_price=current_price,
+                            stop_loss=stop_loss,
+                            confidence=confidence,
+                            volatility=atr,
+                            current_positions=None  # Could track open positions
+                        )
+                        
+                        position_size_usd = size_result['position_value']
+                        risk_pct = size_result['risk_pct']
+                        
+                        # NEW: Risk manager approval
+                        risk_check = self.risk_manager.approve_trade(
+                            symbol=symbol,
+                            direction=direction,
+                            entry_price=current_price,
+                            position_size=position_size_usd,
+                            stop_loss=stop_loss
+                        )
+                        
+                        if not risk_check.approved:
+                            action = "HOLD"
+                            filtered_count += 1
+                            approved = False
+                            entry_reasons.append(f"Risk rejected: {risk_check.reason}")
+                        else:
+                            approved = True
 
                 signals[symbol] = {
                     'action': action,
                     'confidence': round(float(confidence), 3),
                     'direction_probability': round(float(pred.direction_probability), 3),
                     'expected_return': round(float(pred.expected_return), 6),
-                    'current_price': round(float(latest.get('close', 0)), 2)
+                    'current_price': round(float(latest.get('close', 0)), 2),
+                    # NEW: Phase 1 metrics
+                    'quality_score': round(float(quality_score), 3),
+                    'entry_approved': approved,
+                    'position_size_usd': round(float(position_size_usd), 2),
+                    'risk_pct': round(float(risk_pct), 4),
+                    'entry_reasons': ', '.join(entry_reasons[:2])  # Top 2 reasons
                 }
             except Exception as e:
                 logger.error(f"Signal generation failed for {symbol}: {e}")
@@ -682,11 +979,15 @@ class UnifiedOrchestrator:
         buy_signals = [s for s in signals.values() if s['action'] == 'BUY']
         sell_signals = [s for s in signals.values() if s['action'] == 'SELL']
 
+        logger.info(f"Signal generation complete: {len(buy_signals)} BUY, {len(sell_signals)} SELL, "
+                   f"{filtered_count} filtered by optimizers")
+
         return {
             'total_signals': len(signals),
             'buy_count': len(buy_signals),
             'sell_count': len(sell_signals),
             'hold_count': len(signals) - len(buy_signals) - len(sell_signals),
+            'filtered_count': filtered_count,  # NEW
             'signals': signals
         }
 

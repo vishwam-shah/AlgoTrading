@@ -1,0 +1,16 @@
+{
+  "SBIN": {
+    "action": "SELL",
+    "confidence": 0.551,
+    "direction_probability": 0.475,
+    "expected_return": 0.000692,
+    "current_price": 0.0
+  },
+  "HDFCBANK": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.513,
+    "expected_return": 0.000692,
+    "current_price": 0.0
+  }
+}

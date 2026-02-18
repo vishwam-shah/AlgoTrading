@@ -1,6 +1,8 @@
 'use client';
+import * as React from 'react';
 
 import { useState, useEffect, useCallback } from 'react';
+import Select from 'react-select';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -44,14 +46,92 @@ interface WalletData {
 // ==================== MAIN DASHBOARD ====================
 
 export default function Dashboard() {
+    // Manual trade form state
+    const [tradeSymbol, setTradeSymbol] = useState('');
+    const [tradeAction, setTradeAction] = useState<'buy' | 'sell'>('buy');
+    const [tradeQty, setTradeQty] = useState(1);
+    const [tradeLoading, setTradeLoading] = useState(false);
+    const [stockOptions, setStockOptions] = useState<{ value: string; label: string }[]>([]);
+    const [selectedStock, setSelectedStock] = useState<{ value: string; label: string } | null>(null);
+    const [stockPrice, setStockPrice] = useState<number | null>(null);
+    // Cast react-select to a React component type to avoid TSX type mismatch
+    const TypedSelect = Select as unknown as React.ComponentType<any>;
+        // Fetch all stock tickers for dropdown
+        useEffect(() => {
+          const fetchStocks = async () => {
+            try {
+              const response = await fetch('http://localhost:8000/api/v1/stocks');
+              const data = await response.json();
+              if (data.stocks) {
+                const options = data.stocks.map((s: any) => ({ value: s.symbol, label: `${s.symbol} - ${s.name || ''}` }));
+                setStockOptions(options);
+              }
+            } catch (err) {
+              setStockOptions([]);
+            }
+          };
+          fetchStocks();
+        }, []);
+
+        // Fetch real-time price when stock changes
+        useEffect(() => {
+          if (!selectedStock) { setStockPrice(null); return; }
+          const fetchPrice = async () => {
+            try {
+              const response = await fetch(`http://localhost:8000/api/v1/price/${selectedStock.value}`);
+              const data = await response.json();
+              setStockPrice(data.price ?? null);
+            } catch {
+              setStockPrice(null);
+            }
+          };
+          fetchPrice();
+        }, [selectedStock]);
+    // Manual trade handler
+    const handleManualTrade = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!selectedStock || !selectedStock.value || !tradeQty || tradeQty <= 0) {
+        toast.error('Please select a stock and enter a valid quantity.');
+        return;
+      }
+      setTradeLoading(true);
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/wallet/trade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            symbol: selectedStock.value,
+            action: tradeAction,
+            quantity: tradeQty,
+          }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          toast.success(`${tradeAction === 'buy' ? 'Bought' : 'Sold'} ${tradeQty} ${selectedStock.value}`);
+          // Refresh wallet
+          const walletResponse = await fetch('http://localhost:8000/api/v1/wallet');
+          const walletData = await walletResponse.json();
+          setWallet(walletData);
+        } else {
+          toast.error(data.detail || 'Trade failed');
+        }
+      } catch (err: any) {
+        toast.error('Trade failed: ' + err.message);
+      } finally {
+        setTradeLoading(false);
+      }
+    };
   const { theme, setTheme } = useTheme();
 
   // State
-  const [selectedStock, setSelectedStock] = useState('SBIN');
+  // (removed duplicate selectedStock)
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
   const [expandedSectors, setExpandedSectors] = useState<string[]>([]);
   const [sectorStockMap, setSectorStockMap] = useState<Record<string, string[]>>({});
+
+  // Pipeline mode toggle
+  const [pipelineMode, setPipelineMode] = useState<'engine' | 'v3'>('engine');
 
   // Pipeline state
   const [isRunning, setIsRunning] = useState(false);
@@ -105,7 +185,7 @@ export default function Dashboard() {
     fetchWallet();
   }, []);
 
-  // Poll pipeline status
+  // Poll pipeline status (handles both Engine and V3 modes)
   useEffect(() => {
     if (!isRunning || !pipelineJobId) return;
 
@@ -113,7 +193,11 @@ export default function Dashboard() {
 
     const poll = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/pipeline/${pipelineJobId}/status`);
+        const statusUrl = pipelineMode === 'v3'
+          ? `http://localhost:8000/api/v1/v3/${pipelineJobId}/status`
+          : `http://localhost:8000/api/v1/pipeline/${pipelineJobId}/status`;
+
+        const response = await fetch(statusUrl);
         if (!isMounted) return;
 
         const data = await response.json();
@@ -124,17 +208,15 @@ export default function Dashboard() {
         if (data.status === 'completed') {
           setIsRunning(false);
           setPipelineResult(data.result);
-          toast.success('Pipeline completed successfully! 🎉');
+          toast.success(`${pipelineMode === 'v3' ? 'V3' : 'Engine'} pipeline completed!`);
         } else if (data.status === 'failed') {
           setIsRunning(false);
-          toast.error(`Pipeline failed: ${data.error || 'Unknown error'}`);
+          toast.error(`Pipeline failed: ${data.message || data.error || 'Unknown error'}`);
         } else {
-          // Continue polling if still running
           setTimeout(poll, 2000);
         }
       } catch (err) {
         console.error('Failed to poll pipeline status:', err);
-        // Retry on error if still mounted
         if (isMounted) setTimeout(poll, 2000);
       }
     };
@@ -142,7 +224,7 @@ export default function Dashboard() {
     poll();
 
     return () => { isMounted = false; };
-  }, [isRunning, pipelineJobId]);
+  }, [isRunning, pipelineJobId, pipelineMode]);
 
   // Handlers
   const handleRunPipeline = async () => {
@@ -153,16 +235,19 @@ export default function Dashboard() {
       setPipelineResult(null);
       setPipelineStatus(null);
 
-      // Use selected stocks directly (selection logic is handled by UI handlers)
       const stocksToRun = [...selectedStocks];
 
       if (stocksToRun.length === 0) {
-        toast.error('❌ Please select at least one stock to run.');
+        toast.error('Please select at least one stock to run.');
         setIsRunning(false);
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/v1/pipeline/run', {
+      const endpoint = pipelineMode === 'v3'
+        ? 'http://localhost:8000/api/v1/v3/run'
+        : 'http://localhost:8000/api/v1/pipeline/run';
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbols: stocksToRun }),
@@ -170,7 +255,7 @@ export default function Dashboard() {
 
       const data = await response.json();
       setPipelineJobId(data.job_id);
-      toast.success('Pipeline started successfully 🚀');
+      toast.success(`${pipelineMode === 'v3' ? 'V3' : 'Engine'} pipeline started`);
     } catch (err: any) {
       setIsRunning(false);
       toast.error(`Failed to start pipeline: ${err.message}`);
@@ -287,8 +372,76 @@ export default function Dashboard() {
       <Toaster position="top-right" theme={theme === 'dark' ? 'dark' : 'light'} />
 
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Manual Trade Form */}
+        <form onSubmit={handleManualTrade} className="mb-6 flex flex-wrap gap-4 items-end bg-card border border-border rounded-lg p-4">
+          <div className="min-w-[220px]">
+            <label className="block text-xs mb-1 font-medium">Stock</label>
+            <TypedSelect
+              options={stockOptions}
+              value={selectedStock}
+              onChange={setSelectedStock}
+              isClearable
+              isSearchable
+              placeholder="Select stock..."
+              classNamePrefix="react-select"
+              instanceId="manual-stock-select"
+              inputId="manual-stock-select-input"
+              styles={{ menu: (base: any) => ({ ...base, zIndex: 9999 }) }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs mb-1 font-medium">Action</label>
+            <select value={tradeAction} onChange={e => setTradeAction(e.target.value as 'buy' | 'sell')} className="input input-bordered w-20">
+              <option value="buy">Buy</option>
+              <option value="sell">Sell</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs mb-1 font-medium">Quantity</label>
+            <input type="number" min={1} value={tradeQty} onChange={e => setTradeQty(Number(e.target.value))} className="input input-bordered w-20" />
+          </div>
+          <div>
+            <label className="block text-xs mb-1 font-medium">Price</label>
+            <div className="font-mono text-base min-w-[80px]">{stockPrice !== null ? `₹${stockPrice.toFixed(2)}` : '--'}</div>
+          </div>
+          <button type="submit" className="btn" style={{ background: 'black', color: 'white' }} disabled={tradeLoading}>
+            {tradeLoading ? 'Processing...' : 'Submit'}
+          </button>
+        </form>
         {/* Metrics Cards */}
         <Metrics pipelineResult={pipelineResult} wallet={wallet} />
+
+        {/* Pipeline Mode Toggle */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground">Pipeline:</span>
+          <div className="flex gap-1 bg-secondary rounded-lg p-1">
+            <button
+              onClick={() => setPipelineMode('engine')}
+              className={cn(
+                'px-3 py-1.5 rounded-md text-sm font-medium transition-all',
+                pipelineMode === 'engine'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Engine
+            </button>
+            <button
+              onClick={() => setPipelineMode('v3')}
+              className={cn(
+                'px-3 py-1.5 rounded-md text-sm font-medium transition-all',
+                pipelineMode === 'v3'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              V3 Model
+            </button>
+          </div>
+          {pipelineMode === 'v3' && (
+            <span className="text-xs text-muted-foreground">Regression pipeline with 5 window configs</span>
+          )}
+        </div>
 
         {/* Stock Selector */}
         <StockSelector

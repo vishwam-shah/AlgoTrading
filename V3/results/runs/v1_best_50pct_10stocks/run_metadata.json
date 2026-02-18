@@ -1,0 +1,8 @@
+{
+  "timestamp": "20260218_142331",
+  "data_start": "2018-01-01",
+  "min_move_pct": 0.003,
+  "conf_thresh": 0.55,
+  "n_top_features": 80,
+  "elapsed_sec": 833.8
+}

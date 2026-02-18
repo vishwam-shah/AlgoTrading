@@ -1,0 +1,37 @@
+{
+  "SBIN": {
+    "action": "SELL",
+    "confidence": 0.568,
+    "direction_probability": 0.466,
+    "expected_return": -0.000497,
+    "current_price": 0.0
+  },
+  "HDFCBANK": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.499,
+    "expected_return": -0.000497,
+    "current_price": 0.0
+  },
+  "ICICIBANK": {
+    "action": "SELL",
+    "confidence": 0.551,
+    "direction_probability": 0.475,
+    "expected_return": -0.000497,
+    "current_price": 0.0
+  },
+  "AXISBANK": {
+    "action": "SELL",
+    "confidence": 0.602,
+    "direction_probability": 0.449,
+    "expected_return": -0.000497,
+    "current_price": 0.0
+  },
+  "KOTAKBANK": {
+    "action": "HOLD",
+    "confidence": 0.5,
+    "direction_probability": 0.486,
+    "expected_return": -0.000497,
+    "current_price": 0.0
+  }
+}

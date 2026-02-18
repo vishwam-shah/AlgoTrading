@@ -90,6 +90,14 @@ class AdvancedFeatureEngine:
         if ENHANCED_INDICATORS_AVAILABLE:
             logger.info("Adding 60+ enhanced indicators...")
             df = add_all_enhanced_indicators(df)
+        
+        # NEW: Lagged features for better accuracy (40+ features, no data leakage)
+        try:
+            from engine.lagged_features import add_lagged_features
+            logger.info("Adding lagged features for improved accuracy...")
+            df = add_lagged_features(df)
+        except Exception as e:
+            logger.warning(f"Could not add lagged features: {e}")
 
         # Market context (optional)
         if self.include_market_context:
@@ -121,14 +129,30 @@ class AdvancedFeatureEngine:
 
     @staticmethod
     def compute_targets(df: pd.DataFrame) -> pd.DataFrame:
-        """Compute prediction targets."""
+        """Compute prediction targets.
+        
+        CRITICAL: Targets must represent FUTURE values we want to predict
+        from CURRENT features. We use shift(-1) to move future values forward.
+        
+        Example: Row i contains:
+        - Features: computed from data up to and including day i
+        - Targets: what we want to predict for day i+1
+        """
         df = df.copy()
 
-        df['target_close_return'] = df['close'].pct_change(-1)
-        df['target_high_return'] = (df['high'].shift(-1) - df['close']) / df['close']
-        df['target_low_return'] = (df['low'].shift(-1) - df['close']) / df['close']
+        # Target: tomorrow's return (what we're trying to predict)
+        # We compute pct_change() which gives us today's return from yesterday,
+        # then shift(-1) to get tomorrow's return into today's row
+        df['target_close_return'] = df['close'].pct_change().shift(-1)
+        
+        # Target: tomorrow's high/low relative to today's close
+        df['target_high_return'] = ((df['high'].shift(-1) - df['close']) / df['close'])
+        df['target_low_return'] = ((df['low'].shift(-1) - df['close']) / df['close'])
+        
+        # Binary direction: will price go up tomorrow?
         df['target_direction'] = (df['target_close_return'] > 0).astype(int)
 
+        # Multi-class direction (5 classes: strong bear, weak bear, neutral, weak bull, strong bull)
         thresholds = config.DIRECTION_THRESHOLDS
         df['target_direction_5class'] = pd.cut(
             df['target_close_return'],
@@ -137,6 +161,7 @@ class AdvancedFeatureEngine:
             labels=[0, 1, 2, 3, 4]
         ).astype(float)
 
+        # Raw future prices (for regression models)
         df['target_close'] = df['close'].shift(-1)
         df['target_high'] = df['high'].shift(-1)
         df['target_low'] = df['low'].shift(-1)

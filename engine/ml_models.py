@@ -92,20 +92,22 @@ class XGBoostModel:
 
         try:
             from xgboost import XGBRegressor
+            # Improved hyperparameters for better accuracy
             self.model = XGBRegressor(
-                n_estimators=self.params.get('n_estimators', 500),
-                max_depth=self.params.get('max_depth', 6),
-                learning_rate=self.params.get('learning_rate', 0.01),
+                n_estimators=self.params.get('n_estimators', 1000),  # More trees
+                max_depth=self.params.get('max_depth', 5),  # Slightly shallower to prevent overfitting
+                learning_rate=self.params.get('learning_rate', 0.005),  # Slower learning
                 subsample=self.params.get('subsample', 0.8),
                 colsample_bytree=self.params.get('colsample_bytree', 0.8),
+                colsample_bylevel=self.params.get('colsample_bylevel', 0.8),  # Feature sampling per level
                 min_child_weight=self.params.get('min_child_weight', 5),
-                gamma=self.params.get('gamma', 0.1),
-                reg_alpha=self.params.get('reg_alpha', 0.1),
-                reg_lambda=self.params.get('reg_lambda', 1.0),
+                gamma=self.params.get('gamma', 0.2),  # Higher regularization
+                reg_alpha=self.params.get('reg_alpha', 0.3),  # L1 regularization
+                reg_lambda=self.params.get('reg_lambda', 1.5),  # L2 regularization
                 random_state=42,
                 n_jobs=-1,
                 verbosity=0,
-                early_stopping_rounds=50
+                early_stopping_rounds=100  # More patience
             )
 
             eval_set = []
@@ -152,15 +154,18 @@ class LightGBMModel:
 
         try:
             import lightgbm as lgb
+            # Improved hyperparameters for better accuracy  
             self.model = lgb.LGBMRegressor(
-                n_estimators=self.params.get('n_estimators', 500),
-                max_depth=self.params.get('max_depth', 6),
-                learning_rate=self.params.get('learning_rate', 0.01),
+                n_estimators=self.params.get('n_estimators', 1000),  # More trees
+                max_depth=self.params.get('max_depth', 5),  # Slightly shallower
+                learning_rate=self.params.get('learning_rate', 0.005),  # Slower learning
                 subsample=self.params.get('subsample', 0.8),
+                subsample_freq=5,  # Bagging frequency
                 colsample_bytree=self.params.get('colsample_bytree', 0.8),
-                num_leaves=self.params.get('num_leaves', 31),
-                reg_alpha=self.params.get('reg_alpha', 0.1),
-                reg_lambda=self.params.get('reg_lambda', 1.0),
+                num_leaves=self.params.get('num_leaves', 24),  # Fewer leaves to reduce complexity
+                min_child_samples=self.params.get('min_child_samples', 30),  # More regularization
+                reg_alpha=self.params.get('reg_alpha', 0.3),  # L1 regularization
+                reg_lambda=self.params.get('reg_lambda', 1.5),  # L2 regularization
                 random_state=42,
                 n_jobs=-1,
                 verbosity=-1
@@ -432,10 +437,12 @@ class MLModelTrainer:
     """Unified trainer for all ML models."""
 
     def __init__(self):
+        """Initialize trainer with fresh state to prevent accumulation across runs."""
         self.models = {}
         self.metrics = {}
         self.predictions = {}
         self.scaler = StandardScaler()
+        self.training_run_id = None  # Track training runs to prevent state accumulation
 
     def prepare_data(self, features_df: pd.DataFrame, target_col: str = 'close'):
         """Prepare train/val/test splits from feature DataFrame."""

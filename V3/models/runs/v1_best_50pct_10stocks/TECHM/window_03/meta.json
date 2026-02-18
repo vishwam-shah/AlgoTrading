@@ -1,0 +1,9 @@
+{
+  "window_id": 3,
+  "train_ratio": 0.9,
+  "acc_all": 0.44375,
+  "acc_conf": 0.4351851851851852,
+  "conf_rate": 0.675,
+  "n_conf": 108,
+  "auc": 0.43640625
+}
