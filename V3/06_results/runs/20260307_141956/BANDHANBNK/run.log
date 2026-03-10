@@ -1,0 +1,142 @@
+
+────────────────────────────────────────────────────────────
+  BANDHANBNK
+────────────────────────────────────────────────────────────
+  BANDHANBNK   ↻ computing features ... ✓ 1437 rows × 159 features
+  [1/3] Walk-forward: 6 windows  |  1437 rows  |  159 features
+        Win 1: train[0:905]  val[905:1005]  test[1005:1149]  (70%)
+        Win 2: train[0:970]  val[970:1077]  test[1077:1221]  (75%)
+        Win 3: train[0:1035]  val[1035:1149]  test[1149:1293]  (80%)
+        Win 4: train[0:1099]  val[1099:1221]  test[1221:1365]  (85%)
+        Win 5: train[0:1164]  val[1164:1293]  test[1293:1437]  (90%)
+        Win 6: train[0:1229]  val[1229:1365]  test[1365:1437]  (95%)
+  [1b] Feature selection: top 50 of 159 ... ✓ 47 features kept
+  [2/3] Training...
+      [scaler] range [-5.00, 5.00]  17.8% outside [-1,1]
+      [PCA]    20 components → 90.3% explained variance
+      [LSTM    ] acc=0.569
+      [BiLSTM  ] acc=0.590
+      [GRU     ] acc=0.535
+      [CNN_LSTM] acc=0.451
+      [CNN_GRU ] acc=0.500
+      [TCN_GRU ] acc=0.569
+      [TCN_Transformer] acc=0.562
+      [NBEATS  ] acc=0.493
+      [calib]  temperature T=0.558  (prob spread: [0.418, 0.565])
+    ~ Win 1 | 70% train | test_n=144 | OOS=56.94% | AUC=0.568 | F1=0.500 | LGB=52.78% | XGB=53.47% | T=0.56
+         Dir → UP=52.54%  DOWN=60.00%  NEUTRAL=0.0%
+         DL  → LSTM=56.94%  BiLSTM=59.03%  GRU=53.47%  CNN_LSTM=45.14%  CNN_GRU=50.00%  TCN_GRU=56.94%  TCN_Transformer=56.25%  NBEATS=49.31%
+      [scaler] range [-5.00, 5.00]  17.4% outside [-1,1]
+      [PCA]    20 components → 90.2% explained variance
+      [LSTM    ] acc=0.618
+      [BiLSTM  ] acc=0.528
+      [GRU     ] acc=0.493
+      [CNN_LSTM] acc=0.486
+      [CNN_GRU ] acc=0.597
+      [TCN_GRU ] acc=0.514
+      [TCN_Transformer] acc=0.562
+      [NBEATS  ] acc=0.479
+      [calib]  temperature T=0.979  (prob spread: [0.381, 0.581])
+    ✓ Win 2 | 75% train | test_n=144 | OOS=60.42% | AUC=0.536 | F1=0.447 | LGB=54.17% | XGB=52.08% | T=0.98
+         Dir → UP=54.76%  DOWN=62.75%  NEUTRAL=0.0%
+         DL  → LSTM=61.81%  BiLSTM=52.78%  GRU=49.31%  CNN_LSTM=48.61%  CNN_GRU=59.72%  TCN_GRU=51.39%  TCN_Transformer=56.25%  NBEATS=47.92%
+      [scaler] range [-5.00, 5.00]  17.2% outside [-1,1]
+      [PCA]    20 components → 90.1% explained variance
+      [LSTM    ] acc=0.535
+      [BiLSTM  ] acc=0.569
+      [GRU     ] acc=0.597
+      [CNN_LSTM] acc=0.535
+      [CNN_GRU ] acc=0.674
+      [TCN_GRU ] acc=0.576
+      [TCN_Transformer] acc=0.549
+      [NBEATS  ] acc=0.444
+      [calib]  temperature T=0.800  (prob spread: [0.433, 0.546])
+    ~ Win 3 | 80% train | test_n=144 | OOS=57.64% | AUC=0.602 | F1=0.470 | LGB=56.25% | XGB=53.47% | T=0.80
+         Dir → UP=52.94%  DOWN=60.22%  NEUTRAL=0.0%
+         DL  → LSTM=53.47%  BiLSTM=56.94%  GRU=59.72%  CNN_LSTM=53.47%  CNN_GRU=67.36%  TCN_GRU=57.64%  TCN_Transformer=54.86%  NBEATS=44.44%
+      [scaler] range [-5.00, 5.00]  17.0% outside [-1,1]
+      [PCA]    21 components → 90.9% explained variance
+      [LSTM    ] acc=0.542
+      [BiLSTM  ] acc=0.535
+      [GRU     ] acc=0.549
+      [CNN_LSTM] acc=0.556
+      [CNN_GRU ] acc=0.486
+      [TCN_GRU ] acc=0.535
+      [TCN_Transformer] acc=0.549
+      [NBEATS  ] acc=0.528
+      [calib]  temperature T=0.574  (prob spread: [0.384, 0.542])
+    ✓ Win 4 | 85% train | test_n=144 | OOS=58.33% | AUC=0.565 | F1=0.423 | LGB=47.92% | XGB=52.08% | T=0.57
+         Dir → UP=61.11%  DOWN=57.41%  NEUTRAL=0.0%
+         DL  → LSTM=54.17%  BiLSTM=53.47%  GRU=54.86%  CNN_LSTM=55.56%  CNN_GRU=48.61%  TCN_GRU=53.47%  TCN_Transformer=54.86%  NBEATS=52.78%
+      [scaler] range [-5.00, 5.00]  17.0% outside [-1,1]
+      [PCA]    21 components → 90.7% explained variance
+      [LSTM    ] acc=0.528
+      [BiLSTM  ] acc=0.542
+      [GRU     ] acc=0.535
+      [CNN_LSTM] acc=0.590
+      [CNN_GRU ] acc=0.521
+      [TCN_GRU ] acc=0.521
+      [TCN_Transformer] acc=0.521
+      [NBEATS  ] acc=0.549
+      [calib]  temperature T=0.460  (prob spread: [0.191, 0.596])
+    ~ Win 5 | 90% train | test_n=144 | OOS=54.17% | AUC=0.547 | F1=0.108 | LGB=54.17% | XGB=50.69% | T=0.46
+         Dir → UP=57.14%  DOWN=54.01%  NEUTRAL=0.0%
+         DL  → LSTM=52.78%  BiLSTM=54.17%  GRU=53.47%  CNN_LSTM=59.03%  CNN_GRU=52.08%  TCN_GRU=52.08%  TCN_Transformer=52.08%  NBEATS=54.86%
+      [scaler] range [-5.00, 5.00]  16.8% outside [-1,1]
+      [PCA]    21 components → 90.5% explained variance
+      [LSTM    ] acc=0.500
+      [BiLSTM  ] acc=0.486
+      [GRU     ] acc=0.500
+      [CNN_LSTM] acc=0.528
+      [CNN_GRU ] acc=0.486
+      [TCN_GRU ] acc=0.458
+      [TCN_Transformer] acc=0.514
+      [NBEATS  ] acc=0.514
+      [calib]  temperature T=0.528  (prob spread: [0.326, 0.493])
+    ~ Win 6 | 95% train | test_n=72 | OOS=50.00% | AUC=0.576 | F1=0.000 | LGB=50.00% | XGB=52.78% | T=0.53
+         Dir → UP=0.00%  DOWN=50.00%  NEUTRAL=0.0%
+         DL  → LSTM=50.00%  BiLSTM=48.61%  GRU=50.00%  CNN_LSTM=52.78%  CNN_GRU=48.61%  TCN_GRU=45.83%  TCN_Transformer=51.39%  NBEATS=51.39%
+  [3/3] OOS Overall → Accuracy=56.82%  F1=0.3849  (792 preds, 6 wins, avg_T=0.65)
+
+A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.2.6 as it may crash. To support both 1.x and 2.x
+versions of NumPy, modules must be compiled with NumPy 2.0.
+Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+If you are a user of the module, the easiest solution will be to
+downgrade to 'numpy<2' or try to upgrade the affected module.
+We expect that some modules will need time to support NumPy 2.
+
+Traceback (most recent call last):  File "<string>", line 1, in <module>
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 129, in _main
+    return self._bootstrap(parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 314, in _bootstrap
+    self.run()
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\process.py", line 246, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 266, in _run_symbol_worker
+    return run_symbol(
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1839, in run_symbol
+    plot_oos_accuracy(window_rows, symbol, sym_plot_path)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1467, in plot_oos_accuracy
+    plt = _mpl()
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1459, in _mpl
+    import matplotlib; matplotlib.use("Agg")
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\__init__.py", line 144, in <module>
+    from . import _api, _version, cbook, _docstring, rcsetup
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\rcsetup.py", line 27, in <module>
+    from matplotlib.colors import Colormap, is_color_like
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\colors.py", line 56, in <module>
+    from matplotlib import _api, _cm, cbook, scale
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\scale.py", line 22, in <module>
+    from matplotlib.ticker import (
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\ticker.py", line 138, in <module>
+    from matplotlib import transforms as mtransforms
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\transforms.py", line 49, in <module>
+    from matplotlib._path import (
+AttributeError: _ARRAY_API not found
+  ⚠ Plot error: numpy.core.multiarray failed to import

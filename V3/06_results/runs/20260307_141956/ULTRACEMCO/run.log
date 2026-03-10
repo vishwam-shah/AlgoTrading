@@ -1,0 +1,100 @@
+
+────────────────────────────────────────────────────────────
+  ULTRACEMCO
+────────────────────────────────────────────────────────────
+  ULTRACEMCO   ↻ computing features ... ✓ 1311 rows × 159 features
+  [1/3] Walk-forward: 6 windows  |  1311 rows  |  159 features
+        Win 1: train[0:826]  val[826:917]  test[917:1048]  (70%)
+        Win 2: train[0:885]  val[885:983]  test[983:1114]  (75%)
+        Win 3: train[0:944]  val[944:1048]  test[1048:1179]  (80%)
+        Win 4: train[0:1003]  val[1003:1114]  test[1114:1245]  (85%)
+        Win 5: train[0:1062]  val[1062:1179]  test[1179:1311]  (90%)
+        Win 6: train[0:1121]  val[1121:1245]  test[1245:1311]  (95%)
+  [1b] Feature selection: top 50 of 159 ... ✓ 50 features kept
+  [2/3] Training...
+      [scaler] range [-5.00, 5.00]  17.1% outside [-1,1]
+      [PCA]    25 components → 90.0% explained variance
+      [LSTM    ] acc=0.412
+      [BiLSTM  ] acc=0.557
+      [GRU     ] acc=0.489
+      [CNN_LSTM] acc=0.481
+      [CNN_GRU ] acc=0.511
+      [TCN_GRU ] acc=0.542
+      [TCN_Transformer] acc=0.504
+      [NBEATS  ] acc=0.542
+      [calib]  temperature T=0.233  (prob spread: [0.044, 0.913])
+    ✗ Win 1 | 70% train | test_n=131 | OOS=47.33% | AUC=0.479 | F1=0.489 | LGB=53.44% | XGB=50.38% | T=0.23
+         Dir → UP=50.77%  DOWN=43.94%  NEUTRAL=0.0%
+         DL  → LSTM=41.22%  BiLSTM=55.73%  GRU=48.85%  CNN_LSTM=48.09%  CNN_GRU=51.15%  TCN_GRU=54.20%  TCN_Transformer=50.38%  NBEATS=54.20%
+      [scaler] range [-5.00, 5.00]  17.0% outside [-1,1]
+      [PCA]    25 components → 90.1% explained variance
+      [LSTM    ] acc=0.504
+      [BiLSTM  ] acc=0.481
+      [GRU     ] acc=0.511
+      [CNN_LSTM] acc=0.496
+      [CNN_GRU ] acc=0.504
+      [TCN_GRU ] acc=0.481
+      [TCN_Transformer] acc=0.489
+      [NBEATS  ] acc=0.496
+      [calib]  temperature T=0.100  (prob spread: [0.308, 0.726])
+    ~ Win 2 | 75% train | test_n=131 | OOS=51.15% | AUC=0.517 | F1=0.536 | LGB=51.91% | XGB=51.91% | T=0.10
+         Dir → UP=52.86%  DOWN=49.18%  NEUTRAL=0.0%
+         DL  → LSTM=50.38%  BiLSTM=48.09%  GRU=51.15%  CNN_LSTM=49.62%  CNN_GRU=50.38%  TCN_GRU=48.09%  TCN_Transformer=48.85%  NBEATS=49.62%
+      [scaler] range [-5.00, 5.00]  16.8% outside [-1,1]
+      [PCA]    25 components → 90.1% explained variance
+      [LSTM    ] acc=0.435
+      [BiLSTM  ] acc=0.481
+      [GRU     ] acc=0.496
+      [CNN_LSTM] acc=0.443
+      [CNN_GRU ] acc=0.473
+      [TCN_GRU ] acc=0.504
+      [TCN_Transformer] acc=0.519
+      [NBEATS  ] acc=0.473
+      [calib]  temperature T=0.283  (prob spread: [0.440, 0.721])
+    ~ Win 3 | 80% train | test_n=131 | OOS=51.91% | AUC=0.596 | F1=0.609 | LGB=47.33% | XGB=47.33% | T=0.28
+         Dir → UP=49.49%  DOWN=59.38%  NEUTRAL=0.0%
+         DL  → LSTM=43.51%  BiLSTM=48.09%  GRU=49.62%  CNN_LSTM=44.27%  CNN_GRU=47.33%  TCN_GRU=50.38%  TCN_Transformer=51.91%  NBEATS=47.33%
+      [scaler] range [-4.83, 5.00]  16.6% outside [-1,1]
+      [PCA]    26 components → 90.9% explained variance
+      [LSTM    ] acc=0.550
+      [BiLSTM  ] acc=0.504
+      [GRU     ] acc=0.496
+      [CNN_LSTM] acc=0.542
+      [CNN_GRU ] acc=0.519
+      [TCN_GRU ] acc=0.519
+      [TCN_Transformer] acc=0.519
+      [NBEATS  ] acc=0.466
+      [calib]  temperature T=0.680  (prob spread: [0.394, 0.642])
+    ~ Win 4 | 85% train | test_n=131 | OOS=51.91% | AUC=0.602 | F1=0.604 | LGB=50.38% | XGB=48.09% | T=0.68
+         Dir → UP=50.00%  DOWN=57.14%  NEUTRAL=0.0%
+         DL  → LSTM=54.96%  BiLSTM=50.38%  GRU=49.62%  CNN_LSTM=54.20%  CNN_GRU=51.91%  TCN_GRU=51.91%  TCN_Transformer=51.91%  NBEATS=46.56%
+      [scaler] range [-4.79, 5.00]  16.5% outside [-1,1]
+      [PCA]    26 components → 90.8% explained variance
+      [LSTM    ] acc=0.515
+      [BiLSTM  ] acc=0.523
+      [GRU     ] acc=0.485
+      [CNN_LSTM] acc=0.470
+      [CNN_GRU ] acc=0.508
+      [TCN_GRU ] acc=0.455
+      [TCN_Transformer] acc=0.538
+      [NBEATS  ] acc=0.500
+      [calib]  temperature T=0.227  (prob spread: [0.435, 0.782])
+    ✗ Win 5 | 90% train | test_n=132 | OOS=49.24% | AUC=0.529 | F1=0.621 | LGB=49.24% | XGB=49.24% | T=0.23
+         Dir → UP=49.11%  DOWN=50.00%  NEUTRAL=0.0%
+         DL  → LSTM=51.52%  BiLSTM=52.27%  GRU=48.48%  CNN_LSTM=46.97%  CNN_GRU=50.76%  TCN_GRU=45.45%  TCN_Transformer=53.79%  NBEATS=50.00%
+      [scaler] range [-4.64, 5.00]  16.4% outside [-1,1]
+      [PCA]    26 components → 90.7% explained variance
+      [LSTM    ] acc=0.439
+      [BiLSTM  ] acc=0.470
+      [GRU     ] acc=0.515
+      [CNN_LSTM] acc=0.485
+      [CNN_GRU ] acc=0.576
+      [TCN_GRU ] acc=0.591
+      [TCN_Transformer] acc=0.500
+      [NBEATS  ] acc=0.485
+      [calib]  temperature T=0.100  (prob spread: [0.036, 0.984])
+    ~ Win 6 | 95% train | test_n=66 | OOS=53.03% | AUC=0.600 | F1=0.597 | LGB=43.94% | XGB=50.00% | T=0.10
+         Dir → UP=52.27%  DOWN=54.55%  NEUTRAL=0.0%
+         DL  → LSTM=43.94%  BiLSTM=46.97%  GRU=51.52%  CNN_LSTM=48.48%  CNN_GRU=57.58%  TCN_GRU=59.09%  TCN_Transformer=50.00%  NBEATS=48.48%
+  [3/3] OOS Overall → Accuracy=50.55%  F1=0.5785  (722 preds, 6 wins, avg_T=0.27)
+  Plots → 06_results\runs\20260307_141956\ULTRACEMCO\plots

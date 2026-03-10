@@ -34,6 +34,8 @@ frontend/.next/
 # Data
 *.csv
 *.txt
+*.parquet
+*.json
 data/raw/*.csv
 data/processed/*.csv
 data/features/*.csv
@@ -66,6 +68,13 @@ results/**/*.csv
 results/**/*.png
 results/**/*.jpg
 results/**/*.html
+
+# V3 results — allow CSVs, JSONs, and logs
+!V3/06_results/runs/**/*.csv
+!V3/06_results/runs/**/*.json
+!V3/06_results/runs/**/run.log
+!V3/06_results/runs/
+!V3/06_results/
 
 # Jupyter
 .ipynb_checkpoints

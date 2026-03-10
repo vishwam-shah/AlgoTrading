@@ -1,0 +1,188 @@
+
+────────────────────────────────────────────────────────────
+  MUTHOOTFIN
+────────────────────────────────────────────────────────────
+  MUTHOOTFIN   ↻ computing features ... ✓ 1381 rows × 159 features
+  [1/3] Walk-forward: 6 windows  |  1381 rows  |  159 features
+        Win 1: train[0:870]  val[870:966]  test[966:1104]  (70%)
+        Win 2: train[0:932]  val[932:1035]  test[1035:1173]  (75%)
+        Win 3: train[0:994]  val[994:1104]  test[1104:1242]  (80%)
+        Win 4: train[0:1056]  val[1056:1173]  test[1173:1311]  (85%)
+        Win 5: train[0:1118]  val[1118:1242]  test[1242:1381]  (90%)
+        Win 6: train[0:1180]  val[1180:1311]  test[1311:1381]  (95%)
+  [1b] Feature selection: top 50 of 159 ... 
+A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.2.6 as it may crash. To support both 1.x and 2.x
+versions of NumPy, modules must be compiled with NumPy 2.0.
+Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+If you are a user of the module, the easiest solution will be to
+downgrade to 'numpy<2' or try to upgrade the affected module.
+We expect that some modules will need time to support NumPy 2.
+
+Traceback (most recent call last):  File "<string>", line 1, in <module>
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 129, in _main
+    return self._bootstrap(parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 314, in _bootstrap
+    self.run()
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\process.py", line 246, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 266, in _run_symbol_worker
+    return run_symbol(
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1654, in run_symbol
+    selected = select_top_features(X, y, feat_cols, fs_win, symbol=symbol)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1004, in select_top_features
+    from lightgbm import LGBMClassifier, early_stopping as lgb_es, log_evaluation as lgb_log
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\lightgbm\__init__.py", line 8, in <module>
+    from .basic import Booster, Dataset, Sequence, register_logger
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\lightgbm\basic.py", line 21, in <module>
+    from .compat import PANDAS_INSTALLED, concat, dt_DataTable, pd_CategoricalDtype, pd_DataFrame, pd_Series
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\lightgbm\compat.py", line 41, in <module>
+    import matplotlib  # noqa: F401
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\__init__.py", line 144, in <module>
+    from . import _api, _version, cbook, _docstring, rcsetup
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\rcsetup.py", line 27, in <module>
+    from matplotlib.colors import Colormap, is_color_like
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\colors.py", line 56, in <module>
+    from matplotlib import _api, _cm, cbook, scale
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\scale.py", line 22, in <module>
+    from matplotlib.ticker import (
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\ticker.py", line 138, in <module>
+    from matplotlib import transforms as mtransforms
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\transforms.py", line 49, in <module>
+    from matplotlib._path import (
+AttributeError: _ARRAY_API not found
+✓ 47 features kept
+  [2/3] Training...
+      [scaler] range [-4.34, 5.00]  16.7% outside [-1,1]
+      [PCA]    21 components → 90.7% explained variance
+      [LSTM    ] acc=0.536
+      [BiLSTM  ] acc=0.514
+      [GRU     ] acc=0.601
+      [CNN_LSTM] acc=0.536
+      [CNN_GRU ] acc=0.442
+      [TCN_GRU ] acc=0.536
+      [TCN_Transformer] acc=0.464
+      [NBEATS  ] acc=0.464
+      [calib]  temperature T=0.614  (prob spread: [0.418, 0.535])
+    ~ Win 1 | 70% train | test_n=138 | OOS=50.00% | AUC=0.579 | F1=0.389 | LGB=49.28% | XGB=50.00% | T=0.61
+         Dir → UP=62.86%  DOWN=45.63%  NEUTRAL=0.0%
+         DL  → LSTM=53.62%  BiLSTM=51.45%  GRU=60.14%  CNN_LSTM=53.62%  CNN_GRU=44.20%  TCN_GRU=53.62%  TCN_Transformer=46.38%  NBEATS=46.38%
+      [scaler] range [-4.37, 5.00]  16.6% outside [-1,1]
+      [PCA]    21 components → 90.5% explained variance
+      [LSTM    ] acc=0.493
+      [BiLSTM  ] acc=0.543
+      [GRU     ] acc=0.464
+      [CNN_LSTM] acc=0.464
+      [CNN_GRU ] acc=0.413
+      [TCN_GRU ] acc=0.500
+      [TCN_Transformer] acc=0.413
+      [NBEATS  ] acc=0.493
+      [calib]  temperature T=8.000  (prob spread: [0.493, 0.507])
+    ✗ Win 2 | 75% train | test_n=138 | OOS=42.75% | AUC=0.471 | F1=0.325 | LGB=40.58% | XGB=46.38% | T=8.00
+         Dir → UP=54.29%  DOWN=38.83%  NEUTRAL=0.0%
+         DL  → LSTM=49.28%  BiLSTM=54.35%  GRU=46.38%  CNN_LSTM=46.38%  CNN_GRU=41.30%  TCN_GRU=50.00%  TCN_Transformer=41.30%  NBEATS=49.28%
+      [scaler] range [-4.28, 5.00]  16.9% outside [-1,1]
+      [PCA]    21 components → 90.4% explained variance
+      [LSTM    ] acc=0.529
+      [BiLSTM  ] acc=0.507
+      [GRU     ] acc=0.522
+      [CNN_LSTM] acc=0.543
+      [CNN_GRU ] acc=0.529
+      [TCN_GRU ] acc=0.522
+      [TCN_Transformer] acc=0.536
+      [NBEATS  ] acc=0.442
+      [calib]  temperature T=1.452  (prob spread: [0.421, 0.570])
+    ~ Win 3 | 80% train | test_n=138 | OOS=52.17% | AUC=0.505 | F1=0.529 | LGB=53.62% | XGB=53.62% | T=1.45
+         Dir → UP=56.06%  DOWN=48.61%  NEUTRAL=0.0%
+         DL  → LSTM=52.90%  BiLSTM=50.72%  GRU=52.17%  CNN_LSTM=54.35%  CNN_GRU=52.90%  TCN_GRU=52.17%  TCN_Transformer=53.62%  NBEATS=44.20%
+      [scaler] range [-4.10, 5.00]  16.9% outside [-1,1]
+      [PCA]    21 components → 90.2% explained variance
+      [LSTM    ] acc=0.529
+      [BiLSTM  ] acc=0.457
+      [GRU     ] acc=0.514
+      [CNN_LSTM] acc=0.529
+      [CNN_GRU ] acc=0.587
+      [TCN_GRU ] acc=0.551
+      [TCN_Transformer] acc=0.486
+      [NBEATS  ] acc=0.529
+      [calib]  temperature T=0.523  (prob spread: [0.404, 0.651])
+    ~ Win 4 | 85% train | test_n=138 | OOS=52.17% | AUC=0.515 | F1=0.641 | LGB=53.62% | XGB=53.62% | T=0.52
+         Dir → UP=53.64%  DOWN=46.43%  NEUTRAL=0.0%
+         DL  → LSTM=52.90%  BiLSTM=45.65%  GRU=51.45%  CNN_LSTM=52.90%  CNN_GRU=58.70%  TCN_GRU=55.07%  TCN_Transformer=48.55%  NBEATS=52.90%
+      [scaler] range [-3.81, 5.00]  16.9% outside [-1,1]
+      [PCA]    22 components → 91.0% explained variance
+      [LSTM    ] acc=0.532
+      [BiLSTM  ] acc=0.446
+      [GRU     ] acc=0.496
+      [CNN_LSTM] acc=0.532
+      [CNN_GRU ] acc=0.540
+      [TCN_GRU ] acc=0.496
+      [TCN_Transformer] acc=0.532
+      [NBEATS  ] acc=0.532
+      [calib]  temperature T=0.941  (prob spread: [0.515, 0.565])
+    ~ Win 5 | 90% train | test_n=139 | OOS=53.24% | AUC=0.480 | F1=0.695 | LGB=53.24% | XGB=53.24% | T=0.94
+         Dir → UP=53.24%  DOWN=0.00%  NEUTRAL=0.0%
+         DL  → LSTM=53.24%  BiLSTM=44.60%  GRU=49.64%  CNN_LSTM=53.24%  CNN_GRU=53.96%  TCN_GRU=49.64%  TCN_Transformer=53.24%  NBEATS=53.24%
+      [scaler] range [-3.70, 5.00]  16.8% outside [-1,1]
+      [PCA]    22 components → 90.9% explained variance
+      [LSTM    ] acc=0.500
+      [BiLSTM  ] acc=0.414
+      [GRU     ] acc=0.529
+      [CNN_LSTM] acc=0.586
+      [CNN_GRU ] acc=0.500
+      [TCN_GRU ] acc=0.471
+      [TCN_Transformer] acc=0.471
+      [NBEATS  ] acc=0.500
+      [calib]  temperature T=0.809  (prob spread: [0.517, 0.553])
+    ~ Win 6 | 95% train | test_n=70 | OOS=50.00% | AUC=0.430 | F1=0.667 | LGB=50.00% | XGB=50.00% | T=0.81
+         Dir → UP=50.00%  DOWN=0.00%  NEUTRAL=0.0%
+         DL  → LSTM=50.00%  BiLSTM=41.43%  GRU=52.86%  CNN_LSTM=58.57%  CNN_GRU=50.00%  TCN_GRU=47.14%  TCN_Transformer=47.14%  NBEATS=50.00%
+  [3/3] OOS Overall → Accuracy=50.07%  F1=0.5642  (761 preds, 6 wins, avg_T=2.06)
+
+A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.2.6 as it may crash. To support both 1.x and 2.x
+versions of NumPy, modules must be compiled with NumPy 2.0.
+Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+If you are a user of the module, the easiest solution will be to
+downgrade to 'numpy<2' or try to upgrade the affected module.
+We expect that some modules will need time to support NumPy 2.
+
+Traceback (most recent call last):  File "<string>", line 1, in <module>
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 129, in _main
+    return self._bootstrap(parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 314, in _bootstrap
+    self.run()
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\process.py", line 246, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 266, in _run_symbol_worker
+    return run_symbol(
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1839, in run_symbol
+    plot_oos_accuracy(window_rows, symbol, sym_plot_path)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1467, in plot_oos_accuracy
+    plt = _mpl()
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1459, in _mpl
+    import matplotlib; matplotlib.use("Agg")
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\__init__.py", line 144, in <module>
+    from . import _api, _version, cbook, _docstring, rcsetup
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\rcsetup.py", line 27, in <module>
+    from matplotlib.colors import Colormap, is_color_like
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\colors.py", line 56, in <module>
+    from matplotlib import _api, _cm, cbook, scale
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\scale.py", line 22, in <module>
+    from matplotlib.ticker import (
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\ticker.py", line 138, in <module>
+    from matplotlib import transforms as mtransforms
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\matplotlib\transforms.py", line 49, in <module>
+    from matplotlib._path import (
+AttributeError: _ARRAY_API not found
+  ⚠ Plot error: numpy.core.multiarray failed to import
