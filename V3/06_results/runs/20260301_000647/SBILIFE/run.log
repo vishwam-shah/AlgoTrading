@@ -1,0 +1,162 @@
+
+────────────────────────────────────────────────────────────
+  SBILIFE
+────────────────────────────────────────────────────────────
+  SBILIFE      ↻ computing features ... ✓ 1275 rows × 159 features
+  [1/3] Walk-forward: 6 windows  |  1275 rows  |  159 features
+        Win 1: train[0:803]  val[803:892]  test[892:1020]  (70%)
+        Win 2: train[0:861]  val[861:956]  test[956:1083]  (75%)
+        Win 3: train[0:918]  val[918:1020]  test[1020:1147]  (80%)
+        Win 4: train[0:975]  val[975:1083]  test[1083:1211]  (85%)
+        Win 5: train[0:1033]  val[1033:1147]  test[1147:1275]  (90%)
+        Win 6: train[0:1090]  val[1090:1211]  test[1211:1275]  (95%)
+  [1b] Feature selection: top 50 of 159 ... ✓ 47 features kept
+  [2/3] Training...
+      [scaler] range [-5.00, 5.00]  15.8% outside [-1,1]
+      [PCA]    20 components → 90.6% explained variance
+      [LSTM    ] acc=0.531
+      [BiLSTM  ] acc=0.516
+      [GRU     ] acc=0.516
+      [CNN_LSTM] acc=0.500
+      [CNN_GRU ] acc=0.477
+      [calib]  temperature T=0.288  (prob spread: [0.370, 0.691])
+    ~ Win 1 | 70% train | test_n=128 | OOS=53.91% | AUC=0.523 | F1=0.624 | LGB=57.81% | XGB=53.91% | T=0.29
+         DL → LSTM=53.12%  BiLSTM=51.56%  GRU=51.56%  CNN_LSTM=50.00%  CNN_GRU=47.66%
+      [scaler] range [-5.00, 5.00]  15.9% outside [-1,1]
+      [PCA]    20 components → 90.5% explained variance
+      [LSTM    ] acc=0.551
+      [BiLSTM  ] acc=0.504
+      [GRU     ] acc=0.472
+      [CNN_LSTM] acc=0.433
+      [CNN_GRU ] acc=0.559
+      [calib]  temperature T=0.327  (prob spread: [0.254, 0.826])
+    ~ Win 2 | 75% train | test_n=127 | OOS=54.33% | AUC=0.547 | F1=0.608 | LGB=53.54% | XGB=54.33% | T=0.33
+         DL → LSTM=55.12%  BiLSTM=50.39%  GRU=47.24%  CNN_LSTM=43.31%  CNN_GRU=55.91%
+      [scaler] range [-5.00, 5.00]  15.8% outside [-1,1]
+      [PCA]    20 components → 90.5% explained variance
+      [LSTM    ] acc=0.449
+      [BiLSTM  ] acc=0.512
+      [GRU     ] acc=0.520
+      [CNN_LSTM] acc=0.504
+      [CNN_GRU ] acc=0.457
+      [calib]  temperature T=0.480  (prob spread: [0.305, 0.807])
+    ✗ Win 3 | 80% train | test_n=127 | OOS=48.82% | AUC=0.506 | F1=0.615 | LGB=48.82% | XGB=48.03% | T=0.48
+         DL → LSTM=44.88%  BiLSTM=51.18%  GRU=51.97%  CNN_LSTM=50.39%  CNN_GRU=45.67%
+      [scaler] range [-5.00, 5.00]  15.6% outside [-1,1]
+      [PCA]    20 components → 90.3% explained variance
+      [LSTM    ] acc=0.500
+      [BiLSTM  ] acc=0.555
+      [GRU     ] acc=0.562
+      [CNN_LSTM] acc=0.523
+      [CNN_GRU ] acc=0.531
+      [calib]  temperature T=1.807  (prob spread: [0.488, 0.554])
+    ~ Win 4 | 85% train | test_n=128 | OOS=53.12% | AUC=0.541 | F1=0.545 | LGB=47.66% | XGB=50.00% | T=1.81
+         DL → LSTM=50.00%  BiLSTM=55.47%  GRU=56.25%  CNN_LSTM=52.34%  CNN_GRU=53.12%
+      [scaler] range [-5.00, 5.00]  15.5% outside [-1,1]
+      [PCA]    20 components → 90.4% explained variance
+      [LSTM    ] acc=0.523
+      [BiLSTM  ] acc=0.531
+      [GRU     ] acc=0.484
+      [CNN_LSTM] acc=0.453
+      [CNN_GRU ] acc=0.484
+      [calib]  temperature T=0.535  (prob spread: [0.468, 0.570])
+    ✗ Win 5 | 90% train | test_n=128 | OOS=47.66% | AUC=0.489 | F1=0.396 | LGB=51.56% | XGB=51.56% | T=0.53
+         DL → LSTM=52.34%  BiLSTM=53.12%  GRU=48.44%  CNN_LSTM=45.31%  CNN_GRU=48.44%
+      [scaler] range [-5.00, 5.00]  14.9% outside [-1,1]
+      [PCA]    20 components → 90.4% explained variance
+      [LSTM    ] acc=0.453
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\logging\__init__.py", line 1103, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<string>", line 1, in <module>
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 129, in _main
+    return self._bootstrap(parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 314, in _bootstrap
+    self.run()
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\process.py", line 246, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 230, in _run_symbol_worker
+    return run_symbol(
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1515, in run_symbol
+    res = train_window(X, y, win, feat_cols, symbol, sym_model_path, regimes=regimes)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1122, in train_window
+    test_preds[dl_name]     = mdl.predict(X_te_seq)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\02_models\deep_learning\base_deep.py", line 257, in predict
+    return (self.predict_proba(X) >= 0.5).astype(int)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\02_models\deep_learning\base_deep.py", line 252, in predict_proba
+    raw = self._model.predict(X.astype(np.float32), verbose=0)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\utils\traceback_utils.py", line 117, in error_handler
+    return fn(*args, **kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\tensorflow\trainer.py", line 588, in predict
+    batch_outputs = self.predict_function(data)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\util\traceback_utils.py", line 150, in error_handler
+    return fn(*args, **kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\eager\polymorphic_function\polymorphic_function.py", line 846, in __call__
+    _frequent_tracing_detector_manager.called_with_tracing(
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\eager\polymorphic_function\polymorphic_function.py", line 202, in called_with_tracing
+    detector.called_with_tracing(function_name, omit_warning)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\eager\polymorphic_function\polymorphic_function.py", line 157, in called_with_tracing
+    logging.warning(
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\platform\tf_logging.py", line 214, in warning
+    get_logger().warning(msg, *args, **kwargs)
+Message: '5 out of the last 21 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x00000145043A1630> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.'
+Arguments: ()
+      [BiLSTM  ] acc=0.438
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\logging\__init__.py", line 1103, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<string>", line 1, in <module>
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\spawn.py", line 129, in _main
+    return self._bootstrap(parent_sentinel)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 314, in _bootstrap
+    self.run()
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\process.py", line 246, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 230, in _run_symbol_worker
+    return run_symbol(
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1515, in run_symbol
+    res = train_window(X, y, win, feat_cols, symbol, sym_model_path, regimes=regimes)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\07_pipeline\run_pipeline.py", line 1122, in train_window
+    test_preds[dl_name]     = mdl.predict(X_te_seq)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\02_models\deep_learning\base_deep.py", line 257, in predict
+    return (self.predict_proba(X) >= 0.5).astype(int)
+  File "C:\Users\Home\Documents\AI_IN_STOCK_V2\V3\02_models\deep_learning\base_deep.py", line 252, in predict_proba
+    raw = self._model.predict(X.astype(np.float32), verbose=0)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\utils\traceback_utils.py", line 117, in error_handler
+    return fn(*args, **kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\tensorflow\trainer.py", line 588, in predict
+    batch_outputs = self.predict_function(data)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\util\traceback_utils.py", line 150, in error_handler
+    return fn(*args, **kwargs)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\eager\polymorphic_function\polymorphic_function.py", line 846, in __call__
+    _frequent_tracing_detector_manager.called_with_tracing(
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\eager\polymorphic_function\polymorphic_function.py", line 202, in called_with_tracing
+    detector.called_with_tracing(function_name, omit_warning)
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\eager\polymorphic_function\polymorphic_function.py", line 157, in called_with_tracing
+    logging.warning(
+  File "C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\platform\tf_logging.py", line 214, in warning
+    get_logger().warning(msg, *args, **kwargs)
+Message: '5 out of the last 17 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000014511C6CC10> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.'
+Arguments: ()
+      [GRU     ] acc=0.453
+      [CNN_LSTM] acc=0.406
+      [CNN_GRU ] acc=0.500
+      [calib]  temperature T=0.409  (prob spread: [0.266, 0.674])
+    ~ Win 6 | 95% train | test_n=64 | OOS=50.00% | AUC=0.571 | F1=0.448 | LGB=60.94% | XGB=53.12% | T=0.41
+         DL → LSTM=45.31%  BiLSTM=43.75%  GRU=45.31%  CNN_LSTM=40.62%  CNN_GRU=50.00%
+  [3/3] OOS Overall → Accuracy=51.42%  F1=0.5600  (702 preds, 6 wins, avg_T=0.64)
+  Plots → 06_results\runs\20260301_000647\SBILIFE\plots

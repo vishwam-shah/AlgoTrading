@@ -1,0 +1,78 @@
+
+────────────────────────────────────────────────────────────
+  ICICIBANK
+────────────────────────────────────────────────────────────
+  ICICIBANK    ↻ computing features ... ✓ 1265 rows × 159 features
+  [1/3] Walk-forward: 6 windows  |  1265 rows  |  159 features
+        Win 1: train[0:797]  val[797:885]  test[885:1012]  (70%)
+        Win 2: train[0:854]  val[854:948]  test[948:1075]  (75%)
+        Win 3: train[0:911]  val[911:1012]  test[1012:1138]  (80%)
+        Win 4: train[0:968]  val[968:1075]  test[1075:1201]  (85%)
+        Win 5: train[0:1025]  val[1025:1138]  test[1138:1265]  (90%)
+        Win 6: train[0:1081]  val[1081:1201]  test[1201:1265]  (95%)
+  [1b] Feature selection: top 50 of 159 ... ✓ 47 features kept
+  [2/3] Training...
+      [scaler] range [-5.00, 5.00]  19.3% outside [-1,1]
+      [PCA]    26 components → 90.7% explained variance
+      [LSTM    ] acc=0.496
+      [BiLSTM  ] acc=0.520
+      [GRU     ] acc=0.598
+      [CNN_LSTM] acc=0.543
+      [CNN_GRU ] acc=0.583
+      [calib]  temperature T=0.435  (prob spread: [0.312, 0.759])
+    ✓ Win 1 | 70% train | test_n=127 | OOS=58.27% | AUC=0.565 | F1=0.717 | LGB=57.48% | XGB=57.48% | T=0.43
+         DL → LSTM=49.61%  BiLSTM=51.97%  GRU=59.84%  CNN_LSTM=54.33%  CNN_GRU=58.27%
+      [scaler] range [-5.00, 5.00]  18.9% outside [-1,1]
+      [PCA]    26 components → 90.6% explained variance
+      [LSTM    ] acc=0.472
+      [BiLSTM  ] acc=0.575
+      [GRU     ] acc=0.535
+      [CNN_LSTM] acc=0.559
+      [CNN_GRU ] acc=0.535
+      [calib]  temperature T=0.620  (prob spread: [0.482, 0.706])
+    ~ Win 2 | 75% train | test_n=127 | OOS=51.97% | AUC=0.494 | F1=0.667 | LGB=48.03% | XGB=46.46% | T=0.62
+         DL → LSTM=47.24%  BiLSTM=57.48%  GRU=53.54%  CNN_LSTM=55.91%  CNN_GRU=53.54%
+      [scaler] range [-5.00, 5.00]  18.8% outside [-1,1]
+      [PCA]    26 components → 90.5% explained variance
+      [LSTM    ] acc=0.556
+      [BiLSTM  ] acc=0.548
+      [GRU     ] acc=0.516
+      [CNN_LSTM] acc=0.468
+      [CNN_GRU ] acc=0.476
+      [calib]  temperature T=0.610  (prob spread: [0.415, 0.812])
+    ✓ Win 3 | 80% train | test_n=126 | OOS=58.73% | AUC=0.519 | F1=0.708 | LGB=52.38% | XGB=53.97% | T=0.61
+         DL → LSTM=55.56%  BiLSTM=54.76%  GRU=51.59%  CNN_LSTM=46.83%  CNN_GRU=47.62%
+      [scaler] range [-5.00, 5.00]  18.6% outside [-1,1]
+      [PCA]    26 components → 90.4% explained variance
+      [LSTM    ] acc=0.508
+      [BiLSTM  ] acc=0.508
+      [GRU     ] acc=0.548
+      [CNN_LSTM] acc=0.460
+      [CNN_GRU ] acc=0.508
+      [calib]  temperature T=0.624  (prob spread: [0.522, 0.624])
+    ~ Win 4 | 85% train | test_n=126 | OOS=50.79% | AUC=0.461 | F1=0.674 | LGB=50.79% | XGB=50.79% | T=0.62
+         DL → LSTM=50.79%  BiLSTM=50.79%  GRU=54.76%  CNN_LSTM=46.03%  CNN_GRU=50.79%
+      [scaler] range [-5.00, 5.00]  18.7% outside [-1,1]
+      [PCA]    26 components → 90.2% explained variance
+      [LSTM    ] acc=0.512
+      [BiLSTM  ] acc=0.496
+      [GRU     ] acc=0.504
+      [CNN_LSTM] acc=0.496
+      [CNN_GRU ] acc=0.488
+      [calib]  temperature T=1.011  (prob spread: [0.518, 0.659])
+    ✗ Win 5 | 90% train | test_n=127 | OOS=49.61% | AUC=0.460 | F1=0.663 | LGB=49.61% | XGB=49.61% | T=1.01
+         DL → LSTM=51.18%  BiLSTM=49.61%  GRU=50.39%  CNN_LSTM=49.61%  CNN_GRU=48.82%
+      [scaler] range [-5.00, 5.00]  18.6% outside [-1,1]
+      [PCA]    26 components → 90.1% explained variance
+      [LSTM    ] acc=0.547
+      [BiLSTM  ] acc=0.547
+WARNING:tensorflow:5 out of the last 17 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x00000187285D1AB0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+      [GRU     ] acc=0.469
+WARNING:tensorflow:5 out of the last 17 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000018736765E10> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+      [CNN_LSTM] acc=0.562
+      [CNN_GRU ] acc=0.562
+      [calib]  temperature T=0.100  (prob spread: [0.692, 0.978])
+    ~ Win 6 | 95% train | test_n=64 | OOS=54.69% | AUC=0.466 | F1=0.707 | LGB=54.69% | XGB=54.69% | T=0.10
+         DL → LSTM=54.69%  BiLSTM=54.69%  GRU=46.88%  CNN_LSTM=56.25%  CNN_GRU=56.25%
+  [3/3] OOS Overall → Accuracy=53.95%  F1=0.6874  (697 preds, 6 wins, avg_T=0.57)
+  Plots → 06_results\runs\20260301_000647\ICICIBANK\plots

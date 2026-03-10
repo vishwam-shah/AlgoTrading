@@ -1,0 +1,76 @@
+
+────────────────────────────────────────────────────────────
+  CHOLAFIN
+────────────────────────────────────────────────────────────
+  CHOLAFIN     ↻ computing features ... ✓ 1455 rows × 159 features
+  [1/3] Walk-forward: 6 windows  |  1455 rows  |  159 features
+        Win 1: train[0:917]  val[917:1018]  test[1018:1164]  (70%)
+        Win 2: train[0:982]  val[982:1091]  test[1091:1236]  (75%)
+        Win 3: train[0:1048]  val[1048:1164]  test[1164:1309]  (80%)
+        Win 4: train[0:1113]  val[1113:1236]  test[1236:1382]  (85%)
+        Win 5: train[0:1179]  val[1179:1309]  test[1309:1455]  (90%)
+        Win 6: train[0:1244]  val[1244:1382]  test[1382:1455]  (95%)
+  [1b] Feature selection: top 50 of 159 ... ✓ 47 features kept
+  [2/3] Training...
+      [scaler] range [-4.47, 5.00]  17.3% outside [-1,1]
+      [PCA]    21 components → 90.5% explained variance
+      [LSTM    ] acc=0.555
+      [BiLSTM  ] acc=0.514
+      [GRU     ] acc=0.445
+      [CNN_LSTM] acc=0.548
+      [CNN_GRU ] acc=0.541
+      [calib]  temperature T=0.730  (prob spread: [0.450, 0.612])
+    ~ Win 1 | 70% train | test_n=146 | OOS=54.79% | AUC=0.552 | F1=0.649 | LGB=51.37% | XGB=51.37% | T=0.73
+         DL → LSTM=55.48%  BiLSTM=51.37%  GRU=44.52%  CNN_LSTM=54.79%  CNN_GRU=54.11%
+      [scaler] range [-4.59, 5.00]  16.9% outside [-1,1]
+      [PCA]    21 components → 90.5% explained variance
+      [LSTM    ] acc=0.503
+      [BiLSTM  ] acc=0.524
+      [GRU     ] acc=0.483
+      [CNN_LSTM] acc=0.524
+      [CNN_GRU ] acc=0.497
+      [calib]  temperature T=8.000  (prob spread: [0.497, 0.512])
+    ✗ Win 2 | 75% train | test_n=145 | OOS=47.59% | AUC=0.560 | F1=0.645 | LGB=48.97% | XGB=48.97% | T=8.00
+         DL → LSTM=50.34%  BiLSTM=52.41%  GRU=48.28%  CNN_LSTM=52.41%  CNN_GRU=49.66%
+      [scaler] range [-4.71, 5.00]  16.9% outside [-1,1]
+      [PCA]    21 components → 90.3% explained variance
+      [LSTM    ] acc=0.462
+      [BiLSTM  ] acc=0.510
+      [GRU     ] acc=0.441
+      [CNN_LSTM] acc=0.441
+      [CNN_GRU ] acc=0.434
+      [calib]  temperature T=0.461  (prob spread: [0.117, 0.958])
+    ✗ Win 3 | 80% train | test_n=145 | OOS=40.69% | AUC=0.420 | F1=0.538 | LGB=49.66% | XGB=48.97% | T=0.46
+         DL → LSTM=46.21%  BiLSTM=51.03%  GRU=44.14%  CNN_LSTM=44.14%  CNN_GRU=43.45%
+      [scaler] range [-4.75, 5.00]  16.8% outside [-1,1]
+      [PCA]    21 components → 90.1% explained variance
+      [LSTM    ] acc=0.527
+      [BiLSTM  ] acc=0.527
+      [GRU     ] acc=0.397
+      [CNN_LSTM] acc=0.493
+      [CNN_GRU ] acc=0.452
+      [calib]  temperature T=8.000  (prob spread: [0.492, 0.511])
+    ✗ Win 4 | 85% train | test_n=146 | OOS=45.21% | AUC=0.471 | F1=0.512 | LGB=43.84% | XGB=47.26% | T=8.00
+         DL → LSTM=52.74%  BiLSTM=52.74%  GRU=39.73%  CNN_LSTM=49.32%  CNN_GRU=45.21%
+      [scaler] range [-4.90, 5.00]  16.6% outside [-1,1]
+      [PCA]    21 components → 90.0% explained variance
+      [LSTM    ] acc=0.459
+      [BiLSTM  ] acc=0.466
+      [GRU     ] acc=0.521
+      [CNN_LSTM] acc=0.486
+      [CNN_GRU ] acc=0.555
+      [calib]  temperature T=8.000  (prob spread: [0.495, 0.512])
+    ✗ Win 5 | 90% train | test_n=146 | OOS=48.63% | AUC=0.489 | F1=0.483 | LGB=46.58% | XGB=45.89% | T=8.00
+         DL → LSTM=45.89%  BiLSTM=46.58%  GRU=52.05%  CNN_LSTM=48.63%  CNN_GRU=55.48%
+      [scaler] range [-4.90, 5.00]  16.6% outside [-1,1]
+      [PCA]    22 components → 91.0% explained variance
+      [LSTM    ] acc=0.548
+      [BiLSTM  ] acc=0.452
+      [GRU     ] acc=0.425
+      [CNN_LSTM] acc=0.521
+      [CNN_GRU ] acc=0.521
+      [calib]  temperature T=8.000  (prob spread: [0.497, 0.505])
+    ✗ Win 6 | 95% train | test_n=73 | OOS=47.95% | AUC=0.406 | F1=0.136 | LGB=50.68% | XGB=50.68% | T=8.00
+         DL → LSTM=54.79%  BiLSTM=45.21%  GRU=42.47%  CNN_LSTM=52.05%  CNN_GRU=52.05%
+  [3/3] OOS Overall → Accuracy=47.44%  F1=0.5526  (801 preds, 6 wins, avg_T=5.53)
+  Plots → 06_results\runs\20260301_000647\CHOLAFIN\plots

@@ -1,0 +1,805 @@
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [RESUME] Resuming run 20260307_141956 — completed symbols will be skipped
+======================================================================
+  AI STOCK PREDICTION — PRODUCTION PIPELINE V3  [Phase 1]
+  Run ID    : 20260307_141956
+  Date      : 2026-03-09 02:47
+  Stocks    : 100  (SBIN, HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, INDUSINDBK, BANDHANBNK, IDFCFIRSTB, FEDERALBNK, AUBANK...)
+  Workers   : 4  (n_jobs/model=2,  cpu_count=8)
+  MIN_MOVE  : 0.4%  (above transaction costs)
+  CONF THR  : 58%
+  Data from : 2018-01-01 → today  (incremental)
+  Windows   : 70% → 95% (step 5%)
+======================================================================
+
+======================================================================
+  STEP 1 — DATA DOWNLOAD  (incremental, parallel threads)
+======================================================================
+  HDFCBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   SBIN         ↓ incremental  2026-03-06 → 2026-03-09 ...   KOTAKBANK    ↓ incremental  2026-03-06 → 2026-03-09 ...   BANDHANBNK   ↓ incremental  2026-03-06 → 2026-03-09 ...   AXISBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   IDFCFIRSTB   ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIBANK    ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSINDBK   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  AUBANK       ↓ incremental  2026-03-06 → 2026-03-09 ...   FEDERALBNK   ↓ incremental  2026-03-06 → 2026-03-09 ...   HDFCLIFE     ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJFINANCE   ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIGI      ↓ incremental  2026-03-06 → 2026-03-09 ...   SBILIFE      ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJFINSV   ↓ incremental  2026-03-06 → 2026-03-09 ...   MUTHOOTFIN   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  HCLTECH      ↓ incremental  2026-03-06 → 2026-03-09 ...   SHRIRAMFIN   ↓ incremental  2026-03-06 → 2026-03-09 ...   INFY         ↓ incremental  2026-03-06 → 2026-03-09 ...   CHOLAFIN     ↓ incremental  2026-03-06 → 2026-03-09 ...   LTIM         ↓ incremental  2026-03-06 → 2026-03-09 ...   TCS          ↓ incremental  2026-03-06 → 2026-03-09 ...   WIPRO        ↓ incremental  2026-03-06 → 2026-03-09 ...   TECHM        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  M&M          ↓ incremental  2026-03-06 → 2026-03-09 ...   COFORGE      ↓ incremental  2026-03-06 → 2026-03-09 ...   MARUTI       ↓ incremental  2026-03-06 → 2026-03-09 ...   PERSISTENT   ↓ incremental  2026-03-06 → 2026-03-09 ...   MPHASIS      ↓ incremental  2026-03-06 → 2026-03-09 ...   TVSMOTOR     ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJ-AUTO   ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAELXSI    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  ITC          ↓ incremental  2026-03-06 → 2026-03-09 ...   HEROMOTOCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   EICHERMOT    ↓ incremental  2026-03-06 → 2026-03-09 ...   MOTHERSON    ↓ incremental  2026-03-06 → 2026-03-09 ...   HINDUNILVR   ↓ incremental  2026-03-06 → 2026-03-09 ...   NESTLEIND    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  SUNPHARMA    ↓ incremental  2026-03-06 → 2026-03-09 ...   COLPAL       ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJCP     ↓ incremental  2026-03-06 → 2026-03-09 ...   BRITANNIA    ↓ incremental  2026-03-06 → 2026-03-09 ...   TATACONSUM   ↓ incremental  2026-03-06 → 2026-03-09 ...   MARICO       ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  CIPLA        ↓ incremental  2026-03-06 → 2026-03-09 ...   DRREDDY      ↓ incremental  2026-03-06 → 2026-03-09 ...   AUROPHARMA   ↓ incremental  2026-03-06 → 2026-03-09 ...   TORNTPHARM   ↓ incremental  2026-03-06 → 2026-03-09 ...   DIVISLAB     ↓ incremental  2026-03-06 → 2026-03-09 ...   LUPIN        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+  RELIANCE     ↓ incremental  2026-03-06 → 2026-03-09 ...   ALKEM        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  ONGC         ↓ incremental  2026-03-06 → 2026-03-09 ...   POWERGRID    ↓ incremental  2026-03-06 → 2026-03-09 ...   BPCL         ↓ incremental  2026-03-06 → 2026-03-09 ...   NTPC         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  COALINDIA    ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAPOWER    ↓ incremental  2026-03-06 → 2026-03-09 ...   GAIL         ↓ incremental  2026-03-06 → 2026-03-09 ...   TATASTEEL    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  VEDL         ↓ incremental  2026-03-06 → 2026-03-09 ...   JSWSTEEL     ↓ incremental  2026-03-06 → 2026-03-09 ...   HINDALCO     ↓ incremental  2026-03-06 → 2026-03-09 ...   SAIL         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  LT           ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSTOWER   ↓ incremental  2026-03-06 → 2026-03-09 ...   BHARTIARTL   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  BHEL         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  SIEMENS      ↓ incremental  2026-03-06 → 2026-03-09 ...   HAVELLS      ↓ incremental  2026-03-06 → 2026-03-09 ...   ULTRACEMCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   ABB          ↓ incremental  2026-03-06 → 2026-03-09 ...   CUMMINSIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   POLYCAB      ↓ incremental  2026-03-06 → 2026-03-09 ...   GRASIM       ↓ incremental  2026-03-06 → 2026-03-09 ...   AMBUJACEM    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  SHREECEM     ↓ incremental  2026-03-06 → 2026-03-09 ...   TITAN        ↓ incremental  2026-03-06 → 2026-03-09 ...   PIDILITIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   ASIANPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  BERGEPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ...   PAGEIND      ↓ incremental  2026-03-06 → 2026-03-09 ...   DMART        ↓ incremental  2026-03-06 → 2026-03-09 ...   DLF          ↓ incremental  2026-03-06 → 2026-03-09 ...   VOLTAS       ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJPROP   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  ADANIENT     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  HAL          ↓ incremental  2026-03-06 → 2026-03-09 ...   ADANIPORTS   ↓ incremental  2026-03-06 → 2026-03-09 ...   IRFC         ↓ incremental  2026-03-06 → 2026-03-09 ...   BEL          ↓ incremental  2026-03-06 → 2026-03-09 ...   OFSS         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  ETERNAL      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  NAUKRI       ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  NMDC         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  BOSCHLTD     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  BAJAJHFL     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  MANAPPURAM   ↓ incremental  2026-03-06 → 2026-03-09 ...   EXIDEIND     ↓ incremental  2026-03-06 → 2026-03-09 ...   RBLBANK      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+
+  Loaded 100/100 symbols
+
+  Downloading auxiliary data ...
+  global_cues     ↓ 2026-03-07 → 2026-03-09 ... AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+WARNING:tensorflow:From C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:5 out of the last 19 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000028941729750> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 17 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x000002894584BD00> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 19 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000012040A61750> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 17 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000016F45753B50> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 17 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000012044BEFD00> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 17 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000016F47591C60> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+[watchdog] Attempt 1 — 52/100 completed
+[watchdog] Launching pipeline (--resume 20260307_141956 --workers 4) ...
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [RESUME] Resuming run 20260307_141956 — completed symbols will be skipped
+======================================================================
+  AI STOCK PREDICTION — PRODUCTION PIPELINE V3  [Phase 1]
+  Run ID    : 20260307_141956
+  Date      : 2026-03-09 06:36
+  Stocks    : 100  (SBIN, HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, INDUSINDBK, BANDHANBNK, IDFCFIRSTB, FEDERALBNK, AUBANK...)
+  Workers   : 4  (n_jobs/model=2,  cpu_count=8)
+  MIN_MOVE  : 0.4%  (above transaction costs)
+  CONF THR  : 58%
+  Data from : 2018-01-01 → today  (incremental)
+  Windows   : 70% → 95% (step 5%)
+======================================================================
+
+======================================================================
+  STEP 1 — DATA DOWNLOAD  (incremental, parallel threads)
+======================================================================
+  BANDHANBNK   ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSINDBK   ↓ incremental  2026-03-06 → 2026-03-09 ...   SBIN         ↓ incremental  2026-03-06 → 2026-03-09 ...   AXISBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   HDFCBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   IDFCFIRSTB   ↓ incremental  2026-03-06 → 2026-03-09 ...   KOTAKBANK    ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIBANK    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  AUBANK       ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIGI      ↓ incremental  2026-03-06 → 2026-03-09 ...   HDFCLIFE     ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJFINSV   ↓ incremental  2026-03-06 → 2026-03-09 ...   SBILIFE      ↓ incremental  2026-03-06 → 2026-03-09 ...   FEDERALBNK   ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJFINANCE   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  MUTHOOTFIN   ↓ incremental  2026-03-06 → 2026-03-09 ...   CHOLAFIN     ↓ incremental  2026-03-06 → 2026-03-09 ...   SHRIRAMFIN   ↓ incremental  2026-03-06 → 2026-03-09 ...   WIPRO        ↓ incremental  2026-03-06 → 2026-03-09 ...   INFY         ↓ incremental  2026-03-06 → 2026-03-09 ...   HCLTECH      ↓ incremental  2026-03-06 → 2026-03-09 ...   TCS          ↓ incremental  2026-03-06 → 2026-03-09 ...   TECHM        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  MPHASIS      ↓ incremental  2026-03-06 → 2026-03-09 ...   LTIM         ↓ incremental  2026-03-06 → 2026-03-09 ...   PERSISTENT   ↓ incremental  2026-03-06 → 2026-03-09 ...   TVSMOTOR     ↓ incremental  2026-03-06 → 2026-03-09 ...   COFORGE      ↓ incremental  2026-03-06 → 2026-03-09 ...   M&M          ↓ incremental  2026-03-06 → 2026-03-09 ...   MARUTI       ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAELXSI    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  HEROMOTOCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   ITC          ↓ incremental  2026-03-06 → 2026-03-09 ...   HINDUNILVR   ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJ-AUTO   ↓ incremental  2026-03-06 → 2026-03-09 ...   NESTLEIND    ↓ incremental  2026-03-06 → 2026-03-09 ...   MOTHERSON    ↓ incremental  2026-03-06 → 2026-03-09 ...   BRITANNIA    ↓ incremental  2026-03-06 → 2026-03-09 ...   EICHERMOT    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  SUNPHARMA    ↓ incremental  2026-03-06 → 2026-03-09 ...   MARICO       ↓ incremental  2026-03-06 → 2026-03-09 ...   TATACONSUM   ↓ incremental  2026-03-06 → 2026-03-09 ...   COLPAL       ↓ incremental  2026-03-06 → 2026-03-09 ...   DIVISLAB     ↓ incremental  2026-03-06 → 2026-03-09 ...   DRREDDY      ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJCP     ↓ incremental  2026-03-06 → 2026-03-09 ...   CIPLA        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  RELIANCE     ↓ incremental  2026-03-06 → 2026-03-09 ...   TORNTPHARM   ↓ incremental  2026-03-06 → 2026-03-09 ...   ONGC         ↓ incremental  2026-03-06 → 2026-03-09 ...   ALKEM        ↓ incremental  2026-03-06 → 2026-03-09 ...   BPCL         ↓ incremental  2026-03-06 → 2026-03-09 ...   LUPIN        ↓ incremental  2026-03-06 → 2026-03-09 ...   NTPC         ↓ incremental  2026-03-06 → 2026-03-09 ...   AUROPHARMA   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  GAIL         ↓ incremental  2026-03-06 → 2026-03-09 ...   POWERGRID    ↓ incremental  2026-03-06 → 2026-03-09 ...   TATASTEEL    ↓ incremental  2026-03-06 → 2026-03-09 ...   COALINDIA    ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAPOWER    ↓ incremental  2026-03-06 → 2026-03-09 ...   JSWSTEEL     ↓ incremental  2026-03-06 → 2026-03-09 ...   HINDALCO     ↓ incremental  2026-03-06 → 2026-03-09 ...   VEDL         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  LT           ↓ incremental  2026-03-06 → 2026-03-09 ...   SAIL         ↓ incremental  2026-03-06 → 2026-03-09 ...   BHARTIARTL   ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSTOWER   ↓ incremental  2026-03-06 → 2026-03-09 ...   BHEL         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  ABB          ↓ incremental  2026-03-06 → 2026-03-09 ...   HAVELLS      ↓ incremental  2026-03-06 → 2026-03-09 ...   CUMMINSIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   POLYCAB      ↓ incremental  2026-03-06 → 2026-03-09 ...   SIEMENS      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  GRASIM       ↓ incremental  2026-03-06 → 2026-03-09 ...   ULTRACEMCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   AMBUJACEM    ↓ incremental  2026-03-06 → 2026-03-09 ...   SHREECEM     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  PIDILITIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   ASIANPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ...   TITAN        ↓ incremental  2026-03-06 → 2026-03-09 ...   BERGEPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  VOLTAS       ↓ incremental  2026-03-06 → 2026-03-09 ...   PAGEIND      ↓ incremental  2026-03-06 → 2026-03-09 ...   DMART        ↓ incremental  2026-03-06 → 2026-03-09 ...   ADANIPORTS   ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJPROP   ↓ incremental  2026-03-06 → 2026-03-09 ...   ADANIENT     ↓ incremental  2026-03-06 → 2026-03-09 ...   DLF          ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  BEL          ↓ incremental  2026-03-06 → 2026-03-09 ...   NAUKRI       ↓ incremental  2026-03-06 → 2026-03-09 ...   HAL          ↓ incremental  2026-03-06 → 2026-03-09 ...   OFSS         ↓ incremental  2026-03-06 → 2026-03-09 ...   IRFC         ↓ incremental  2026-03-06 → 2026-03-09 ...   NMDC         ↓ incremental  2026-03-06 → 2026-03-09 ...   ETERNAL      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  RBLBANK      ↓ incremental  2026-03-06 → 2026-03-09 ...   BOSCHLTD     ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJHFL     ↓ incremental  2026-03-06 → 2026-03-09 ...   MANAPPURAM   ↓ incremental  2026-03-06 → 2026-03-09 ...   EXIDEIND     ↓ incremental  2026-03-06 → 2026-03-09 ... AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+WARNING:tensorflow:From C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From C:\Users\Home\AppData\Local\Programs\Python\Python310\lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+[watchdog] After run: 57/100 completed
+[watchdog] Pipeline exited before finishing. Waiting 10s then retrying...
+[watchdog] Attempt 1 — 57/100 completed
+[watchdog] Launching pipeline (--resume 20260307_141956 --workers 4) ...
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [RESUME] Resuming run 20260307_141956 — completed symbols will be skipped
+======================================================================
+  AI STOCK PREDICTION — PRODUCTION PIPELINE V3  [Phase 1]
+  Run ID    : 20260307_141956
+  Date      : 2026-03-09 13:14
+  Stocks    : 100  (SBIN, HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, INDUSINDBK, BANDHANBNK, IDFCFIRSTB, FEDERALBNK, AUBANK...)
+  Workers   : 4  (n_jobs/model=2,  cpu_count=8)
+  MIN_MOVE  : 0.4%  (above transaction costs)
+  CONF THR  : 58%
+  Data from : 2018-01-01 → today  (incremental)
+  Windows   : 70% → 95% (step 5%)
+======================================================================
+
+======================================================================
+  STEP 1 — DATA DOWNLOAD  (incremental, parallel threads)
+======================================================================
+  AXISBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   IDFCFIRSTB   ↓ incremental  2026-03-06 → 2026-03-09 ...   BANDHANBNK   ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIBANK    ↓ incremental  2026-03-06 → 2026-03-09 ...   SBIN         ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSINDBK   ↓ incremental  2026-03-06 → 2026-03-09 ...   HDFCBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   KOTAKBANK    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  BAJFINANCE   ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJFINSV   ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIGI      ↓ incremental  2026-03-06 → 2026-03-09 ...   HDFCLIFE     ↓ incremental  2026-03-06 → 2026-03-09 ...   SBILIFE      ↓ incremental  2026-03-06 → 2026-03-09 ...   AUBANK       ↓ incremental  2026-03-06 → 2026-03-09 ...   MUTHOOTFIN   ↓ incremental  2026-03-06 → 2026-03-09 ...   FEDERALBNK   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+  SHRIRAMFIN   ↓ incremental  2026-03-06 → 2026-03-09 ...   CHOLAFIN     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  INFY         ↓ incremental  2026-03-06 → 2026-03-09 ...   TCS          ↓ incremental  2026-03-06 → 2026-03-09 ...   WIPRO        ↓ incremental  2026-03-06 → 2026-03-09 ...   HCLTECH      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  LTIM         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  TECHM        ↓ incremental  2026-03-06 → 2026-03-09 ...   MPHASIS      ↓ incremental  2026-03-06 → 2026-03-09 ...   PERSISTENT   ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAELXSI    ↓ incremental  2026-03-06 → 2026-03-09 ...   COFORGE      ↓ incremental  2026-03-06 → 2026-03-09 ...   MARUTI       ↓ incremental  2026-03-06 → 2026-03-09 ...   M&M          ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  HEROMOTOCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJ-AUTO   ↓ incremental  2026-03-06 → 2026-03-09 ...   HINDUNILVR   ↓ incremental  2026-03-06 → 2026-03-09 ...   EICHERMOT    ↓ incremental  2026-03-06 → 2026-03-09 ...   MOTHERSON    ↓ incremental  2026-03-06 → 2026-03-09 ...   TVSMOTOR     ↓ incremental  2026-03-06 → 2026-03-09 ...   ITC          ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  NESTLEIND    ↓ incremental  2026-03-06 → 2026-03-09 ...   BRITANNIA    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+  COLPAL       ↓ incremental  2026-03-06 → 2026-03-09 ...   MARICO       ↓ incremental  2026-03-06 → 2026-03-09 ...   TATACONSUM   ↓ incremental  2026-03-06 → 2026-03-09 ...   SUNPHARMA    ↓ incremental  2026-03-06 → 2026-03-09 ...   CIPLA        ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJCP     ↓ incremental  2026-03-06 → 2026-03-09 ...   DRREDDY      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  ALKEM        ↓ incremental  2026-03-06 → 2026-03-09 ...   AUROPHARMA   ↓ incremental  2026-03-06 → 2026-03-09 ...   RELIANCE     ↓ incremental  2026-03-06 → 2026-03-09 ...   TORNTPHARM   ↓ incremental  2026-03-06 → 2026-03-09 ...   DIVISLAB     ↓ incremental  2026-03-06 → 2026-03-09 ...   LUPIN        ↓ incremental  2026-03-06 → 2026-03-09 ...   ONGC         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  BPCL         ↓ incremental  2026-03-06 → 2026-03-09 ...   NTPC         ↓ incremental  2026-03-06 → 2026-03-09 ...   POWERGRID    ↓ incremental  2026-03-06 → 2026-03-09 ...   TATASTEEL    ↓ incremental  2026-03-06 → 2026-03-09 ...   GAIL         ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAPOWER    ↓ incremental  2026-03-06 → 2026-03-09 ...   COALINDIA    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  JSWSTEEL     ↓ incremental  2026-03-06 → 2026-03-09 ...   HINDALCO     ↓ incremental  2026-03-06 → 2026-03-09 ...   BHARTIARTL   ↓ incremental  2026-03-06 → 2026-03-09 ...   SAIL         ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSTOWER   ↓ incremental  2026-03-06 → 2026-03-09 ...   VEDL         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  HAVELLS      ↓ incremental  2026-03-06 → 2026-03-09 ...   BHEL         ↓ incremental  2026-03-06 → 2026-03-09 ...   POLYCAB      ↓ incremental  2026-03-06 → 2026-03-09 ...   SIEMENS      ↓ incremental  2026-03-06 → 2026-03-09 ...   ABB          ↓ incremental  2026-03-06 → 2026-03-09 ...   LT           ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  CUMMINSIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   ULTRACEMCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   GRASIM       ↓ incremental  2026-03-06 → 2026-03-09 ...   TITAN        ↓ incremental  2026-03-06 → 2026-03-09 ...   AMBUJACEM    ↓ incremental  2026-03-06 → 2026-03-09 ...   SHREECEM     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  VOLTAS       ↓ incremental  2026-03-06 → 2026-03-09 ...   PIDILITIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   ASIANPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ...   PAGEIND      ↓ incremental  2026-03-06 → 2026-03-09 ...   DLF          ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+  DMART        ↓ incremental  2026-03-06 → 2026-03-09 ...   BERGEPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJPROP   ↓ incremental  2026-03-06 → 2026-03-09 ...   ADANIPORTS   ↓ incremental  2026-03-06 → 2026-03-09 ...   ADANIENT     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  BEL          ↓ incremental  2026-03-06 → 2026-03-09 ...   NAUKRI       ↓ incremental  2026-03-06 → 2026-03-09 ...   ETERNAL      ↓ incremental  2026-03-06 → 2026-03-09 ...   HAL          ↓ incremental  2026-03-06 → 2026-03-09 ...   IRFC         ↓ incremental  2026-03-06 → 2026-03-09 ...   NMDC         ↓ incremental  2026-03-06 → 2026-03-09 ...   BOSCHLTD     ↓ incremental  2026-03-06 → 2026-03-09 ...   OFSS         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  EXIDEIND     ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJHFL     ↓ incremental  2026-03-06 → 2026-03-09 ...   RBLBANK      ↓ incremental  2026-03-06 → 2026-03-09 ...   MANAPPURAM   ↓ incremental  2026-03-06 → 2026-03-09 ... AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
+[watchdog] Attempt 1 — 57/100 completed
+[watchdog] Launching pipeline (--resume 20260307_141956 --workers 4) ...
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [RESUME] Resuming run 20260307_141956 — completed symbols will be skipped
+======================================================================
+  AI STOCK PREDICTION — PRODUCTION PIPELINE V3  [Phase 1]
+  Run ID    : 20260307_141956
+  Date      : 2026-03-09 15:29
+  Stocks    : 100  (SBIN, HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, INDUSINDBK, BANDHANBNK, IDFCFIRSTB, FEDERALBNK, AUBANK...)
+  Workers   : 4  (n_jobs/model=2,  cpu_count=8)
+  MIN_MOVE  : 0.4%  (above transaction costs)
+  CONF THR  : 58%
+  Data from : 2018-01-01 → today  (incremental)
+  Windows   : 70% → 95% (step 5%)
+======================================================================
+
+======================================================================
+  STEP 1 — DATA DOWNLOAD  (incremental, parallel threads)
+======================================================================
+  SBIN         ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSINDBK   ↓ incremental  2026-03-06 → 2026-03-09 ...   HDFCBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIBANK    ↓ incremental  2026-03-06 → 2026-03-09 ...   BANDHANBNK   ↓ incremental  2026-03-06 → 2026-03-09 ...   KOTAKBANK    ↓ incremental  2026-03-06 → 2026-03-09 ...   AXISBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   IDFCFIRSTB   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  BAJFINANCE   ↓ incremental  2026-03-06 → 2026-03-09 ...   AUBANK       ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJFINSV   ↓ incremental  2026-03-06 → 2026-03-09 ...   HDFCLIFE     ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIGI      ↓ incremental  2026-03-06 → 2026-03-09 ...   SBILIFE      ↓ incremental  2026-03-06 → 2026-03-09 ...   MUTHOOTFIN   ↓ incremental  2026-03-06 → 2026-03-09 ...   FEDERALBNK   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  CHOLAFIN     ↓ incremental  2026-03-06 → 2026-03-09 ...   WIPRO        ↓ incremental  2026-03-06 → 2026-03-09 ...   SHRIRAMFIN   ↓ incremental  2026-03-06 → 2026-03-09 ...   INFY         ↓ incremental  2026-03-06 → 2026-03-09 ...   LTIM         ↓ incremental  2026-03-06 → 2026-03-09 ...   HCLTECH      ↓ incremental  2026-03-06 → 2026-03-09 ...   TCS          ↓ incremental  2026-03-06 → 2026-03-09 ...   TECHM        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  PERSISTENT   ↓ incremental  2026-03-06 → 2026-03-09 ...   MARUTI       ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAELXSI    ↓ incremental  2026-03-06 → 2026-03-09 ...   TVSMOTOR     ↓ incremental  2026-03-06 → 2026-03-09 ...   COFORGE      ↓ incremental  2026-03-06 → 2026-03-09 ...   MPHASIS      ↓ incremental  2026-03-06 → 2026-03-09 ...   M&M          ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJ-AUTO   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  HEROMOTOCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   HINDUNILVR   ↓ incremental  2026-03-06 → 2026-03-09 ...   EICHERMOT    ↓ incremental  2026-03-06 → 2026-03-09 ...   MOTHERSON    ↓ incremental  2026-03-06 → 2026-03-09 ...   ITC          ↓ incremental  2026-03-06 → 2026-03-09 ...   NESTLEIND    ↓ incremental  2026-03-06 → 2026-03-09 ...   BRITANNIA    ↓ incremental  2026-03-06 → 2026-03-09 ...   TATACONSUM   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  COLPAL       ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJCP     ↓ incremental  2026-03-06 → 2026-03-09 ...   MARICO       ↓ incremental  2026-03-06 → 2026-03-09 ...   SUNPHARMA    ↓ incremental  2026-03-06 → 2026-03-09 ...   DIVISLAB     ↓ incremental  2026-03-06 → 2026-03-09 ...   CIPLA        ↓ incremental  2026-03-06 → 2026-03-09 ...   LUPIN        ↓ incremental  2026-03-06 → 2026-03-09 ...   DRREDDY      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  TORNTPHARM   ↓ incremental  2026-03-06 → 2026-03-09 ...   ALKEM        ↓ incremental  2026-03-06 → 2026-03-09 ...   RELIANCE     ↓ incremental  2026-03-06 → 2026-03-09 ...   AUROPHARMA   ↓ incremental  2026-03-06 → 2026-03-09 ...   BPCL         ↓ incremental  2026-03-06 → 2026-03-09 ...   ONGC         ↓ incremental  2026-03-06 → 2026-03-09 ...   NTPC         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  HINDALCO     ↓ incremental  2026-03-06 → 2026-03-09 ...   TATASTEEL    ↓ incremental  2026-03-06 → 2026-03-09 ...   COALINDIA    ↓ incremental  2026-03-06 → 2026-03-09 ...   POWERGRID    ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAPOWER    ↓ incremental  2026-03-06 → 2026-03-09 ...   GAIL         ↓ incremental  2026-03-06 → 2026-03-09 ...   VEDL         ↓ incremental  2026-03-06 → 2026-03-09 ...   JSWSTEEL     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  SAIL         ↓ incremental  2026-03-06 → 2026-03-09 ...   BHARTIARTL   ↓ incremental  2026-03-06 → 2026-03-09 ...   ABB          ↓ incremental  2026-03-06 → 2026-03-09 ...   BHEL         ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSTOWER   ↓ incremental  2026-03-06 → 2026-03-09 ...   HAVELLS      ↓ incremental  2026-03-06 → 2026-03-09 ...   SIEMENS      ↓ incremental  2026-03-06 → 2026-03-09 ...   LT           ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  CUMMINSIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   ULTRACEMCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   GRASIM       ↓ incremental  2026-03-06 → 2026-03-09 ...   AMBUJACEM    ↓ incremental  2026-03-06 → 2026-03-09 ...   POLYCAB      ↓ incremental  2026-03-06 → 2026-03-09 ...   SHREECEM     ↓ incremental  2026-03-06 → 2026-03-09 ...   ASIANPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ...   TITAN        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  BERGEPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ...   PIDILITIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   VOLTAS       ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  DMART        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  PAGEIND      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  DLF          ↓ incremental  2026-03-06 → 2026-03-09 ...   BEL          ↓ incremental  2026-03-06 → 2026-03-09 ...   ADANIPORTS   ↓ incremental  2026-03-06 → 2026-03-09 ...   ADANIENT     ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJPROP   ↓ incremental  2026-03-06 → 2026-03-09 ...   HAL          ↓ incremental  2026-03-06 → 2026-03-09 ...   IRFC         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  ETERNAL      ↓ incremental  2026-03-06 → 2026-03-09 ...   NAUKRI       ↓ incremental  2026-03-06 → 2026-03-09 ...   MANAPPURAM   ↓ incremental  2026-03-06 → 2026-03-09 ...   BOSCHLTD     ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJHFL     ↓ incremental  2026-03-06 → 2026-03-09 ...   NMDC         ↓ incremental  2026-03-06 → 2026-03-09 ...   OFSS         ↓ incremental  2026-03-06 → 2026-03-09 ...   RBLBANK      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  EXIDEIND     ↓ incremental  2026-03-06 → 2026-03-09 ... [watchdog] Attempt 1 — 68/100 completed
+[watchdog] Launching pipeline (--resume 20260307_141956 --workers 4) ...
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [RESUME] Resuming run 20260307_141956 — completed symbols will be skipped
+======================================================================
+  AI STOCK PREDICTION — PRODUCTION PIPELINE V3  [Phase 1]
+  Run ID    : 20260307_141956
+  Date      : 2026-03-09 22:02
+  Stocks    : 100  (SBIN, HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, INDUSINDBK, BANDHANBNK, IDFCFIRSTB, FEDERALBNK, AUBANK...)
+  Workers   : 4  (n_jobs/model=2,  cpu_count=8)
+  MIN_MOVE  : 0.4%  (above transaction costs)
+  CONF THR  : 58%
+  Data from : 2018-01-01 → today  (incremental)
+  Windows   : 70% → 95% (step 5%)
+======================================================================
+
+======================================================================
+  STEP 1 — DATA DOWNLOAD  (incremental, parallel threads)
+======================================================================
+  KOTAKBANK    ↓ incremental  2026-03-06 → 2026-03-09 ...   HDFCBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   IDFCFIRSTB   ↓ incremental  2026-03-06 → 2026-03-09 ...   AXISBANK     ↓ incremental  2026-03-06 → 2026-03-09 ...   ICICIBANK    ↓ incremental  2026-03-06 → 2026-03-09 ...   BANDHANBNK   ↓ incremental  2026-03-06 → 2026-03-09 ...   INDUSINDBK   ↓ incremental  2026-03-06 → 2026-03-09 ...   SBIN         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  AUBANK       ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJFINANCE   ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJFINSV   ↓ incremental  2026-03-06 → 2026-03-09 ...   FEDERALBNK   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  MUTHOOTFIN   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  ICICIGI      ↓ incremental  2026-03-06 → 2026-03-09 ...   SBILIFE      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  HDFCLIFE     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+  SHRIRAMFIN   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  TCS          ↓ incremental  2026-03-06 → 2026-03-09 ...   WIPRO        ↓ incremental  2026-03-06 → 2026-03-09 ...   CHOLAFIN     ↓ incremental  2026-03-06 → 2026-03-09 ...   INFY         ↓ incremental  2026-03-06 → 2026-03-09 ...   TECHM        ↓ incremental  2026-03-06 → 2026-03-09 ...   HCLTECH      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  COFORGE      ↓ incremental  2026-03-06 → 2026-03-09 ...   PERSISTENT   ↓ incremental  2026-03-06 → 2026-03-09 ...   LTIM         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  MPHASIS      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  M&M          ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  MARUTI       ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJ-AUTO   ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAELXSI    ↓ incremental  2026-03-06 → 2026-03-09 ...   HEROMOTOCO   ↓ incremental  2026-03-06 → 2026-03-09 ...   MOTHERSON    ↓ incremental  2026-03-06 → 2026-03-09 ...   EICHERMOT    ↓ incremental  2026-03-06 → 2026-03-09 ...   TVSMOTOR     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  HINDUNILVR   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  ITC          ↓ incremental  2026-03-06 → 2026-03-09 ...   NESTLEIND    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+  BRITANNIA    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  COLPAL       ↓ incremental  2026-03-06 → 2026-03-09 ...   GODREJCP     ↓ incremental  2026-03-06 → 2026-03-09 ...   DRREDDY      ↓ incremental  2026-03-06 → 2026-03-09 ...   SUNPHARMA    ↓ incremental  2026-03-06 → 2026-03-09 ...   TATACONSUM   ↓ incremental  2026-03-06 → 2026-03-09 ...   MARICO       ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  DIVISLAB     ↓ incremental  2026-03-06 → 2026-03-09 ...   AUROPHARMA   ↓ incremental  2026-03-06 → 2026-03-09 ...   TORNTPHARM   ↓ incremental  2026-03-06 → 2026-03-09 ...   CIPLA        ↓ incremental  2026-03-06 → 2026-03-09 ...   LUPIN        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  ONGC         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  ALKEM        ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  RELIANCE     ↓ incremental  2026-03-06 → 2026-03-09 ...   BPCL         ↓ incremental  2026-03-06 → 2026-03-09 ...   POWERGRID    ↓ incremental  2026-03-06 → 2026-03-09 ...   NTPC         ↓ incremental  2026-03-06 → 2026-03-09 ...   COALINDIA    ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  GAIL         ↓ incremental  2026-03-06 → 2026-03-09 ...   JSWSTEEL     ↓ incremental  2026-03-06 → 2026-03-09 ...   VEDL         ↓ incremental  2026-03-06 → 2026-03-09 ...   TATAPOWER    ↓ incremental  2026-03-06 → 2026-03-09 ...   HINDALCO     ↓ incremental  2026-03-06 → 2026-03-09 ...   TATASTEEL    ↓ incremental  2026-03-06 → 2026-03-09 ...   SAIL         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  BHARTIARTL   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+  INDUSTOWER   ↓ incremental  2026-03-06 → 2026-03-09 ...   LT           ↓ incremental  2026-03-06 → 2026-03-09 ...   SIEMENS      ↓ incremental  2026-03-06 → 2026-03-09 ...   BHEL         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  ABB          ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  HAVELLS      ↓ incremental  2026-03-06 → 2026-03-09 ...   CUMMINSIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   ULTRACEMCO   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  POLYCAB      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+  TITAN        ↓ incremental  2026-03-06 → 2026-03-09 ...   SHREECEM     ↓ incremental  2026-03-06 → 2026-03-09 ...   AMBUJACEM    ↓ incremental  2026-03-06 → 2026-03-09 ...   GRASIM       ↓ incremental  2026-03-06 → 2026-03-09 ...   ASIANPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  PIDILITIND   ↓ incremental  2026-03-06 → 2026-03-09 ...   BERGEPAINT   ↓ incremental  2026-03-06 → 2026-03-09 ...   DMART        ↓ incremental  2026-03-06 → 2026-03-09 ...   PAGEIND      ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  VOLTAS       ↓ incremental  2026-03-06 → 2026-03-09 ...   DLF          ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  GODREJPROP   ↓ incremental  2026-03-06 → 2026-03-09 ...   ADANIENT     ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  ADANIPORTS   ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  BEL          ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+  IRFC         ↓ incremental  2026-03-06 → 2026-03-09 ...   HAL          ↓ incremental  2026-03-06 → 2026-03-09 ...   ETERNAL      ↓ incremental  2026-03-06 → 2026-03-09 ...   OFSS         ↓ incremental  2026-03-06 → 2026-03-09 ...   NAUKRI       ↓ incremental  2026-03-06 → 2026-03-09 ...   NMDC         ↓ incremental  2026-03-06 → 2026-03-09 ... ✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+✓ no new rows
+  MANAPPURAM   ↓ incremental  2026-03-06 → 2026-03-09 ...   BAJAJHFL     ↓ incremental  2026-03-06 → 2026-03-09 ...   EXIDEIND     ↓ incremental  2026-03-06 → 2026-03-09 ...   BOSCHLTD     ↓ incremental  2026-03-06 → 2026-03-09 ...   RBLBANK      ↓ incremental  2026-03-06 → 2026-03-09 ... [watchdog] Attempt 1 — 69/100 completed
+[watchdog] Launching pipeline (--resume 20260307_141956 --workers 4) ...
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [RESUME] Resuming run 20260307_141956 — completed symbols will be skipped
+======================================================================
+  AI STOCK PREDICTION — PRODUCTION PIPELINE V3  [Phase 1]
+  Run ID    : 20260307_141956
+  Date      : 2026-03-10 01:47
+  Stocks    : 100  (SBIN, HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, INDUSINDBK, BANDHANBNK, IDFCFIRSTB, FEDERALBNK, AUBANK...)
+  Workers   : 4  (n_jobs/model=2,  cpu_count=8)
+  MIN_MOVE  : 0.4%  (above transaction costs)
+  CONF THR  : 58%
+  Data from : 2018-01-01 → today  (incremental)
+  Windows   : 70% → 95% (step 5%)
+======================================================================
+
+======================================================================
+  STEP 1 — DATA DOWNLOAD  (incremental, parallel threads)
+======================================================================
+  BANDHANBNK   ↓ incremental  2026-03-06 → 2026-03-10 ...   IDFCFIRSTB   ↓ incremental  2026-03-06 → 2026-03-10 ...   INDUSINDBK   ↓ incremental  2026-03-06 → 2026-03-10 ...   AXISBANK     ↓ incremental  2026-03-06 → 2026-03-10 ...   KOTAKBANK    ↓ incremental  2026-03-06 → 2026-03-10 ...   HDFCBANK     ↓ incremental  2026-03-06 → 2026-03-10 ...   ICICIBANK    ↓ incremental  2026-03-06 → 2026-03-10 ...   SBIN         ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  AUBANK       ↓ incremental  2026-03-06 → 2026-03-10 ...   FEDERALBNK   ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 1964  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  BAJFINANCE   ↓ incremental  2026-03-06 → 2026-03-10 ...   BAJAJFINSV   ↓ incremental  2026-03-06 → 2026-03-10 ...   SBILIFE      ↓ incremental  2026-03-06 → 2026-03-10 ...   SHRIRAMFIN   ↓ incremental  2026-03-06 → 2026-03-10 ...   CHOLAFIN     ↓ incremental  2026-03-06 → 2026-03-10 ...   HDFCLIFE     ↓ incremental  2026-03-06 → 2026-03-10 ...   ICICIGI      ↓ incremental  2026-03-06 → 2026-03-10 ...   MUTHOOTFIN   ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  TCS          ↓ incremental  2026-03-06 → 2026-03-10 ...   HCLTECH      ↓ incremental  2026-03-06 → 2026-03-10 ...   INFY         ↓ incremental  2026-03-06 → 2026-03-10 ...   PERSISTENT   ↓ incremental  2026-03-06 → 2026-03-10 ...   WIPRO        ↓ incremental  2026-03-06 → 2026-03-10 ...   LTIM         ↓ incremental  2026-03-06 → 2026-03-10 ...   MPHASIS      ↓ incremental  2026-03-06 → 2026-03-10 ...   TECHM        ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  COFORGE      ↓ incremental  2026-03-06 → 2026-03-10 ...   TATAELXSI    ↓ incremental  2026-03-06 → 2026-03-10 ...   TVSMOTOR     ↓ incremental  2026-03-06 → 2026-03-10 ...   HEROMOTOCO   ↓ incremental  2026-03-06 → 2026-03-10 ...   MARUTI       ↓ incremental  2026-03-06 → 2026-03-10 ...   BAJAJ-AUTO   ↓ incremental  2026-03-06 → 2026-03-10 ...   M&M          ↓ incremental  2026-03-06 → 2026-03-10 ...   EICHERMOT    ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  MOTHERSON    ↓ incremental  2026-03-06 → 2026-03-10 ...   HINDUNILVR   ↓ incremental  2026-03-06 → 2026-03-10 ...   ITC          ↓ incremental  2026-03-06 → 2026-03-10 ...   BRITANNIA    ↓ incremental  2026-03-06 → 2026-03-10 ...   MARICO       ↓ incremental  2026-03-06 → 2026-03-10 ...   NESTLEIND    ↓ incremental  2026-03-06 → 2026-03-10 ...   COLPAL       ↓ incremental  2026-03-06 → 2026-03-10 ...   TATACONSUM   ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  SUNPHARMA    ↓ incremental  2026-03-06 → 2026-03-10 ...   GODREJCP     ↓ incremental  2026-03-06 → 2026-03-10 ...   DRREDDY      ↓ incremental  2026-03-06 → 2026-03-10 ...   LUPIN        ↓ incremental  2026-03-06 → 2026-03-10 ...   CIPLA        ↓ incremental  2026-03-06 → 2026-03-10 ...   TORNTPHARM   ↓ incremental  2026-03-06 → 2026-03-10 ...   DIVISLAB     ↓ incremental  2026-03-06 → 2026-03-10 ...   AUROPHARMA   ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+  ALKEM        ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2021  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  RELIANCE     ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2021  [2026-03-09])
+  ONGC         ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  BPCL         ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  NTPC         ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+  COALINDIA    ↓ incremental  2026-03-06 → 2026-03-10 ...   POWERGRID    ↓ incremental  2026-03-06 → 2026-03-10 ...   GAIL         ↓ incremental  2026-03-06 → 2026-03-10 ...   TATAPOWER    ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  TATASTEEL    ↓ incremental  2026-03-06 → 2026-03-10 ...   JSWSTEEL     ↓ incremental  2026-03-06 → 2026-03-10 ...   VEDL         ↓ incremental  2026-03-06 → 2026-03-10 ...   HINDALCO     ↓ incremental  2026-03-06 → 2026-03-10 ...   SAIL         ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  BHARTIARTL   ↓ incremental  2026-03-06 → 2026-03-10 ...   INDUSTOWER   ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  BHEL         ↓ incremental  2026-03-06 → 2026-03-10 ...   HAVELLS      ↓ incremental  2026-03-06 → 2026-03-10 ...   ABB          ↓ incremental  2026-03-06 → 2026-03-10 ...   SIEMENS      ↓ incremental  2026-03-06 → 2026-03-10 ...   LT           ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2021  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  POLYCAB      ↓ incremental  2026-03-06 → 2026-03-10 ...   GRASIM       ↓ incremental  2026-03-06 → 2026-03-10 ...   ULTRACEMCO   ↓ incremental  2026-03-06 → 2026-03-10 ...   SHREECEM     ↓ incremental  2026-03-06 → 2026-03-10 ...   ASIANPAINT   ↓ incremental  2026-03-06 → 2026-03-10 ...   CUMMINSIND   ↓ incremental  2026-03-06 → 2026-03-10 ...   TITAN        ↓ incremental  2026-03-06 → 2026-03-10 ...   AMBUJACEM    ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 1705  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  PIDILITIND   ↓ incremental  2026-03-06 → 2026-03-10 ...   PAGEIND      ↓ incremental  2026-03-06 → 2026-03-10 ...   GODREJPROP   ↓ incremental  2026-03-06 → 2026-03-10 ...   DLF          ↓ incremental  2026-03-06 → 2026-03-10 ...   BERGEPAINT   ↓ incremental  2026-03-06 → 2026-03-10 ...   DMART        ↓ incremental  2026-03-06 → 2026-03-10 ...   VOLTAS       ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2021  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  ADANIENT     ↓ incremental  2026-03-06 → 2026-03-10 ...   ADANIPORTS   ↓ incremental  2026-03-06 → 2026-03-10 ...   HAL          ↓ incremental  2026-03-06 → 2026-03-10 ...   ETERNAL      ↓ incremental  2026-03-06 → 2026-03-10 ...   BEL          ↓ incremental  2026-03-06 → 2026-03-10 ...   OFSS         ↓ incremental  2026-03-06 → 2026-03-10 ...   NAUKRI       ↓ incremental  2026-03-06 → 2026-03-10 ...   IRFC         ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 1263  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 1962  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 1123  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+  NMDC         ↓ incremental  2026-03-06 → 2026-03-10 ...   BOSCHLTD     ↓ incremental  2026-03-06 → 2026-03-10 ...   MANAPPURAM   ↓ incremental  2026-03-06 → 2026-03-10 ...   EXIDEIND     ↓ incremental  2026-03-06 → 2026-03-10 ...   RBLBANK      ↓ incremental  2026-03-06 → 2026-03-10 ...   BAJAJHFL     ↓ incremental  2026-03-06 → 2026-03-10 ... ✓ +1 rows  (total 368  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+✓ +1 rows  (total 2022  [2026-03-09])
+
+  Loaded 100/100 symbols
+
+  Downloading auxiliary data ...
+  global_cues     ↓ 2026-03-09 → 2026-03-10 ... [watchdog] After run: 77/100 completed
+[watchdog] Pipeline exited before finishing. Waiting 10s then retrying...
+[watchdog] Attempt 1 — 77/100 completed
+[watchdog] Launching pipeline (--resume 20260307_141956 --workers 4) ...
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+[watchdog] After run: 77/100 completed
+[watchdog] Pipeline exited before finishing. Waiting 10s then retrying...
+[watchdog] Attempt 1 — 77/100 completed
+[watchdog] Launching pipeline (--resume 20260307_141956 --workers 4) ...
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+[watchdog] After run: 77/100 completed
+[watchdog] Pipeline exited before finishing. Waiting 10s then retrying...
+[watchdog] Attempt 1 — 77/100 completed
+[watchdog] Launching pipeline (--resume 20260307_141956 --workers 4) ...
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS

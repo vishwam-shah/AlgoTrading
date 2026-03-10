@@ -1,11 +1,4 @@
-"""Traditional ML Models (XGBoost, LightGBM, CatBoost)"""
-
-from .xgboost_classifier import XGBoostClassifier
 from .lightgbm_classifier import LightGBMClassifier
-from .catboost_classifier import CatBoostClassifier
+from .xgboost_classifier import XGBoostClassifier
 
-__all__ = [
-    'XGBoostClassifier',
-    'LightGBMClassifier',
-    'CatBoostClassifier'
-]
+__all__ = ["LightGBMClassifier", "XGBoostClassifier"]

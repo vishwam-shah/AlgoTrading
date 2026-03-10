@@ -1116,35 +1116,29 @@ async def run_v3(request: V3RunRequest, background_tasks: BackgroundTasks):
 
 
 def execute_v3(job_id: str, symbols: List[str]):
-    """Execute V3 pipeline in background."""
+    """Execute V3 walk-forward ML pipeline in background."""
     import logging
+    import sys
+    import os
+
     try:
         v3_jobs[job_id]["status"] = "running"
 
-        # V3 step names
-        v3_step_names = {
-            1: "Data Collection",
-            2: "Feature Engineering",
-            3: "Model Training",
-            4: "Evaluation",
-        }
-
         def progress_cb(step: int, total: int, message: str):
+            pct = int((step / max(total, 1)) * 100)
             v3_jobs[job_id]["current_step"] = step
             v3_jobs[job_id]["total_steps"] = total
-            v3_jobs[job_id]["progress"] = int((step / total) * 100)
+            v3_jobs[job_id]["progress"] = pct
             v3_jobs[job_id]["message"] = message
 
-            # Update steps list
             step_info = {
                 "step": step,
-                "name": v3_step_names.get(step, f"Step {step}"),
-                "status": "running",
+                "name": message,
+                "status": "running" if step < total else "completed",
                 "duration": 0,
                 "details": message,
             }
             steps = v3_jobs[job_id].get("steps", [])
-            # Mark previous steps completed
             for s in steps:
                 if s["step"] < step:
                     s["status"] = "completed"
@@ -1155,8 +1149,16 @@ def execute_v3(job_id: str, symbols: List[str]):
                 steps.append(step_info)
             v3_jobs[job_id]["steps"] = steps
 
-        # Import and run V3 pipeline
-        from V3.pipeline import run_pipeline_api
+        # ── Import V3 pipeline (V3/07_pipeline/run_pipeline.py) ──────────
+        workspace_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        v3_root       = os.path.join(workspace_root, "V3")
+        pipeline_dir  = os.path.join(v3_root, "07_pipeline")
+        models_dir    = os.path.join(v3_root, "02_models")
+        for _p in [pipeline_dir, v3_root, models_dir, workspace_root]:
+            if _p not in sys.path:
+                sys.path.insert(0, _p)
+
+        from run_pipeline import run_pipeline_api  # type: ignore
 
         result = run_pipeline_api(
             symbols=symbols,
@@ -1169,21 +1171,26 @@ def execute_v3(job_id: str, symbols: List[str]):
 
         v3_jobs[job_id]["status"] = "completed"
         v3_jobs[job_id]["progress"] = 100
-        v3_jobs[job_id]["message"] = "V3 pipeline completed"
+        v3_jobs[job_id]["message"] = "V3 pipeline completed successfully"
         v3_jobs[job_id]["result"] = sanitize_dict({
-            "backtest_results": result["backtest_results"],
-            "signals": result["signals"],
-            "allocation": {},
-            "pipeline_status": {"status": "completed"},
-            "timestamp": datetime.now().isoformat(),
+            "signals":          result.get("signals", {}),
+            "backtest_results": result.get("backtest_results", {}),
+            "equity_curve":     result.get("equity_curve", []),
+            "allocation":       {},
+            "pipeline_status":  {"status": "completed"},
+            "run_path":         result.get("run_path", ""),
+            "elapsed_sec":      result.get("elapsed_sec", 0),
+            "timestamp":        datetime.now().isoformat(),
         })
 
         results_cache[job_id] = v3_jobs[job_id]["result"]
 
     except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
         v3_jobs[job_id]["status"] = "failed"
         v3_jobs[job_id]["message"] = str(e)
-        logging.error(f"[V3 Pipeline Error] job_id={job_id} error={e}")
+        logging.error(f"[V3 Pipeline Error] job_id={job_id}\n{tb}")
 
 
 @app.get("/api/v1/v3/{job_id}/status")

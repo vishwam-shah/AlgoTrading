@@ -1,0 +1,3 @@
+symbol,last_date,last_close,direction,action,confidence,avg_prob,signal_active,regime,regime_label,temperature
+ETERNAL,02-03-2026,242.8699951,DOWN,SELL,0.7254,0.2746,TRUE,0,bear,0.1
+ADANIENT,02-03-2026,2124.600098,UP,HOLD,0.5221,0.5221,FALSE,0,bear,1.178
