@@ -803,3 +803,674 @@ AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
   [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
   [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
   [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [RESUME] Resuming run 20260307_141956 — completed symbols will be skipped
+======================================================================
+  AI STOCK PREDICTION — PRODUCTION PIPELINE V3  [Phase 1]
+  Run ID    : 20260307_141956
+  Date      : 2026-03-11 08:29
+  Stocks    : 100  (SBIN, HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, INDUSINDBK, BANDHANBNK, IDFCFIRSTB, FEDERALBNK, AUBANK...)
+  Workers   : 2  (n_jobs/model=4,  cpu_count=8)
+  MIN_MOVE  : 0.4%  (above transaction costs)
+  CONF THR  : 58%
+  Data from : 2018-01-01 → today  (incremental)
+  Windows   : 70% → 95% (step 5%)
+======================================================================
+
+======================================================================
+  STEP 1 — DATA DOWNLOAD  (incremental, parallel threads)
+======================================================================
+  INDUSINDBK   ↓ incremental  2026-03-09 → 2026-03-11 ...   SBIN         ↓ incremental  2026-03-09 → 2026-03-11 ...   IDFCFIRSTB   ↓ incremental  2026-03-09 → 2026-03-11 ...   AXISBANK     ↓ incremental  2026-03-09 → 2026-03-11 ...   KOTAKBANK    ↓ incremental  2026-03-09 → 2026-03-11 ...   ICICIBANK    ↓ incremental  2026-03-09 → 2026-03-11 ...   BANDHANBNK   ↓ incremental  2026-03-09 → 2026-03-11 ...   HDFCBANK     ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 1965  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  FEDERALBNK   ↓ incremental  2026-03-09 → 2026-03-11 ...   AUBANK       ↓ incremental  2026-03-09 → 2026-03-11 ...   BAJAJFINSV   ↓ incremental  2026-03-09 → 2026-03-11 ...   ICICIGI      ↓ incremental  2026-03-09 → 2026-03-11 ...   SBILIFE      ↓ incremental  2026-03-09 → 2026-03-11 ...   HDFCLIFE     ↓ incremental  2026-03-09 → 2026-03-11 ...   MUTHOOTFIN   ↓ incremental  2026-03-09 → 2026-03-11 ...   BAJFINANCE   ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  SHRIRAMFIN   ↓ incremental  2026-03-09 → 2026-03-11 ...   CHOLAFIN     ↓ incremental  2026-03-09 → 2026-03-11 ...   INFY         ↓ incremental  2026-03-09 → 2026-03-11 ...   WIPRO        ↓ incremental  2026-03-09 → 2026-03-11 ...   TCS          ↓ incremental  2026-03-09 → 2026-03-11 ...   HCLTECH      ↓ incremental  2026-03-09 → 2026-03-11 ...   TECHM        ↓ incremental  2026-03-09 → 2026-03-11 ...   LTIM         ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  MPHASIS      ↓ incremental  2026-03-09 → 2026-03-11 ...   PERSISTENT   ↓ incremental  2026-03-09 → 2026-03-11 ...   COFORGE      ↓ incremental  2026-03-09 → 2026-03-11 ...   M&M          ↓ incremental  2026-03-09 → 2026-03-11 ...   TATAELXSI    ↓ incremental  2026-03-09 → 2026-03-11 ...   MARUTI       ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  TVSMOTOR     ↓ incremental  2026-03-09 → 2026-03-11 ...   BAJAJ-AUTO   ↓ incremental  2026-03-09 → 2026-03-11 ...   EICHERMOT    ↓ incremental  2026-03-09 → 2026-03-11 ...   HINDUNILVR   ↓ incremental  2026-03-09 → 2026-03-11 ...   HEROMOTOCO   ↓ incremental  2026-03-09 → 2026-03-11 ...   MOTHERSON    ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  ITC          ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  NESTLEIND    ↓ incremental  2026-03-09 → 2026-03-11 ...   BRITANNIA    ↓ incremental  2026-03-09 → 2026-03-11 ...   MARICO       ↓ incremental  2026-03-09 → 2026-03-11 ...   GODREJCP     ↓ incremental  2026-03-09 → 2026-03-11 ...   TATACONSUM   ↓ incremental  2026-03-09 → 2026-03-11 ...   COLPAL       ↓ incremental  2026-03-09 → 2026-03-11 ...   SUNPHARMA    ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  DRREDDY      ↓ incremental  2026-03-09 → 2026-03-11 ...   DIVISLAB     ↓ incremental  2026-03-09 → 2026-03-11 ...   CIPLA        ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  LUPIN        ↓ incremental  2026-03-09 → 2026-03-11 ...   ONGC         ↓ incremental  2026-03-09 → 2026-03-11 ...   BPCL         ↓ incremental  2026-03-09 → 2026-03-11 ...   NTPC         ↓ incremental  2026-03-09 → 2026-03-11 ...   TORNTPHARM   ↓ incremental  2026-03-09 → 2026-03-11 ...   RELIANCE     ↓ incremental  2026-03-09 → 2026-03-11 ...   AUROPHARMA   ↓ incremental  2026-03-09 → 2026-03-11 ...   ALKEM        ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+  POWERGRID    ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2022  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  COALINDIA    ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2022  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  GAIL         ↓ incremental  2026-03-09 → 2026-03-11 ...   TATAPOWER    ↓ incremental  2026-03-09 → 2026-03-11 ...   JSWSTEEL     ↓ incremental  2026-03-09 → 2026-03-11 ...   TATASTEEL    ↓ incremental  2026-03-09 → 2026-03-11 ...   HINDALCO     ↓ incremental  2026-03-09 → 2026-03-11 ...   VEDL         ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  SAIL         ↓ incremental  2026-03-09 → 2026-03-11 ...   LT           ↓ incremental  2026-03-09 → 2026-03-11 ...   BHARTIARTL   ↓ incremental  2026-03-09 → 2026-03-11 ...   INDUSTOWER   ↓ incremental  2026-03-09 → 2026-03-11 ...   ABB          ↓ incremental  2026-03-09 → 2026-03-11 ...   BHEL         ↓ incremental  2026-03-09 → 2026-03-11 ...   SIEMENS      ↓ incremental  2026-03-09 → 2026-03-11 ...   HAVELLS      ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2022  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  TITAN        ↓ incremental  2026-03-09 → 2026-03-11 ...   CUMMINSIND   ↓ incremental  2026-03-09 → 2026-03-11 ...   ULTRACEMCO   ↓ incremental  2026-03-09 → 2026-03-11 ...   AMBUJACEM    ↓ incremental  2026-03-09 → 2026-03-11 ...   ASIANPAINT   ↓ incremental  2026-03-09 → 2026-03-11 ...   GRASIM       ↓ incremental  2026-03-09 → 2026-03-11 ...   POLYCAB      ↓ incremental  2026-03-09 → 2026-03-11 ...   SHREECEM     ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 1706  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  DLF          ↓ incremental  2026-03-09 → 2026-03-11 ...   PIDILITIND   ↓ incremental  2026-03-09 → 2026-03-11 ...   VOLTAS       ↓ incremental  2026-03-09 → 2026-03-11 ...   BERGEPAINT   ↓ incremental  2026-03-09 → 2026-03-11 ...   DMART        ↓ incremental  2026-03-09 → 2026-03-11 ...   PAGEIND      ↓ incremental  2026-03-09 → 2026-03-11 ...   ADANIENT     ↓ incremental  2026-03-09 → 2026-03-11 ...   GODREJPROP   ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2022  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  ADANIPORTS   ↓ incremental  2026-03-09 → 2026-03-11 ...   HAL          ↓ incremental  2026-03-09 → 2026-03-11 ...   BEL          ↓ incremental  2026-03-09 → 2026-03-11 ...   IRFC         ↓ incremental  2026-03-09 → 2026-03-11 ...   NAUKRI       ↓ incremental  2026-03-09 → 2026-03-11 ...   OFSS         ↓ incremental  2026-03-09 → 2026-03-11 ...   ETERNAL      ↓ incremental  2026-03-09 → 2026-03-11 ...   NMDC         ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+  BOSCHLTD     ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 1264  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 1124  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 1963  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+  BAJAJHFL     ↓ incremental  2026-03-09 → 2026-03-11 ...   MANAPPURAM   ↓ incremental  2026-03-09 → 2026-03-11 ...   EXIDEIND     ↓ incremental  2026-03-09 → 2026-03-11 ...   RBLBANK      ↓ incremental  2026-03-09 → 2026-03-11 ... ✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 369  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+✓ +1 rows  (total 2023  [2026-03-10])
+
+  Loaded 100/100 symbols
+
+  Downloading auxiliary data ...
+  global_cues     ↓ 2026-03-10 → 2026-03-11 ...   [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+✓ 2129 rows  [2026-03-10]
+  USD/INR     : 2133 rows
+  Global cues : 2129 rows  cols=['date', 'sp500_close', 'sp500_ret', 'nasdaq_close', 'nasdaq_ret', 'us_vix_close', 'us_vix_ret', 'dxy_close', 'dxy_ret', 'crude_close', 'crude_ret', 'nikkei_close', 'nikkei_ret']
+
+======================================================================
+  STEPS 2-7 — FEATURES + WALK-FORWARD TRAINING  (2 workers)
+  Per-symbol logs → 06_results\runs\20260307_141956/<symbol>/run.log
+======================================================================
+  [skip] SBIN — already completed
+  [skip] HDFCBANK — already completed
+  [skip] ICICIBANK — already completed
+  [skip] AXISBANK — already completed
+  [skip] KOTAKBANK — already completed
+  [skip] INDUSINDBK — already completed
+  [skip] BANDHANBNK — already completed
+  [skip] IDFCFIRSTB — already completed
+  [skip] FEDERALBNK — already completed
+  [skip] AUBANK — already completed
+  [skip] BAJFINANCE — already completed
+  [skip] BAJAJFINSV — already completed
+  [skip] HDFCLIFE — already completed
+  [skip] SBILIFE — already completed
+  [skip] ICICIGI — already completed
+  [skip] MUTHOOTFIN — already completed
+  [skip] CHOLAFIN — already completed
+  [skip] SHRIRAMFIN — already completed
+  [skip] TCS — already completed
+  [skip] INFY — already completed
+  [skip] WIPRO — already completed
+  [skip] HCLTECH — already completed
+  [skip] TECHM — already completed
+  [skip] LTIM — already completed
+  [skip] MPHASIS — already completed
+  [skip] PERSISTENT — already completed
+  [skip] COFORGE — already completed
+  [skip] TATAELXSI — already completed
+  [skip] MARUTI — already completed
+  [skip] M&M — already completed
+  [skip] TVSMOTOR — already completed
+  [skip] BAJAJ-AUTO — already completed
+  [skip] HEROMOTOCO — already completed
+  [skip] EICHERMOT — already completed
+  [skip] MOTHERSON — already completed
+  [skip] HINDUNILVR — already completed
+  [skip] ITC — already completed
+  [skip] NESTLEIND — already completed
+  [skip] BRITANNIA — already completed
+  [skip] TATACONSUM — already completed
+  [skip] MARICO — already completed
+  [skip] COLPAL — already completed
+  [skip] GODREJCP — already completed
+  [skip] SUNPHARMA — already completed
+  [skip] DRREDDY — already completed
+  [skip] CIPLA — already completed
+  [skip] DIVISLAB — already completed
+  [skip] LUPIN — already completed
+  [skip] TOR✓ 50 features kept
+  [2/3] Training...
+      [scaler] range [-5.00, 5.00]  18.6% outside [-1,1]
+      [PCA]    25 components → 90.3% explained variance
+      [LSTM    ] acc=0.453
+      [BiLSTM  ] acc=0.533
+      [GRU     ] acc=0.520
+      [CNN_LSTM] acc=0.507
+      [CNN_GRU ] acc=0.527
+      [TCN_GRU ] acc=0.480
+      [TCN_Transformer] acc=0.520
+      [NBEATS  ] acc=0.527
+      [calib]  temperature T=0.100  (prob spread: [0.007, 0.952])
+    ✗ Win 1 | 70% train | test_n=150 | OOS=46.00% | AUC=0.513 | F1=0.319 | LGB=44.00% | XGB=44.00% | T=0.10
+         Dir → UP=54.29%  DOWN=43.48%  NEUTRAL=0.0%
+         DL  → LSTM=45.33%  BiLSTM=53.33%  GRU=52.00%  CNN_LSTM=50.67%  CNN_GRU=52.67%  TCN_GRU=48.00%  TCN_Transformer=52.00%  NBEATS=52.67%
+      [scaler] range [-5.00, 5.00]  18.4% outside [-1,1]
+      [PCA]    25 components → 90.3% explained variance
+      [LSTM    ] acc=0.567
+      [BiLSTM  ] acc=0.580
+      [GRU     ] acc=0.580
+      [CNN_LSTM] acc=0.533
+      [CNN_GRU ] acc=0.567
+      [TCN_GRU ] acc=0.473
+      [TCN_Transformer] acc=0.520
+      [NBEATS  ] acc=0.467
+      [calib]  temperature T=1.088  (prob spread: [0.420, 0.529])
+    ~ Win 2 | 75% train | test_n=150 | OOS=51.33% | AUC=0.579 | F1=0.198 | LGB=53.33% | XGB=50.67% | T=1.09
+         Dir → UP=52.94%  DOWN=51.13%  NEUTRAL=0.0%
+         DL  → LSTM=56.67%  BiLSTM=58.00%  GRU=58.00%  CNN_LSTM=53.33%  CNN_GRU=56.67%  TCN_GRU=47.33%  TCN_Transformer=52.00%  NBEATS=46.67%
+      [scaler] range [-5.00, 5.00]  18.1% outside [-1,1]
+      [PCA]    25 components → 90.1% explained variance
+      [LSTM    ] acc=0.540
+      [BiLSTM  ] acc=0.567
+      [GRU     ] acc=0.580
+      [CNN_LSTM] acc=0.587
+      [CNN_GRU ] acc=0.607
+      [TCN_GRU ] acc=0.547
+      [TCN_Transformer] acc=0.420
+      [NBEATS  ] acc=0.440
+      [calib]  temperature T=0.827  (prob spread: [0.437, 0.520])
+    ~ Win 3 | 80% train | test_n=150 | OOS=56.67% | AUC=0.518 | F1=0.133 | LGB=60.00% | XGB=60.00% | T=0.83
+         Dir → UP=33.33%  DOWN=59.26%  NEUTRAL=0.0%
+         DL  → LSTM=54.00%  BiLSTM=56.67%  GRU=58.00%  CNN_LSTM=58.67%  CNN_GRU=60.67%  TCN_GRU=54.67%  TCN_Transformer=42.00%  NBEATS=44.00%
+      [scaler] range [-5.00, 5.00]  18.1% outside [-1,1]
+      [PCA]    26 components → 90.8% explained variance
+      [LSTM    ] acc=0.520
+      [BiLSTM  ] acc=0.513
+      [GRU     ] acc=0.480
+      [CNN_LSTM] acc=0.560
+      [CNN_GRU ] acc=0.460
+      [TCN_GRU ] acc=0.527
+      [TCN_Transformer] acc=0.493
+      [NBEATS  ] acc=0.527
+      [calib]  temperature T=0.437  (prob spread: [0.348, 0.510])
+    ~ Win 4 | 85% train | test_n=150 | OOS=52.00% | AUC=0.530 | F1=0.027 | LGB=52.67% | XGB=52.00% | T=0.44
+         Dir → UP=33.33%  DOWN=52.38%  NEUTRAL=0.0%
+         DL  → LSTM=52.00%  BiLSTM=51.33%  GRU=48.00%  CNN_LSTM=56.00%  CNN_GRU=46.00%  TCN_GRU=52.67%  TCN_Transformer=49.33%  NBEATS=52.67%
+      [scaler] range [-5.00, 5.00]  17.8% outside [-1,1]
+      [PCA]    26 components → 90.4% explained variance
+      [LSTM    ] acc=0.453
+      [BiLSTM  ] acc=0.487
+      [GRU     ] acc=0.467
+      [CNN_LSTM] acc=0.467
+      [CNN_GRU ] acc=0.473
+      [TCN_GRU ] acc=0.500
+      [TCN_Transformer] acc=0.493
+      [NBEATS  ] acc=0.467
+      [calib]  temperature T=0.547  (prob spread: [0.353, 0.511])
+    ✗ Win 5 | 90% train | test_n=150 | OOS=46.67% | AUC=0.461 | F1=0.024 | LGB=52.00% | XGB=56.00% | T=0.55
+         Dir → UP=25.00%  DOWN=47.26%  NEUTRAL=0.0%
+         DL  → LSTM=45.33%  BiLSTM=48.67%  GRU=46.67%  CNN_LSTM=46.67%  CNN_GRU=47.33%  TCN_GRU=50.00%  TCN_Transformer=49.33%  NBEATS=46.67%
+      [scaler] range [-5.00, 5.00]  17.7% outside [-1,1]
+      [PCA]    26 components → 90.3% explained variance
+      [LSTM    ] acc=0.520
+      [BiLSTM  ] acc=0.547
+      [GRU     ] acc=0.533
+      [CNN_LSTM] acc=0.493
+      [CNN_GRU ] acc=0.560
+      [TCN_GRU ] acc=0.533
+      [TCN_Transformer] acc=0.520
+      [NBEATS  ] acc=0.520
+      [calib]  temperature T=8.000  (prob spread: [0.481, 0.500])
+    ~ Win 6 | 95% train | test_n=75 | OOS=52.00% | AUC=0.438 | F1=0.000 | LGB=52.00% | XGB=52.00% | T=8.00
+         Dir → UP=0.00%  DOWN=52.00%  NEUTRAL=0.0%
+         DL  → LSTM=52.00%  BiLSTM=54.67%  GRU=53.33%  CNN_LSTM=49.33%  CNN_GRU=56.00%  TCN_GRU=53.33%  TCN_Transformer=52.00%  NBEATS=52.00%
+  [3/3] OOS Overall → Accuracy=50.67%  F1=0.1468  (825 preds, 6 wins, avg_T=1.83)
+  Plots → 06_results\runs\20260311_104927\JSWENERGY\plots
+  [1/1] JSWENERGY done
+
+======================================================================
+  STEP 8 — NEXT-DAY PREDICTIONS  (parallel)
+======================================================================
+  DOWN JSWENERGY     : HOLD  conf=50.1%  regime=bear  T=8.00  (close=₹488.70  2026-03-10)  [HOLD]
+
+======================================================================
+  FINAL SUMMARY  [Phase 1 — MIN_MOVE=0.4%, CONF≥58%]
+======================================================================
+
+ Symbol        OOS Acc      F1  Wins  Preds   Rows
+ ──────────── ──────── ─────── ───── ────── ──────
+ ⚠️  JSWENERGY    50.67%  0.1468     6    825   1497
+
+  Avg OOS Accuracy : 50.67%
+  Avg F1 Score     : 0.1468
+  Best Stock       : JSWENERGY (50.67%)
+  ≥58% stocks      : 0/1
+
+  ── Per-Model Comparison (across all stocks × windows) ──
+  Model             Avg Acc  Med Acc     Best    Worst     Std
+  ──────────────── ──────── ──────── ──────── ──────── ───────
+    LightGBM         52.33%   52.33%   60.00%   44.00%   0.051
+    XGBoost          52.44%   52.00%   60.00%   44.00%   0.054
+    LSTM             50.89%   52.00%   56.67%   45.33%   0.046
+  🏆BiLSTM           53.78%   54.00%   58.00%   48.67%   0.034
+    GRU              52.67%   52.67%   58.00%   46.67%   0.048
+    CNN_LSTM         52.44%   52.00%   58.67%   46.67%   0.044
+    CNN_GRU          53.22%   54.33%   60.67%   46.00%   0.057
+    TCN_GRU          51.00%   51.33%   54.67%   47.33%   0.030
+    TCN_Transformer   49.44%   50.67%   52.00%   42.00%   0.039
+    NBEATS           49.11%   49.33%   52.67%   44.00%   0.038
+
+  🏆 Best Model Overall: BiLSTM (avg=53.78%, std=0.034)
+
+  Results  → 06_results\runs\20260311_104927
+  Models   → 02_models\runs\20260311_104927
+  Prod     → 02_models\production/{symbol}/
+  Elapsed  : 1922.5s  (32.0 min)
+======================================================================
+gime=sideways  T=0.37  (close=₹2198.30  2026-03-10)  [HOLD]
+  UP   ADANIENT      : HOLD  conf=54.6%  regime=sideways  T=0.68  (close=₹722.00  2026-03-10)  [HOLD]
+  UP   ICICIBANK     : HOLD  conf=54.5%  regime=bear  T=1.31  (close=₹182.26  2026-03-10)  [HOLD]
+  UP   DMART         : HOLD  conf=54.3%  regime=sideways  T=0.10  (close=₹722.00  2026-03-10)  [HOLD]
+  DOWN HEROMOTOCO    : HOLD  conf=54.2%  regime=sideways  T=0.23  (close=₹1621.90  2026-03-10)  [HOLD]
+  UP   RELIANCE      : HOLD  conf=54.0%  regime=bear  T=0.82  (close=₹2198.30  2026-03-10)  [HOLD]
+  UP   POLYCAB       : HOLD  conf=53.8%  regime=bear  T=0.61  (close=₹1285.90  2026-03-10)  [HOLD]
+  UP   MANAPPURAM    : HOLD  conf=53.6%  regime=sideways  T=0.77  (close=₹7723.00  2026-03-10)  [HOLD]
+  UP   HAVELLS       : HOLD  conf=53.6%  regime=sideways  T=0.43  (close=₹2337.40  2026-03-10)  [HOLD]
+  UP   MPHASIS       : HOLD  conf=53.6%  regime=bear  T=0.83  (close=₹4827.90  2026-03-10)  [HOLD]
+  DOWN INDUSINDBK    : HOLD  conf=53.6%  regime=sideways  T=0.39  (close=₹182.26  2026-03-10)  [HOLD]
+  UP   RBLBANK       : HOLD  conf=53.4%  regime=sideways  T=0.43  (close=₹7723.00  2026-03-10)  [HOLD]
+  DOWN AUROPHARMA    : HOLD  conf=53.4%  regime=sideways  T=0.45  (close=₹2198.30  2026-03-10)  [HOLD]
+  DOWN IRFC          : HOLD  conf=53.2%  regime=sideways  T=0.47  (close=₹258.65  2026-03-10)  [HOLD]
+  UP   AUBANK        : HOLD  conf=52.9%  regime=sideways  T=0.73  (close=₹938.50  2026-03-10)  [HOLD]
+  UP   BERGEPAINT    : HOLD  conf=52.7%  regime=bear  T=1.29  (close=₹722.00  2026-03-10)  [HOLD]
+  UP   SIEMENS       : HOLD  conf=52.6%  regime=bear  T=0.77  (close=₹2337.40  2026-03-10)  [HOLD]
+  UP   HAL           : HOLD  conf=52.6%  regime=bear  T=0.53  (close=₹258.65  2026-03-10)  [HOLD]
+  UP   TORNTPHARM    : HOLD  conf=52.5%  regime=sideways  T=0.90  (close=₹2198.30  2026-03-10)  [HOLD]
+  UP   BAJFINANCE    : HOLD  conf=52.5%  regime=sideways  T=1.27  (close=₹938.50  2026-03-10)  [HOLD]
+  UP   ONGC          : HOLD  conf=52.4%  regime=sideways  T=0.24  (close=₹2198.30  2026-03-10)  [HOLD]
+  UP   CHOLAFIN      : HOLD  conf=52.2%  regime=sideways  T=1.13  (close=₹1621.90  2026-03-10)  [HOLD]
+  UP   MUTHOOTFIN    : HOLD  conf=52.0%  regime=sideways  T=0.81  (close=₹938.50  2026-03-10)  [HOLD]
+  UP   ETERNAL       : HOLD  conf=51.6%  regime=bear  T=0.10  (close=₹258.65  2026-03-10)  [HOLD]
+  UP   POWERGRID     : HOLD  conf=51.3%  regime=sideways  T=2.27  (close=₹1314.60  2026-03-10)  [HOLD]
+  UP   JSWSTEEL      : HOLD  conf=51.2%  regime=sideways  T=3.08  (close=₹1314.60  2026-03-10)  [HOLD]
+  DOWN PAGEIND       : HOLD  conf=51.2%  regime=bear  T=0.67  (close=₹722.00  2026-03-10)  [HOLD]
+  UP   NESTLEIND     : HOLD  conf=51.2%  regime=sideways  T=0.10  (close=₹9610.00  2026-03-10)  [HOLD]
+  UP   AMBUJACEM     : HOLD  conf=51.2%  regime=sideways  T=0.67  (close=₹1285.90  2026-03-10)  [HOLD]
+  UP   CIPLA         : HOLD  conf=50.9%  regime=sideways  T=0.48  (close=₹5711.50  2026-03-10)  [HOLD]
+  UP   INFY          : HOLD  conf=50.9%  regime=sideways  T=1.65  (close=₹1295.60  2026-03-10)  [HOLD]
+  UP   HDFCBANK      : HOLD  conf=50.9%  regime=bear  T=3.98  (close=₹182.26  2026-03-10)  [HOLD]
+  UP   MOTHERSON     : HOLD  conf=50.8%  regime=sideways  T=3.85  (close=₹1295.60  2026-03-10)  [HOLD]
+  UP   SAIL          : HOLD  conf=50.7%  regime=sideways  T=1.10  (close=₹2337.40  2026-03-10)  [HOLD]
+  UP   MARUTI        : HOLD  conf=50.6%  regime=bear  T=8.00  (close=₹4827.90  2026-03-10)  [HOLD]
+  UP   ASIANPAINT    : HOLD  conf=50.5%  regime=sideways  T=1.07  (close=₹1285.90  2026-03-10)  [HOLD]
+  UP   BAJAJFINSV    : HOLD  conf=50.5%  regime=bear  T=1.15  (close=₹938.50  2026-03-10)  [HOLD]
+  UP   PIDILITIND    : HOLD  conf=50.5%  regime=bear  T=8.00  (close=₹722.00  2026-03-10)  [HOLD]
+  UP   BAJAJ-AUTO    : HOLD  conf=50.4%  regime=bear  T=8.00  (close=₹1295.60  2026-03-10)  [HOLD]
+  UP   GODREJPROP    : HOLD  conf=50.4%  regime=sideways  T=2.10  (close=₹722.00  2026-03-10)  [HOLD]
+  UP   INDUSTOWER    : HOLD  conf=50.3%  regime=sideways  T=8.00  (close=₹2337.40  2026-03-10)  [HOLD]
+  UP   FEDERALBNK    : HOLD  conf=50.3%  regime=sideways  T=4.57  (close=₹938.50  2026-03-10)  [HOLD]
+  UP   DRREDDY       : HOLD  conf=50.3%  regime=sideways  T=0.99  (close=₹5711.50  2026-03-10)  [HOLD]
+  DOWN ABB           : HOLD  conf=50.3%  regime=bear  T=8.00  (close=₹2337.40  2026-03-10)  [HOLD]
+  UP   HCLTECH       : HOLD  conf=50.3%  regime=sideways  T=8.00  (close=₹1621.90  2026-03-10)  [HOLD]
+  DOWN NAUKRI        : HOLD  conf=50.3%  regime=bear  T=8.00  (close=₹258.65  2026-03-10)  [HOLD]
+  DOWN IDFCFIRSTB    : HOLD  conf=50.2%  regime=sideways  T=3.15  (close=₹182.26  2026-03-10)  [HOLD]
+  DOWN BEL           : HOLD  conf=50.2%  regime=sideways  T=2.07  (close=₹258.65  2026-03-10)  [HOLD]
+  UP   SUNPHARMA     : HOLD  conf=50.1%  regime=sideways  T=3.16  (close=₹5711.50  2026-03-10)  [HOLD]
+  UP   DLF           : HOLD  conf=50.1%  regime=sideways  T=8.00  (close=₹722.00  2026-03-10)  [HOLD]
+  DOWN COLPAL        : HOLD  conf=50.1%  regime=sideways  T=0.76  (close=₹5711.50  2026-03-10)  [HOLD]
+  DOWN MARICO        : HOLD  conf=50.1%  regime=sideways  T=8.00  (close=₹5711.50  2026-03-10)  [HOLD]
+  DOWN OFSS          : HOLD  conf=50.1%  regime=bear  T=8.00  (close=₹258.65  2026-03-10)  [HOLD]
+  UP   LT            : HOLD  conf=50.0%  regime=bear  T=7.14  (close=₹2337.40  2026-03-10)  [HOLD]
+  UP   GRASIM        : HOLD  conf=50.0%  regime=bear  T=8.00  (close=₹1285.90  2026-03-10)  [HOLD]
+  DOWN ICICIGI       : HOLD  conf=50.0%  regime=bear  T=5.53  (close=₹938.50  2026-03-10)  [HOLD]
+  DOWN WIPRO         : HOLD  conf=50.0%  regime=sideways  T=0.95  (close=₹1621.90  2026-03-10)  [HOLD]
+  DOWN PERSISTENT    : HOLD  conf=50.0%  regime=bear  T=8.00  (close=₹4827.90  2026-03-10)  [HOLD]
+
+======================================================================
+  FINAL SUMMARY  [Phase 1 — MIN_MOVE=0.4%, CONF≥58%]
+======================================================================
+
+ Symbol        OOS Acc      F1  Wins  Preds   Rows
+ ──────────── ──────── ─────── ───── ────── ──────
+ ⚠️  SBIN         55.92%  0.6983     6    735   1334
+ ⚠️  HDFCBANK     52.21%  0.6089     6    680   1234
+ ⚠️  ICICIBANK    52.93%  0.6852     6    699   1269
+ ❌ AXISBANK     49.67%  0.5781     6    751   1364
+ ⚠️  KOTAKBANK    56.90%  0.6123     6    717   1303
+ ⚠️  INDUSINDBK   50.00%  0.5757     6    790   1435
+ ⚠️  BANDHANBNK   56.82%  0.3849     6    792   1437
+ ⚠️  IDFCFIRSTB   50.00%  0.4165     6    790   1434
+ ❌ FEDERALBNK   49.93%  0.6004     6    755   1372
+ ❌ AUBANK       49.87%  0.5733     6    778   1413
+ ⚠️  BAJFINANCE   52.02%  0.6098     6    744   1352
+ ❌ BAJAJFINSV   49.25%  0.6267     6    737   1338
+ ⚠️  HDFCLIFE     56.56%  0.4897     6    739   1341
+ ⚠️  SBILIFE      51.85%  0.5178     6    704   1279
+ ⚠️  ICICIGI      51.85%  0.5935     6    731   1328
+ ⚠️  MUTHOOTFIN   50.07%  0.5642     6    761   1381
+ ❌ CHOLAFIN     49.94%  0.5804     6    803   1458
+ ⚠️  SHRIRAMFIN   53.65%  0.6237     6    794   1442
+ ⚠️  TCS          50.29%  0.6359     6    682   1239
+ ⚠️  INFY         50.76%  0.6417     6    719   1305
+ ⚠️  WIPRO        51.54%  0.6016     6    716   1300
+ ⚠️  HCLTECH      51.33%  0.6717     6    715   1299
+ ⚠️  TECHM        54.53%  0.6517     6    750   1362
+ ⚠️  LTIM         52.58%  0.6059     6    757   1376
+ ⚠️  MPHASIS      50.32%  0.6079     6    779   1414
+ ⚠️  PERSISTENT   50.64%  0.6560     6    786   1428
+ ⚠️  COFORGE      55.56%  0.6885     6    792   1438
+ ❌ TATAELXSI    49.67%  0.5570     6    765   1389
+ ❌ MARUTI       49.15%  0.4783     6    708   1285
+ ⚠️  M&M          52.74%  0.6616     6    749   1360
+ ⚠️  TVSMOTOR     51.43%  0.6537     6    768   1396
+ ❌ BAJAJ-AUTO   49.29%  0.6317     6    706   1282
+ ⚠️  HEROMOTOCO   50.80%  0.6358     6    752   1365
+ ⚠️  EICHERMOT    53.10%  0.5908     6    759   1379
+ ❌ MOTHERSON    47.96%  0.5817     6    807   1466
+ ⚠️  HINDUNILVR   50.45%  0.4924     6    674   1224
+ ⚠️  ITC          50.50%  0.5014     6    695   1263
+ ❌ NESTLEIND    49.49%  0.6149     6    687   1247
+ ⚠️  BRITANNIA    55.72%  0.6343     6    664   1205
+ ⚠️  TATACONSUM   50.80%  0.6455     6    748   1357
+ ❌ MARICO       48.34%  0.5252     6    693   1260
+ ❌ COLPAL       46.88%  0.5704     6    706   1281
+ ❌ GODREJCP     46.96%  0.4753     6    741   1345
+ ⚠️  SUNPHARMA    50.56%  0.5927     6    720   1308
+ ⚠️  DRREDDY      51.64%  0.6627     6    701   1273
+ ⚠️  CIPLA        53.79%  0.5392     6    699   1269
+ ⚠️  DIVISLAB     52.93%  0.6742     6    735   1335
+ ❌ LUPIN        49.26%  0.5763     6    739   1343
+ ⚠️  TORNTPHARM   54.28%  0.6646     6    713   1296
+ ⚠️  AUROPHARMA   50.26%  0.3162     6    774   1406
+ ⚠️  ALKEM        53.77%  0.6422     6    716   1300
+ ❌ RELIANCE     49.09%  0.5597     6    717   1302
+ ⚠️  ONGC         50.45%  0.6220     6    775   1408
+ ⚠️  BPCL         51.61%  0.6008     6    777   1410
+ ⚠️  NTPC         52.11%  0.6437     6    735   1334
+ ⚠️  POWERGRID    50.00%  0.6176     6    728   1322
+ ❌ COALINDIA    48.80%  0.5768     6    748   1357
+ ⚠️  GAIL         50.13%  0.6254     6    776   1409
+ ⚠️  TATAPOWER    54.79%  0.6811     6    752   1366
+ ⚠️  TATASTEEL    52.67%  0.6815     6    786   1428
+ ⚠️  HINDALCO     55.05%  0.6461     6    792   1438
+ ❌ JSWSTEEL     49.87%  0.5985     6    768   1394
+ ⚠️  VEDL         55.64%  0.7113     6    816   1481
+ ⚠️  SAIL         50.79%  0.5884     6    819   1487
+ ⚠️  BHARTIARTL   53.99%  0.6281     6    726   1319
+ ❌ INDUSTOWER   49.35%  0.5764     6    772   1402
+ ⚠️  LT           54.40%  0.6745     6    728   1322
+ ⚠️  BHEL         50.25%  0.6255     6    816   1482
+ ⚠️  SIEMENS      52.44%  0.6628     6    738   1340
+ ❌ ABB          48.36%  0.6068     6    763   1385
+ ❌ HAVELLS      47.48%  0.5838     6    733   1332
+ ⚠️  POLYCAB      52.22%  0.6732     6    632   1147
+ ⚠️  CUMMINSIND   52.22%  0.6303     6    766   1392
+ ⚠️  ULTRACEMCO   50.55%  0.5785     6    722   1311
+ ⚠️  GRASIM       51.07%  0.6514     6    748   1357
+ ❌ AMBUJACEM    49.41%  0.6478     6    763   1386
+ ⚠️  SHREECEM     50.96%  0.6308     6    728   1322
+ ❌ TITAN        49.65%  0.6544     6    709   1288
+ ❌ ASIANPAINT   49.64%  0.6441     6    689   1252
+ ⚠️  PIDILITIND   52.76%  0.6393     6    707   1284
+ ⚠️  BERGEPAINT   51.47%  0.6574     6    713   1296
+ ⚠️  VOLTAS       51.37%  0.6266     6    767   1393
+ ⚠️  PAGEIND      54.29%  0.3732     6    757   1375
+ ❌ DMART        47.48%  0.5945     6    735   1336
+ ⚠️  DLF          50.44%  0.6667     6    801   1455
+ ⚠️  GODREJPROP   50.19%  0.6208     6    807   1465
+ ⚠️  ADANIENT     50.13%  0.6458     6    772   1401
+ ⚠️  ADANIPORTS   51.61%  0.5041     6    744   1350
+ ❌ BEL          49.44%  0.6240     6    801   1455
+ ❌ HAL          47.86%  0.5813     6    746   1355
+ ⚠️  IRFC         54.74%  0.3696     6    422    765
+ ❌ OFSS         46.70%  0.5325     6    728   1321
+ ⚠️  ETERNAL      52.15%  0.4444     6    418    757
+ ⚠️  NMDC         51.67%  0.4229     6    418    757
+ ⚠️  BOSCHLTD     52.63%  0.4438     6    418    757
+ ⚠️  NAUKRI       50.19%  0.5862     6    805   1462
+ ❌ MANAPPURAM   48.44%  0.4718     6    799   1452
+ ⚠️  RBLBANK      51.28%  0.5128     6    819   1487
+ ❌ EXIDEIND     47.73%  0.4731     6    750   1361
+
+  Avg OOS Accuracy : 51.24%
+  Avg F1 Score     : 0.5902
+  Best Stock       : KOTAKBANK (56.90%)
+  ≥58% stocks      : 0/99
+
+  ── Per-Model Comparison (across all stocks × windows) ──
+  Model             Avg Acc  Med Acc     Best    Worst     Std
+  ──────────────── ──────── ──────── ──────── ──────── ───────
+    LightGBM         48.41%   50.00%   53.79%   36.49%   0.047
+    XGBoost          48.46%   49.49%   55.15%   36.49%   0.046
+    LSTM             48.55%   48.58%   56.76%   36.05%   0.057
+    BiLSTM           48.56%   50.17%   56.16%   37.84%   0.050
+  🏆GRU              51.25%   52.38%   58.22%   36.49%   0.054
+    CNN_LSTM         48.61%   49.32%   55.48%   36.49%   0.053
+    CNN_GRU          49.62%   49.83%   58.39%   40.82%   0.046
+    TCN_GRU          50.29%   50.52%   58.90%   37.68%   0.048
+    TCN_Transformer   50.22%   51.76%   62.67%   36.23%   0.064
+    NBEATS           49.22%   48.81%   57.97%   39.46%   0.043
+
+  🏆 Best Model Overall: GRU (avg=51.25%, std=0.054)
+
+  Results  → 06_results\runs\20260307_141956
+  Models   → 02_models\runs\20260307_141956
+  Prod     → 02_models\production/{symbol}/
+  Elapsed  : 8583.0s  (143.0 min)
+======================================================================
+  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS
+======================================================================
+  AI STOCK PREDICTION — PRODUCTION PIPELINE V3  [Phase 1]
+  Run ID    : 20260311_112754
+  Date      : 2026-03-11 11:27
+  Stocks    : 1  (JSWENERGY)
+  Workers   : 1  (n_jobs/model=-1,  cpu_count=8)
+  MIN_MOVE  : 0.4%  (above transaction costs)
+  CONF THR  : 58%
+  Data from : 2018-01-01 → today  (incremental)
+  Windows   : 70% → 95% (step 5%)
+======================================================================
+
+======================================================================
+  STEP 1 — DATA DOWNLOAD  (incremental, parallel threads)
+======================================================================
+  JSWENERGY    ✓ up-to-date  [2026-03-10]
+
+  Loaded 1/1 symbols
+
+  Downloading auxiliary data ...
+  global_cues     ✓ up-to-date  [2026-03-10]
+  USD/INR     : 2133 rows
+  Global cues : 2129 rows  cols=['date', 'sp500_close', 'sp500_ret', 'nasdaq_close', 'nasdaq_ret', 'us_vix_close', 'us_vix_ret', 'dxy_close', 'dxy_ret', 'crude_close', 'crude_ret', 'nikkei_close', 'nikkei_ret']
+
+======================================================================
+  STEPS 2-7 — FEATURES + WALK-FORWARD TRAINING  (1 workers)
+  Per-symbol logs → 06_results\runs\20260311_112754/<symbol>/run.log
+======================================================================
+
+────────────────────────────────────────────────────────────
+  JSWENERGY
+────────────────────────────────────────────────────────────
+  JSWENERGY    ✓ features cached  (1497 rows × 153 feat)
+  [1/3] Walk-forward: 6 windows  |  1497 rows  |  153 features
+        Win 1: train[0:943]  val[943:1047]  test[1047:1197]  (70%)
+        Win 2: train[0:1010]  val[1010:1122]  test[1122:1272]  (75%)
+        Win 3: train[0:1078]  val[1078:1197]  test[1197:1347]  (80%)
+        Win 4: train[0:1145]  val[1145:1272]  test[1272:1422]  (85%)
+        Win 5: train[0:1213]  val[1213:1347]  test[1347:1497]  (90%)
+        Win 6: train[0:1280]  val[1280:1422]  test[1422:1497]  (95%)
+  [1b] Feature selection: top 50 of 153 ... ✓ 50 features kept
+  [2/3] Training...
+      [scaler] range [-5.00, 5.00]  18.6% outside [-1,1]
+      [PCA]    25 components → 90.3% explained variance
+      [LSTM    ] acc=0.453
+      [BiLSTM  ] acc=0.447
+      [GRU     ] acc=0.473
+      [CNN_LSTM] acc=0.467
+      [CNN_GRU ] acc=0.520
+      [TCN_GRU ] acc=0.453
+      [TCN_Transformer] acc=0.520
+      [NBEATS  ] acc=0.493
+      [calib]  temperature T=0.100  (prob spread: [0.008, 0.931])
+    ✗ Win 1 | 70% train | test_n=150 | OOS=44.00% | AUC=0.505 | F1=0.263 | LGB=44.00% | XGB=44.00% | T=0.10
+         Dir → UP=50.00%  DOWN=42.50%  NEUTRAL=0.0%
+         DL  → LSTM=45.33%  BiLSTM=44.67%  GRU=47.33%  CNN_LSTM=46.67%  CNN_GRU=52.00%  TCN_GRU=45.33%  TCN_Transformer=52.00%  NBEATS=49.33%
+      [scaler] range [-5.00, 5.00]  18.4% outside [-1,1]
+      [PCA]    25 components → 90.3% explained variance
+      [LSTM    ] acc=0.580
+      [BiLSTM  ] acc=0.493
+      [GRU     ] acc=0.533
+      [CNN_LSTM] acc=0.567
+      [CNN_GRU ] acc=0.553
+      [TCN_GRU ] acc=0.513
+      [TCN_Transformer] acc=0.527
+      [NBEATS  ] acc=0.527
+      [calib]  temperature T=0.399  (prob spread: [0.296, 0.576])
+    ~ Win 2 | 75% train | test_n=150 | OOS=53.33% | AUC=0.589 | F1=0.327 | LGB=53.33% | XGB=50.67% | T=0.40
+         Dir → UP=56.67%  DOWN=52.50%  NEUTRAL=0.0%
+         DL  → LSTM=58.00%  BiLSTM=49.33%  GRU=53.33%  CNN_LSTM=56.67%  CNN_GRU=55.33%  TCN_GRU=51.33%  TCN_Transformer=52.67%  NBEATS=52.67%
+      [scaler] range [-5.00, 5.00]  18.1% outside [-1,1]
+      [PCA]    25 components → 90.1% explained variance
+      [LSTM    ] acc=0.580
+      [BiLSTM  ] acc=0.540
+      [GRU     ] acc=0.533
+      [CNN_LSTM] acc=0.580
+      [CNN_GRU ] acc=0.493
+      [TCN_GRU ] acc=0.540
+      [TCN_Transformer] acc=0.520
+      [NBEATS  ] acc=0.407
+      [calib]  temperature T=0.344  (prob spread: [0.353, 0.524])
+    ✓ Win 3 | 80% train | test_n=150 | OOS=59.33% | AUC=0.486 | F1=0.116 | LGB=60.00% | XGB=60.00% | T=0.34
+         Dir → UP=44.44%  DOWN=60.28%  NEUTRAL=0.0%
+         DL  → LSTM=58.00%  BiLSTM=54.00%  GRU=53.33%  CNN_LSTM=58.00%  CNN_GRU=49.33%  TCN_GRU=54.00%  TCN_Transformer=52.00%  NBEATS=40.67%
+      [scaler] range [-5.00, 5.00]  18.1% outside [-1,1]
+      [PCA]    26 components → 90.8% explained variance
+      [LSTM    ] acc=0.520
+      [BiLSTM  ] acc=0.527
+      [GRU     ] acc=0.520
+      [CNN_LSTM] acc=0.520
+      [CNN_GRU ] acc=0.520
+      [TCN_GRU ] acc=0.453
+      [TCN_Transformer] acc=0.533
+      [NBEATS  ] acc=0.493
+      [calib]  temperature T=0.489  (prob spread: [0.349, 0.532])
+    ~ Win 4 | 85% train | test_n=150 | OOS=53.33% | AUC=0.544 | F1=0.103 | LGB=52.67% | XGB=52.00% | T=0.49
+         Dir → UP=57.14%  DOWN=53.15%  NEUTRAL=0.0%
+         DL  → LSTM=52.00%  BiLSTM=52.67%  GRU=52.00%  CNN_LSTM=52.00%  CNN_GRU=52.00%  TCN_GRU=45.33%  TCN_Transformer=53.33%  NBEATS=49.33%
+      [scaler] range [-5.00, 5.00]  17.8% outside [-1,1]
+      [PCA]    26 components → 90.4% explained variance
+      [LSTM    ] acc=0.473
+      [BiLSTM  ] acc=0.480
+      [GRU     ] acc=0.453
+      [CNN_LSTM] acc=0.487
+      [CNN_GRU ] acc=0.500
+      [TCN_GRU ] acc=0.467
+      [TCN_Transformer] acc=0.487
+      [NBEATS  ] acc=0.520
+      [calib]  temperature T=0.570  (prob spread: [0.371, 0.506])
+    ✗ Win 5 | 90% train | test_n=150 | OOS=47.33% | AUC=0.470 | F1=0.000 | LGB=52.00% | XGB=56.00% | T=0.57
+         Dir → UP=0.00%  DOWN=47.65%  NEUTRAL=0.0%
+         DL  → LSTM=47.33%  BiLSTM=48.00%  GRU=45.33%  CNN_LSTM=48.67%  CNN_GRU=50.00%  TCN_GRU=46.67%  TCN_Transformer=48.67%  NBEATS=52.00%
+      [scaler] range [-5.00, 5.00]  17.7% outside [-1,1]
+      [PCA]    26 components → 90.3% explained variance
+      [LSTM    ] acc=0.520
+      [BiLSTM  ] acc=0.520
+      [GRU     ] acc=0.533
+      [CNN_LSTM] acc=0.467
+      [CNN_GRU ] acc=0.533
+      [TCN_GRU ] acc=0.533
+      [TCN_Transformer] acc=0.520
+      [NBEATS  ] acc=0.547
+      [calib]  temperature T=8.000  (prob spread: [0.482, 0.500])
+    ~ Win 6 | 95% train | test_n=75 | OOS=50.67% | AUC=0.417 | F1=0.000 | LGB=52.00% | XGB=52.00% | T=8.00
+         Dir → UP=0.00%  DOWN=51.35%  NEUTRAL=0.0%
+         DL  → LSTM=52.00%  BiLSTM=52.00%  GRU=53.33%  CNN_LSTM=46.67%  CNN_GRU=53.33%  TCN_GRU=53.33%  TCN_Transformer=52.00%  NBEATS=54.67%
+  [3/3] OOS Overall → Accuracy=51.39%  F1=0.1663  (825 preds, 6 wins, avg_T=1.65)
+  Plots → 06_results\runs\20260311_112754\JSWENERGY\plots
+  [1/1] JSWENERGY done
+
+======================================================================
+  STEP 8 — NEXT-DAY PREDICTIONS  (parallel)
+======================================================================
+  DOWN JSWENERGY     : HOLD  conf=50.1%  regime=bear  T=8.00  (close=₹488.70  2026-03-10)  [HOLD]
+
+======================================================================
+  FINAL SUMMARY  [Phase 1 — MIN_MOVE=0.4%, CONF≥58%]
+======================================================================
+
+ Symbol        OOS Acc      F1  Wins  Preds   Rows
+ ──────────── ──────── ─────── ───── ────── ──────
+ ⚠️  JSWENERGY    51.39%  0.1663     6    825   1497
+
+  Avg OOS Accuracy : 51.39%
+  Avg F1 Score     : 0.1663
+  Best Stock       : JSWENERGY (51.39%)
+  ≥58% stocks      : 0/1
+
+  ── Per-Model Comparison (across all stocks × windows) ──
+  Model             Avg Acc  Med Acc     Best    Worst     Std
+  ──────────────── ──────── ──────── ──────── ──────── ───────
+    LightGBM         52.33%   52.33%   60.00%   44.00%   0.051
+  🏆XGBoost          52.44%   52.00%   60.00%   44.00%   0.054
+    LSTM             52.11%   52.00%   58.00%   45.33%   0.053
+    BiLSTM           50.11%   50.67%   54.00%   44.67%   0.035
+    GRU              50.78%   52.67%   53.33%   45.33%   0.035
+    CNN_LSTM         51.44%   50.33%   58.00%   46.67%   0.050
+    CNN_GRU          52.00%   52.00%   55.33%   49.33%   0.022
+    TCN_GRU          49.33%   49.00%   54.00%   45.33%   0.040
+    TCN_Transformer   51.78%   52.00%   53.33%   48.67%   0.016
+    NBEATS           49.78%   50.67%   54.67%   40.67%   0.049
+
+  🏆 Best Model Overall: XGBoost (avg=52.44%, std=0.054)
+
+  Results  → 06_results\runs\20260311_112754
+  Models   → 02_models\runs\20260311_112754
+  Prod     → 02_models\production/{symbol}/
+  Elapsed  : 2095.9s  (34.9 min)
+======================================================================

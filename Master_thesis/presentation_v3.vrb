@@ -1,0 +1,18 @@
+\frametitle{Backup: V3 Storage Layout}
+\footnotesize
+    \begin{block}{Directory Structure}
+    \begin{semiverbatim}
+V3/
+|-- 01\_data/
+|   |-- raw/        \{symbol\}.parquet   market.parquet
+|   `-- features/raw/  \{symbol\}\_features.parquet
+|-- 02\_models/
+|   |-- runs/\{run\_id\}/\{symbol\}/window\_\{n\}/
+|   `-- production/\{symbol\}/
+`-- 06\_results/
+    `-- runs/\{run\_id\}/
+        |-- \{symbol\}/  window\_results.csv  predictions.csv
+        |-- summary.csv    all\_windows\_detail.csv
+        `-- RESEARCH\_ANALYSIS\_100\_STOCKS.xlsx
+    \end{semiverbatim}
+    \end{block}

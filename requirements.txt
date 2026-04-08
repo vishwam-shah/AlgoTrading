@@ -22,6 +22,7 @@ joblib==1.5.3
 xgboost==2.0.0
 lightgbm==4.1.0
 # CatBoost removed — poor performance vs LGB/XGB
+arch>=5.3.0                 # GARCH(1,1) conditional volatility features
 
 # ── Deep Learning ──────────────────────────────────────────────────────────
 tensorflow==2.18.0

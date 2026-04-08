@@ -1,0 +1,23 @@
+{
+  "run_id": "20260311_104927",
+  "phase": 1,
+  "symbols": [
+    "JSWENERGY"
+  ],
+  "data_start": "2018-01-01",
+  "min_move": 0.004,
+  "confidence_threshold": 0.58,
+  "initial_train": 0.7,
+  "expansion_step": 0.05,
+  "max_train": 0.95,
+  "n_top_features": 50,
+  "global_cues_enabled": true,
+  "nse_calendar_enabled": true,
+  "calibration": "temperature_scaling",
+  "n_workers": 1,
+  "n_jobs_per_worker": 8,
+  "cpu_count": 8,
+  "elapsed_sec": 1922.5,
+  "n_symbols_ok": 1,
+  "trained_at": "2026-03-11T11:21:30.508180"
+}

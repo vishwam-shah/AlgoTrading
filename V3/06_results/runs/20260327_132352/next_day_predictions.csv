@@ -1,0 +1,3 @@
+symbol,last_date,last_close,direction,action,confidence,avg_prob,signal_active,regime,regime_label,temperature
+SBIN,2026-03-25,1279.0999755859375,UP,BUY,0.6609,0.6609,True,1,sideways,0.222
+INFY,2026-03-25,1279.0999755859375,UP,HOLD,0.501,0.501,False,0,bear,0.479

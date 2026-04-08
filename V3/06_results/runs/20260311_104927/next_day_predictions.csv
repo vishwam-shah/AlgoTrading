@@ -1,0 +1,2 @@
+symbol,last_date,last_close,direction,action,confidence,avg_prob,signal_active,regime,regime_label,temperature
+JSWENERGY,2026-03-10,488.70001220703125,DOWN,HOLD,0.5012,0.4988,False,0,bear,8.0

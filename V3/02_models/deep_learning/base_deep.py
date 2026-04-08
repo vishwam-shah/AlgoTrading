@@ -48,6 +48,43 @@ from config import (                        # noqa: E402
 )
 
 
+# ── Directional loss (module-level so load() can reference same object) ────────
+# Penalises wrong-direction predictions by ALPHA×.
+# Source: MDPI AI 2025 — +3–6 pp directional accuracy vs binary cross-entropy.
+_DIRECTIONAL_ALPHA: float = 2.0
+
+def _make_directional_loss(alpha: float = _DIRECTIONAL_ALPHA):
+    """
+    Asymmetric directional loss for binary stock direction classification.
+
+    When the model predicts the wrong direction (pred>0.5 but actual=0, or
+    pred<0.5 but actual=1), the standard BCE loss for that sample is multiplied
+    by `alpha`.  Correct-direction errors (confident but not extreme) are left
+    at weight 1.0.  This focuses gradient updates on direction errors rather
+    than magnitude errors.
+
+    alpha=1.0 → identical to standard binary cross-entropy.
+    alpha=2.0 → direction errors cost 2× (recommended by literature).
+
+    Uses keras.ops (Keras 3.x API) — keras.backend tensor ops were removed in Keras 3.
+    """
+    def dir_loss(y_true, y_pred):
+        import keras
+        _ops  = keras.ops
+        eps   = 1e-7
+        y_p   = _ops.clip(y_pred, eps, 1.0 - eps)
+        bce   = -(y_true * _ops.log(y_p) + (1.0 - y_true) * _ops.log(1.0 - y_p))
+        # direction error: model output is on the wrong side of 0.5
+        pred_dir  = _ops.cast(y_p > 0.5, dtype=y_true.dtype)
+        dir_wrong = _ops.cast(_ops.abs(pred_dir - y_true) > 0.5, dtype=y_true.dtype)
+        weight    = 1.0 + (alpha - 1.0) * dir_wrong
+        return _ops.mean(bce * weight)
+    dir_loss.__name__ = "dir_loss"
+    return dir_loss
+
+_DIRECTIONAL_LOSS = _make_directional_loss(_DIRECTIONAL_ALPHA)
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  SEQUENCE UTILITIES
 # ══════════════════════════════════════════════════════════════════════════════
@@ -209,7 +246,7 @@ class BaseDLClassifier:
 
         self._model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=self._lr),
-            loss="binary_crossentropy",
+            loss=_DIRECTIONAL_LOSS,   # asymmetric: direction errors cost 2×
             metrics=["accuracy"],
         )
 
@@ -265,5 +302,8 @@ class BaseDLClassifier:
     def load(self, path: str) -> None:
         """Load model from .keras file."""
         import keras
-        self._model     = keras.models.load_model(path)
+        self._model     = keras.models.load_model(
+            path,
+            custom_objects={"dir_loss": _DIRECTIONAL_LOSS},
+        )
         self.is_trained = True
