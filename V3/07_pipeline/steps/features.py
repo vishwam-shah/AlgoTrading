@@ -100,6 +100,11 @@ def _add_global_cues_features(d: pd.DataFrame, global_cues_df: pd.DataFrame) -> 
     indian = pd.DataFrame({"date": pd.to_datetime(d["date"]), "_idx": np.arange(len(d))})
     indian = indian.sort_values("date")
 
+    # Normalise both datetime columns to the same resolution before merge_asof
+    # (parquets may produce ms vs us divergence depending on pandas version)
+    indian["date"] = indian["date"].astype("datetime64[us]")
+    cues["date"]   = cues["date"].astype("datetime64[us]")
+
     merged = pd.merge_asof(
         indian, cues, on="date", direction="backward",
         tolerance=pd.Timedelta("7 days"),

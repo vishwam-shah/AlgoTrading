@@ -36,14 +36,14 @@ from config_v3 import (  # type: ignore  # noqa: E402
 # ══════════════════════════════════════════════════════════════════════════════
 
 def load_parquet(path: Path) -> Optional[pd.DataFrame]:
-    """Read a parquet; normalise date column (supports both 'date' and 'timestamp')."""
+    """Read a parquet; normalise date column to datetime64[us] (supports 'date' and 'timestamp')."""
     try:
         df = pd.read_parquet(path)
         if "date" in df.columns:
-            df["date"] = pd.to_datetime(df["date"])
+            df["date"] = pd.to_datetime(df["date"]).astype("datetime64[us]")
         elif "timestamp" in df.columns:
             df = df.rename(columns={"timestamp": "date"})
-            df["date"] = pd.to_datetime(df["date"])
+            df["date"] = pd.to_datetime(df["date"]).astype("datetime64[us]")
         return df
     except Exception:
         return None
