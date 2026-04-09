@@ -82,17 +82,26 @@ class NBEATSClassifier(BaseDLClassifier):
         import keras
         from keras import layers, regularizers
 
-        p          = NBEATS_PARAMS
-        L2         = regularizers.L2(p["l2"])
-        input_size = self.seq_len * self.n_features   # flattened input dimension
+        p         = NBEATS_PARAMS
+        L2        = regularizers.L2(p["l2"])
+        proj_dim  = p.get("proj_dim", 256)   # bottleneck projection dimension
 
         inp = keras.Input(shape=(self.seq_len, self.n_features), name="input")
 
-        # Flatten sequence into 1D vector (N-BEATS operates on flattened lookback)
+        # Flatten sequence into 1D vector
         flat = layers.Flatten(name="flatten")(inp)   # (batch, seq_len * n_features)
 
+        # ── Input projection: (seq*feat) → proj_dim  ──────────────────────────
+        # Fixes the core bug: raw input could be 1000-dim (20×50), making each
+        # block's backcast a 1000-dim linear layer that can't reconstruct the
+        # 256-dim FC stack's output. Projecting to 256 first means blocks operate
+        # in a compressed space where backcast capacity matches FC capacity.
+        block_input = layers.Dense(
+            proj_dim, activation="relu",
+            kernel_regularizer=L2, name="input_proj",
+        )(flat)
+
         forecast_outputs = []
-        block_input      = flat
 
         for b in range(p["n_blocks"]):
             # ── FC stack (4 layers, matching N-BEATS paper generic config) ──────
@@ -104,9 +113,9 @@ class NBEATSClassifier(BaseDLClassifier):
                     name=f"b{b}_fc{layer_idx}",
                 )(h)
 
-            # ── Backcast: reconstruct the block's input (explains it away) ──────
+            # ── Backcast: reconstruct the projected block input ────────────────
             backcast = layers.Dense(
-                input_size, activation="linear",
+                proj_dim, activation="linear",   # matches proj_dim, not raw input_size
                 name=f"b{b}_backcast",
             )(h)
 
@@ -117,7 +126,7 @@ class NBEATSClassifier(BaseDLClassifier):
             )(h)
             forecast_outputs.append(forecast)
 
-            # ── Residual: next block gets only what this block couldn't explain ──
+            # ── Residual: next block sees only what this block couldn't explain ─
             block_input = layers.Subtract(name=f"b{b}_residual")([block_input, backcast])
 
         # Aggregate all block forecasts (sum — matches N-BEATS paper)

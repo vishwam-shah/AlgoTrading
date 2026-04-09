@@ -34,10 +34,13 @@ MODELS_PROD_DIR  = MODELS_ROOT / "production"
 RESULTS_ROOT     = V3_ROOT / "06_results"
 RESULTS_RUNS_DIR = RESULTS_ROOT / "runs"
 
+# ── Logging paths (07_pipeline/logs) ──────────────────────────────────────────
+LOG_DIR          = V3_ROOT / "07_pipeline" / "logs"
+
 # ── All directories to auto-create on import ─────────────────────────────────
 ALL_DIRS = [
     RAW_DATA_DIR, FEAT_RAW_DIR, FEAT_SCALED_DIR,
-    MODELS_RUNS_DIR, MODELS_PROD_DIR, RESULTS_RUNS_DIR,
+    MODELS_RUNS_DIR, MODELS_PROD_DIR, RESULTS_RUNS_DIR, LOG_DIR,
 ]
 for _d in ALL_DIRS:
     _d.mkdir(parents=True, exist_ok=True)
@@ -362,15 +365,15 @@ XGB_PARAMS: dict = {
 
 DL_SEQ_LEN     = 20    # 20 trading days = 1 calendar month (4 F&O weeks)
 DL_BATCH_SIZE  = 32    # Smaller batch = noisier gradients, better generalisation
-DL_MAX_EPOCHS  = 80    # Reduced from 150; EarlyStopping fires before this anyway
+DL_MAX_EPOCHS  = 150   # Raised from 80; EarlyStopping controls actual stopping
 
 # EarlyStopping — monitor val_loss, restore best weights
-DL_ES_PATIENCE  = 8    # Reduced from 15 (~35% faster per DL model)
+DL_ES_PATIENCE  = 15   # Raised from 8 — gives DL models time to converge
 DL_ES_MIN_DELTA = 5e-5 # Finer threshold — counts smaller real improvements
 
 # ReduceLROnPlateau — halve LR when stuck
 DL_RLROP_FACTOR   = 0.5   # Multiply LR by this on plateau
-DL_RLROP_PATIENCE = 5     # Reduced from 8
+DL_RLROP_PATIENCE = 8     # Raised from 5
 DL_RLROP_MIN_LR   = 1e-5  # Floor on learning rate
 
 # ── LSTM ─────────────────────────────────────────────────────────────────────
@@ -481,9 +484,10 @@ TCN_TRANSFORMER_PARAMS: dict = {
 # Ref: Oreshkin et al. 2019 ICLR — 11% over statistical benchmarks on M4.
 # Adaptation: flattened multivariate input, sigmoid classification head.
 NBEATS_PARAMS: dict = {
-    "n_blocks":      4,      # number of residual backcast blocks
+    "n_blocks":      3,      # Reduced from 4 — fewer but functional blocks
     "n_layers":      4,      # FC layers per block (matches paper generic config)
-    "fc_dim":        256,    # FC hidden dimension per block
+    "fc_dim":        512,    # Raised from 256 — capacity to model projected 256-dim space
+    "proj_dim":      256,    # Input projection: (seq*feat) → 256 before blocks
     "forecast_dim":  64,     # classification representation size per block
     "dense_units":   64,     # classification head hidden size
     "dropout":       0.3,

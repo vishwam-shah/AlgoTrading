@@ -69,12 +69,20 @@ results/**/*.png
 results/**/*.jpg
 results/**/*.html
 
-# V3 results — allow CSVs, JSONs, and logs
-!V3/06_results/runs/**/*.csv
-!V3/06_results/runs/**/*.json
-!V3/06_results/runs/**/run.log
-!V3/06_results/runs/
-!V3/06_results/
+# V3 generated data — never commit (large, regeneratable)
+V3/01_data/raw/
+V3/01_data/features/
+V3/02_models/runs/
+V3/02_models/production/
+V3/07_pipeline/logs/
+
+# V3 result runs — ignore new runs by timestamp pattern (8-digit date prefix)
+# Reference run 20260408_163433 (full 100-stock) is explicitly kept below
+V3/06_results/runs/2*/
+
+# V3 results archive — keep the reference 100-stock run
+!V3/06_results/runs/20260408_163433
+!V3/06_results/runs/20260408_163433/
 
 # Jupyter
 .ipynb_checkpoints

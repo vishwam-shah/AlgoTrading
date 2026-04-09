@@ -133,7 +133,8 @@ try:
         (BiLSTMClassifier,         "BiLSTM"),
         (GRUClassifier,            "GRU"),
         (CNNLSTMClassifier,        "CNN_LSTM"),
-        (CNNGRUClassifier,         "CNN_GRU"),
+        # CNN_GRU removed — statistically identical to CNN_LSTM (both ~50.73%)
+        # Keeping both adds correlated noise that dilutes better tree models' votes
         (TCNGRUClassifier,         "TCN_GRU"),
         (TCNTransformerClassifier, "TCN_Transformer"),
         (NBEATSClassifier,         "NBEATS"),
@@ -159,6 +160,10 @@ def _load_parquet(path: Path) -> Optional[pd.DataFrame]:
     try:
         df = pd.read_parquet(path)
         if "date" in df.columns:
+            df["date"] = pd.to_datetime(df["date"])
+        elif "timestamp" in df.columns:
+            # Handle parquets written by V3/01_data/downloader.py (uses "timestamp")
+            df = df.rename(columns={"timestamp": "date"})
             df["date"] = pd.to_datetime(df["date"])
         return df
     except Exception:
@@ -1217,18 +1222,25 @@ def train_window(
     print(f"      [PCA]    {n_pc} components → {evr:.1%} explained variance")
     pca_names = [f"PC{i+1}" for i in range(n_pc)]
 
-    # ── DL BRANCH: build continuous scaled block + sequences ──────────────────
+    # ── DL BRANCH: build continuous PCA block + sequences ────────────────────
     # X_full_scaled spans [ws..te) continuously (train+val+test).
     # Scaler was fit on X_train only — applying transform here is leakage-free.
+    # PCA was fit on X_train_sc only — same leakage-free guarantee.
+    #
+    # FIX (P4): DL now receives PCA-transformed features (~21 uncorrelated PCs)
+    # instead of raw 50 correlated features. This eliminates the colinearity
+    # problem (ret_1d/ret_2d/ret_5d, rsi_7/14/21, etc.) that confused LSTM gating
+    # and reduces input noise substantially. Expected gain: +1.5-2.5% DL accuracy.
     X_full_block = np.nan_to_num(np.clip(X[ws:te], p01, p99), nan=0.0)
     X_full_scaled = np.clip(scaler.transform(X_full_block), -5, 5)
-    # Local offsets into X_full_scaled:  train[0, we-ws)  val[vs-ws, ve-ws)  test[ts-ws, te-ws)
+    X_full_pca    = np.clip(pca.transform(X_full_scaled),   -5, 5)  # (~21 PCs)
+    # Local offsets into the full block: train[0, we-ws)  val[vs-ws, ve-ws)  test[ts-ws, te-ws)
     _dl_local = dict(ws=0, we=we-ws, vs=vs-ws, ve=ve-ws, ts=ts-ws, te=te-ws)
 
     (X_tr_seq, y_tr_dl,
      X_va_seq, y_va_dl,
      X_te_seq, y_te_dl) = get_dl_splits(
-        X_scaled=X_full_scaled,
+        X_scaled=X_full_pca,     # PCA features instead of raw scaled
         y=y[ws:te],
         seq_len=DL_SEQ_LEN,
         **_dl_local,
@@ -1254,10 +1266,18 @@ def train_window(
     test_probs:     Dict = {}
     val_probs_each: Dict = {}
 
+    # Class imbalance ratio for this window (bull-market drift biases toward UP)
+    _n_up   = max((y_train == 1).sum(), 1)
+    _n_down = max((y_train == 0).sum(), 1)
+    _spw    = float(_n_down) / float(_n_up)   # scale_pos_weight for XGB
+
     # Tree models (LightGBM + XGBoost) on PCA features
     for ModelClass, name in [(LightGBMClassifier, "LightGBM"), (XGBoostClassifier, "XGBoost")]:
         try:
-            mdl = ModelClass(n_jobs=_N_JOBS)
+            if name == "XGBoost":
+                mdl = ModelClass(n_jobs=_N_JOBS, scale_pos_weight=_spw)
+            else:
+                mdl = ModelClass(n_jobs=_N_JOBS, is_unbalance=True)
             mdl.train(X_train, y_train, X_val, y_val,
                       feature_names=pca_names, verbose=False, sample_weight=w)
             test_preds[name]     = mdl.predict(X_test)
@@ -1272,7 +1292,7 @@ def train_window(
 
     # Deep Learning models on sequence features (seq_len × n_features)
     if _DL_AVAILABLE and X_tr_seq is not None and len(X_tr_seq) >= 50:
-        n_feat_dl = X_full_scaled.shape[1]
+        n_feat_dl = X_full_pca.shape[1]   # PCA components (~21), not raw features (50)
         for DLClass, dl_name in _DL_CLASSES:
             try:
                 mdl = DLClass(seq_len=DL_SEQ_LEN, n_features=n_feat_dl)
@@ -1318,7 +1338,7 @@ def train_window(
             base_acc = _acc(y_val, (np.mean(meta_Xv, axis=1) >= 0.5).astype(int))
 
             if len(np.unique(y_val)) == 2:
-                meta_model = LogisticRegression(C=0.05, max_iter=300, random_state=RANDOM_SEED)
+                meta_model = LogisticRegression(C=0.3, max_iter=300, random_state=RANDOM_SEED)
                 meta_model.fit(meta_Xv, y_val)
                 meta_acc  = _acc(y_val, meta_model.predict(meta_Xv))
                 meta_prob = meta_model.predict_proba(meta_Xt)[:, 1]
