@@ -3,15 +3,13 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
-      {
-        protocol: 'http',
-        hostname: '127.0.0.1',
-      },
+      { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'http', hostname: '127.0.0.1' },
     ],
+  },
+  // Proxy timeout: abort backend requests after 10s so the UI never hangs
+  experimental: {
+    proxyTimeout: 10_000,
   },
   async rewrites() {
     return [

@@ -10,16 +10,22 @@ import os
 import sys
 import json
 import asyncio
+import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+
+# Silence noisy third-party loggers immediately at import time
+for _noisy in ["SmartApi", "smartConnect", "logzero", "urllib3", "yfinance"]:
+    logging.getLogger(_noisy).setLevel(logging.CRITICAL)
 from fastapi import Path
 from pathlib import Path as FilePath  # Only use this alias for file paths, not FastAPI params
 
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
+import threading
 import pandas as pd
 import numpy as np
 import math
@@ -58,8 +64,15 @@ class SafeJSONEncoder(json.JSONEncoder):
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from engine.orchestrator import UnifiedOrchestrator
-from engine.sentiment import FastSentimentEngine
+try:
+    from engine.orchestrator import UnifiedOrchestrator  # type: ignore
+    from engine.sentiment import FastSentimentEngine      # type: ignore
+    _LEGACY_ENGINE = True
+except ImportError:
+    # Old engine not present — V3-native endpoints still work
+    UnifiedOrchestrator = None   # type: ignore
+    FastSentimentEngine = None   # type: ignore
+    _LEGACY_ENGINE = False
 
 # Create FastAPI app with API versioning
 app = FastAPI(
@@ -266,6 +279,8 @@ async def get_sentiment(symbol: str):
     try:
         if symbol not in AVAILABLE_STOCKS:
             return JSONResponse(status_code=404, content={"error": f"Stock {symbol} not found"})
+        if not _LEGACY_ENGINE:
+            return JSONResponse(status_code=503, content={"error": "Legacy engine not available. Use /api/v3/sentiment/{symbol}"})
         engine = FastSentimentEngine()
         scores = engine.get_sentiment_scores(symbol)
         bullish = scores.get('bullish_ratio', 0)
@@ -337,6 +352,11 @@ async def execute_backtest(job_id: str, symbols: List[str], capital: float, days
         # Log state before pipeline run
         logging.basicConfig(level=logging.INFO)
         logging.info(f"[Pipeline Start] job_id={job_id} running_jobs={running_jobs.get(job_id)} results_cache={results_cache.get(job_id)} pipeline_orchestrators={pipeline_orchestrators.get(job_id)}")
+
+        if not _LEGACY_ENGINE:
+            running_jobs[job_id]["status"] = "failed"
+            running_jobs[job_id]["message"] = "Legacy engine not available. Use /api/v1/v3/run instead."
+            return
 
         running_jobs[job_id]["status"] = "running"
         running_jobs[job_id]["message"] = "Running pipeline..."
@@ -764,6 +784,11 @@ async def execute_pipeline(
 ):
     """Execute full pipeline in background."""
     try:
+        if not _LEGACY_ENGINE:
+            running_jobs[job_id]["status"] = "failed"
+            running_jobs[job_id]["message"] = "Legacy engine not available. Use /api/v1/v3/run."
+            return
+
         running_jobs[job_id]["status"] = "running"
 
         def progress_cb(step_status):
@@ -877,6 +902,8 @@ async def get_stock_analysis(symbol: str):
 
     # Get sentiment
     try:
+        if not _LEGACY_ENGINE:
+            raise ImportError("legacy engine unavailable")
         engine = FastSentimentEngine()
         scores = engine.get_sentiment_scores(symbol)
         analysis["sentiment"] = sanitize_dict({
@@ -1086,111 +1113,158 @@ async def get_models_comparison():
 
 # ==================== V3 PIPELINE ENDPOINTS ====================
 
+_WORKSPACE    = FilePath(__file__).resolve().parent.parent
+_PYTHON_BIN   = str(_WORKSPACE / "venv" / "bin" / "python")
+_ORCHESTRATOR = str(_WORKSPACE / "V3" / "07_pipeline" / "orchestrator.py")
+
 class V3RunRequest(BaseModel):
     symbols: List[str] = []
-    capital: float = 100000
+    capital: float = 500000
+    fast: bool = True
+    force_features: bool = False
 
 
 @app.post("/api/v1/v3/run")
 async def run_v3(request: V3RunRequest, background_tasks: BackgroundTasks):
-    """Start V3 regression pipeline (background execution)."""
-    job_id = f"v3_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    """
+    Start V3 pipeline as a SEPARATE SUBPROCESS — never blocks uvicorn.
+    Progress tracked by polling summary.csv file counts.
+    """
+    import subprocess, os
 
-    symbols = request.symbols
-    if not symbols:
-        symbols = ['SBIN', 'HDFCBANK', 'ICICIBANK', 'TCS', 'INFY']
+    job_id  = f"v3_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    symbols = request.symbols or []
+
+    # Build orchestrator command
+    cmd = [_PYTHON_BIN, _ORCHESTRATOR]
+    if request.fast:
+        cmd.append("--fast")
+    if request.force_features:
+        cmd.append("--force-features")
+    if symbols:
+        cmd += ["--symbols"] + symbols
+
+    log_path = _WORKSPACE / "V3" / "07_pipeline" / "logs" / f"{job_id}.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
     v3_jobs[job_id] = {
-        "status": "pending",
-        "progress": 0,
-        "message": "Initializing V3 pipeline...",
-        "symbols": symbols,
-        "steps": [],
-        "current_step": 0,
-        "total_steps": 4,
-        "result": None,
+        "status":      "running",
+        "progress":    0,
+        "message":     f"Pipeline started — {len(symbols) or 99} stocks",
+        "symbols":     symbols,
+        "log_path":    str(log_path),
+        "pid":         None,
+        "run_id":      None,
+        "result":      None,
     }
 
-    background_tasks.add_task(execute_v3, job_id, symbols)
-    return {"job_id": job_id, "status": "started", "symbols": symbols}
+    background_tasks.add_task(_monitor_v3_subprocess, job_id, cmd, log_path)
+    return {"job_id": job_id, "status": "started", "symbols": symbols, "cmd": " ".join(cmd[:4])}
 
 
-def execute_v3(job_id: str, symbols: List[str]):
-    """Execute V3 walk-forward ML pipeline in background."""
-    import logging
-    import sys
-    import os
+def _monitor_v3_subprocess(job_id: str, cmd: list, log_path: "FilePath"):
+    """
+    Launch the V3 orchestrator as a subprocess and monitor it.
+    Progress is inferred from log lines — no RAM/CPU shared with uvicorn.
+    Max runtime: 4 hours. Sleep 2s between polls to keep thread-pool free.
+    """
+    import subprocess
+    import re
+    import time as _time
+
+    # Keywords → (progress %, human label)
+    PROGRESS_MARKERS = [
+        (r"Starting.*pipeline",         5,  "Initializing pipeline"),
+        (r"[Dd]ownload.*data|fetch.*data|Collecting data", 15, "Downloading market data"),
+        (r"[Cc]omput.*feature|[Ff]eature.*engineer",      35, "Computing features"),
+        (r"[Tt]rain.*model|[Ff]itting.*model",             55, "Training models"),
+        (r"[Bb]acktest|walk.forward",                      75, "Running backtest"),
+        (r"[Ss]ignal|[Pp]rediction",                       90, "Generating signals"),
+        (r"[Cc]omplete|[Ff]inished|[Dd]one",              100, "Pipeline complete"),
+    ]
 
     try:
-        v3_jobs[job_id]["status"] = "running"
+        with open(log_path, "w") as log_fh:
+            proc = subprocess.Popen(
+                cmd,
+                stdout=log_fh,
+                stderr=subprocess.STDOUT,
+                cwd=str(_WORKSPACE),
+            )
 
-        def progress_cb(step: int, total: int, message: str):
-            pct = int((step / max(total, 1)) * 100)
-            v3_jobs[job_id]["current_step"] = step
-            v3_jobs[job_id]["total_steps"] = total
-            v3_jobs[job_id]["progress"] = pct
-            v3_jobs[job_id]["message"] = message
+        v3_jobs[job_id]["pid"] = proc.pid
 
-            step_info = {
-                "step": step,
-                "name": message,
-                "status": "running" if step < total else "completed",
-                "duration": 0,
-                "details": message,
-            }
-            steps = v3_jobs[job_id].get("steps", [])
-            for s in steps:
-                if s["step"] < step:
-                    s["status"] = "completed"
-            existing = [i for i, s in enumerate(steps) if s["step"] == step]
-            if existing:
-                steps[existing[0]] = step_info
-            else:
-                steps.append(step_info)
-            v3_jobs[job_id]["steps"] = steps
+        # Stream log file for progress hints — 2s poll, 4h hard cap
+        MAX_RUNTIME_S = 4 * 3600
+        started_at    = _time.monotonic()
+        with open(log_path, "r") as log_fh:
+            while True:
+                ret  = proc.poll()
+                line = log_fh.readline()
+                if line:
+                    for pattern, pct, label in PROGRESS_MARKERS:
+                        if re.search(pattern, line):
+                            if pct > v3_jobs[job_id].get("progress", 0):
+                                v3_jobs[job_id]["progress"] = pct
+                                v3_jobs[job_id]["message"]  = label
+                    if "ERROR" in line or "Traceback" in line:
+                        v3_jobs[job_id]["message"] = line.strip()[:200]
+                elif ret is not None:
+                    break
+                elif _time.monotonic() - started_at > MAX_RUNTIME_S:
+                    proc.kill()
+                    v3_jobs[job_id].update({"status": "failed", "message": "Killed: exceeded 4h limit"})
+                    break
+                else:
+                    _time.sleep(2)   # 2s instead of 0.5s — keeps thread-pool free
 
-        # ── Import V3 pipeline (V3/07_pipeline/run_pipeline.py) ──────────
-        workspace_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        v3_root       = os.path.join(workspace_root, "V3")
-        pipeline_dir  = os.path.join(v3_root, "07_pipeline")
-        models_dir    = os.path.join(v3_root, "02_models")
-        for _p in [pipeline_dir, v3_root, models_dir, workspace_root]:
-            if _p not in sys.path:
-                sys.path.insert(0, _p)
+        # ── Subprocess finished ──────────────────────────────────────────
+        if proc.returncode == 0:
+            # Try to load summary from the latest run folder
+            summary_csv = _WORKSPACE / "V3" / "07_pipeline" / "runs" / "latest" / "summary.csv"
+            result_data: dict = {}
+            if summary_csv.exists():
+                try:
+                    df = pd.read_csv(summary_csv)
+                    result_data["signals"] = df.to_dict(orient="records")
+                except Exception:
+                    pass
 
-        from run_pipeline import run_pipeline_api  # type: ignore
+            v3_jobs[job_id].update({
+                "status":   "completed",
+                "progress": 100,
+                "message":  "V3 pipeline completed successfully",
+                "result":   sanitize_dict({
+                    "signals":         result_data.get("signals", []),
+                    "backtest_results": {},
+                    "equity_curve":    [],
+                    "allocation":      {},
+                    "pipeline_status": {"status": "completed"},
+                    "log_path":        str(log_path),
+                    "timestamp":       datetime.now().isoformat(),
+                }),
+            })
+            results_cache[job_id] = v3_jobs[job_id]["result"]
+        else:
+            # Read tail of log for error context
+            try:
+                with open(log_path) as f:
+                    tail = "".join(f.readlines()[-30:])
+            except Exception:
+                tail = "(log unreadable)"
+            v3_jobs[job_id].update({
+                "status":  "failed",
+                "message": f"Pipeline exited with code {proc.returncode}",
+                "result":  {"error_tail": tail},
+            })
 
-        result = run_pipeline_api(
-            symbols=symbols,
-            progress_callback=progress_cb,
-        )
-
-        # Mark all steps completed
-        for s in v3_jobs[job_id].get("steps", []):
-            s["status"] = "completed"
-
-        v3_jobs[job_id]["status"] = "completed"
-        v3_jobs[job_id]["progress"] = 100
-        v3_jobs[job_id]["message"] = "V3 pipeline completed successfully"
-        v3_jobs[job_id]["result"] = sanitize_dict({
-            "signals":          result.get("signals", {}),
-            "backtest_results": result.get("backtest_results", {}),
-            "equity_curve":     result.get("equity_curve", []),
-            "allocation":       {},
-            "pipeline_status":  {"status": "completed"},
-            "run_path":         result.get("run_path", ""),
-            "elapsed_sec":      result.get("elapsed_sec", 0),
-            "timestamp":        datetime.now().isoformat(),
-        })
-
-        results_cache[job_id] = v3_jobs[job_id]["result"]
-
-    except Exception as e:
+    except Exception as exc:
         import traceback
-        tb = traceback.format_exc()
-        v3_jobs[job_id]["status"] = "failed"
-        v3_jobs[job_id]["message"] = str(e)
-        logging.error(f"[V3 Pipeline Error] job_id={job_id}\n{tb}")
+        v3_jobs[job_id].update({
+            "status":  "failed",
+            "message": str(exc),
+        })
+        logging.error(f"[V3 Subprocess Monitor] job_id={job_id}\n{traceback.format_exc()}")
 
 
 @app.get("/api/v1/v3/{job_id}/status")
@@ -1201,16 +1275,15 @@ async def get_v3_status(job_id: str = Path(...)):
 
     job = v3_jobs[job_id]
     return sanitize_dict({
-        "job_id": job_id,
-        "status": job.get("status"),
+        "job_id":   job_id,
+        "status":   job.get("status"),
         "progress": job.get("progress", 0),
-        "message": job.get("message", ""),
-        "symbols": job.get("symbols", []),
-        "steps": job.get("steps", []),
-        "current_step": job.get("current_step", 0),
-        "total_steps": job.get("total_steps", 4),
+        "message":  job.get("message", ""),
+        "symbols":  job.get("symbols", []),
+        "pid":      job.get("pid"),
+        "log_path": job.get("log_path"),
         "timestamp": datetime.now().isoformat(),
-        "result": job.get("result"),
+        "result":   job.get("result"),
     })
 
 
@@ -1535,6 +1608,974 @@ async def auto_trade_from_signal(symbol: str):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  V3 NATIVE ENDPOINTS — reads directly from V3 pipeline output files
+#  No dependency on old engine/. Pure file readers → zero import issues.
+# ══════════════════════════════════════════════════════════════════════════════
+
+_V3_ROOT    = FilePath(__file__).resolve().parent.parent / "V3"
+_RUNS_DIR   = _V3_ROOT / "06_results" / "runs"
+_ORDERS_DIR = _V3_ROOT / "05_live_trading" / "orders"
+
+
+def _latest_run_id() -> Optional[str]:
+    """
+    Return the most recently completed run (newest folder name that has a summary.csv).
+    Folders are named YYYYMMDD_HHMMSS so lexicographic descending == chronological.
+    """
+    for run_dir in sorted(_RUNS_DIR.glob("20*"), reverse=True):
+        if (run_dir / "summary.csv").exists():
+            return run_dir.name
+    return None
+
+
+def _read_summary(run_id: str) -> dict:
+    path = _RUNS_DIR / run_id / "summary.csv"
+    if not path.exists():
+        return {}
+    df = pd.read_csv(path)
+    return sanitize_dict(df.to_dict(orient="records"))
+
+
+# ── Latest run id (polling endpoint) ─────────────────────────────────────────
+
+@app.get("/api/v3/runs/latest-id")
+async def get_latest_run_id():
+    """Lightweight endpoint — returns only the most recent run_id. Frontend polls this."""
+    run_id = _latest_run_id()
+    if not run_id:
+        raise HTTPException(404, detail="No runs found")
+    return {"run_id": run_id, "timestamp": datetime.now().isoformat()}
+
+
+# ── List runs ─────────────────────────────────────────────────────────────────
+
+@app.get("/api/v3/runs")
+async def list_v3_runs():
+    """List all completed V3 pipeline runs with summary stats."""
+    runs = []
+    for run_dir in sorted(_RUNS_DIR.glob("20*"), reverse=True):
+        meta_path = run_dir / "run_metadata.json"
+        summary_path = run_dir / "summary.csv"
+        entry = {"run_id": run_dir.name}
+        if meta_path.exists():
+            with open(meta_path) as f:
+                entry.update(json.load(f))
+        if summary_path.exists():
+            df = pd.read_csv(summary_path)
+            avg_row = df[df["symbol"] == "AVERAGE"]
+            if not avg_row.empty:
+                entry["avg_accuracy"] = round(float(avg_row.iloc[0].get("oos_accuracy", 0)), 4)
+                entry["n_stocks"]     = int(df[df["symbol"] != "AVERAGE"].shape[0])
+        runs.append(sanitize_dict(entry))
+    return {"runs": runs, "total": len(runs)}
+
+
+# ── Run summary ───────────────────────────────────────────────────────────────
+
+@app.get("/api/v3/runs/{run_id}/summary")
+async def get_v3_run_summary(run_id: str):
+    """Per-stock OOS accuracy + backtest metrics merged into one response."""
+    path = _RUNS_DIR / run_id / "summary.csv"
+    if not path.exists():
+        raise HTTPException(404, detail=f"Run {run_id} not found or still in progress")
+    df = pd.read_csv(path)
+    # Merge backtest metrics (sharpe, binary_dir_acc, tradeable, etc.) if available
+    bt_path = _RUNS_DIR / run_id / "backtest_results.csv"
+    if bt_path.exists():
+        bt_df   = pd.read_csv(bt_path)
+        bt_want = ["symbol", "sharpe", "binary_dir_acc", "tradeable",
+                   "n_trades", "win_rate", "total_return", "profit_factor",
+                   "max_drawdown", "up_signal_acc", "ann_return"]
+        bt_df = bt_df[[c for c in bt_want if c in bt_df.columns]]
+        df = df.merge(bt_df, on="symbol", how="left")
+    return sanitize_dict({
+        "run_id": run_id,
+        "stocks": df.to_dict(orient="records"),
+        "count": len(df),
+    })
+
+
+# ── Next-day predictions ──────────────────────────────────────────────────────
+
+@app.get("/api/v3/predictions/latest")
+async def get_latest_predictions():
+    """Next-day trading signals from the most recent run."""
+    run_id = _latest_run_id()
+    if not run_id:
+        raise HTTPException(404, detail="No runs found")
+    return await get_v3_predictions(run_id)
+
+
+@app.get("/api/v3/predictions/{run_id}")
+async def get_v3_predictions(run_id: str):
+    """Next-day trading signals for a specific run."""
+    path = _RUNS_DIR / run_id / "next_day_predictions.csv"
+    if not path.exists():
+        raise HTTPException(404, detail=f"No predictions for run {run_id}")
+    df = pd.read_csv(path)
+    # Normalise probability column — pipeline writes avg_prob, frontend expects prob_up
+    if "avg_prob" in df.columns and "prob_up" not in df.columns:
+        df["prob_up"] = df["avg_prob"]
+    # Use last_close as price hint if present
+    if "last_close" in df.columns:
+        df["price"] = df["last_close"]
+    return sanitize_dict({
+        "run_id": run_id,
+        "predictions": df.to_dict(orient="records"),
+        "count": len(df),
+        "up_count":   int((df["direction"] == "UP").sum())   if "direction" in df.columns else 0,
+        "down_count": int((df["direction"] == "DOWN").sum()) if "direction" in df.columns else 0,
+        "generated_at": str(path.stat().st_mtime),
+    })
+
+
+# ── Backtest results ──────────────────────────────────────────────────────────
+
+def _load_backtest(run_id: str) -> dict:
+    """Load backtest_results.csv for a run. Raises HTTPException if missing."""
+    path = _RUNS_DIR / run_id / "backtest_results.csv"
+    if not path.exists():
+        raise HTTPException(404, detail=f"No backtest data for run {run_id}. Re-run the pipeline.")
+    df = pd.read_csv(path)
+    profitable = df[df["sharpe"] > 0]
+    tradeable  = df[df.get("tradeable", pd.Series(False, index=df.index)) == True]
+    portfolio_path = _RUNS_DIR / run_id / "backtest_portfolio.csv"
+    portfolio_curve: list = []
+    if portfolio_path.exists():
+        pf = pd.read_csv(portfolio_path).fillna(0)
+        portfolio_curve = sanitize_dict(pf.to_dict(orient="records"))
+    # Load supplementary bootstrap + NIFTY summary if available
+    bt_summary: dict = {}
+    summary_json = _RUNS_DIR / run_id / "backtest_summary.json"
+    if summary_json.exists():
+        try:
+            with open(summary_json) as _f:
+                bt_summary = json.load(_f)
+        except Exception:
+            pass
+
+    return sanitize_dict({
+        "run_id":              run_id,
+        "stocks":              df.to_dict(orient="records"),
+        "n_total":             len(df),
+        "n_tradeable":         int(len(tradeable)),
+        "n_profitable":        int(len(profitable)),
+        "portfolio_sharpe":    round(float(profitable["sharpe"].mean()), 3) if not profitable.empty else 0,
+        "portfolio_win_rate":  round(float(profitable["win_rate"].mean()), 4) if not profitable.empty else 0,
+        "portfolio_total_ret": round(float(profitable["total_return"].mean()), 4) if not profitable.empty else 0,
+        "portfolio_max_dd":    round(float(profitable["max_drawdown"].mean()), 4) if not profitable.empty else 0,
+        "portfolio_curve":     portfolio_curve,
+        "cost_model":          "0.25% round-trip (STT+brokerage+slippage)",
+        # Bootstrap CI for statistical significance
+        "bootstrap_significant":  bt_summary.get("bootstrap_significant", False),
+        "bootstrap_ci_lower":     bt_summary.get("bootstrap_ci_lower", 0.0),
+        "bootstrap_ci_upper":     bt_summary.get("bootstrap_ci_upper", 0.0),
+        "bootstrap_acc_mean":     bt_summary.get("bootstrap_acc_mean", 0.0),
+        "bootstrap_n_signals":    bt_summary.get("bootstrap_n_signals", 0),
+        # NIFTY buy-and-hold comparison
+        "nifty_return":           bt_summary.get("nifty_return", None),
+        "nifty_start_date":       bt_summary.get("nifty_start_date", ""),
+        "nifty_end_date":         bt_summary.get("nifty_end_date", ""),
+    })
+
+
+# IMPORTANT: specific route BEFORE parameterized route so FastAPI doesn't
+# capture "latest" as a run_id.
+@app.get("/api/v3/runs/latest/backtest")
+async def get_latest_backtest():
+    """Backtest results for the most recent run."""
+    run_id = _latest_run_id()
+    if not run_id:
+        raise HTTPException(404, detail="No runs found")
+    return _load_backtest(run_id)
+
+
+@app.get("/api/v3/runs/{run_id}/backtest")
+async def get_backtest_results(run_id: str):
+    """Per-stock simulated P&L metrics for a specific run."""
+    return _load_backtest(run_id)
+
+
+# ── Paper trading ─────────────────────────────────────────────────────────────
+
+_PT_DIR = _V3_ROOT / "05_live_trading" / "paper_trading_logs"
+
+@app.get("/api/v3/paper/sessions")
+async def list_paper_sessions():
+    """List all paper trading sessions."""
+    _PT_DIR.mkdir(parents=True, exist_ok=True)
+    sessions = []
+    for f in sorted(_PT_DIR.glob("session_*.json"), reverse=True):
+        try:
+            with open(f) as fp:
+                s = json.load(fp)
+            sessions.append({"session_id": f.stem.replace("session_", ""),
+                              "trades": len(s.get("trades", [])),
+                              "cash": s.get("cash", 0),
+                              "initial_cash": s.get("initial_cash", 0)})
+        except Exception:
+            pass
+    return sanitize_dict({"sessions": sessions, "count": len(sessions)})
+
+
+@app.post("/api/v3/paper/start")
+async def start_paper_session(background_tasks: BackgroundTasks):
+    """
+    Start a new paper trading session using the best stocks from the latest backtest.
+    Selects stocks where: tradeable=True AND sharpe>0.5 (VOLTAS, TECHM, VEDL, FEDERALBNK, ADANIENT).
+    """
+    run_id = _latest_run_id()
+    if not run_id:
+        raise HTTPException(404, detail="No pipeline run found. Run the pipeline first.")
+
+    bt_path = _RUNS_DIR / run_id / "backtest_results.csv"
+    if not bt_path.exists():
+        raise HTTPException(404, detail="No backtest results. Run pipeline first.")
+
+    bt_df = pd.read_csv(bt_path)
+    top_stocks = bt_df[
+        (bt_df["tradeable"] == True) & (bt_df["sharpe"] >= 0.5)
+    ][["symbol", "sharpe", "win_rate", "oos_accuracy"]].to_dict(orient="records")
+
+    if not top_stocks:
+        raise HTTPException(400, detail="No stocks qualify (need tradeable=True AND sharpe>=0.5)")
+
+    session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    _PT_DIR.mkdir(parents=True, exist_ok=True)
+
+    pred_path = _RUNS_DIR / run_id / "next_day_predictions.csv"
+    todays_signals = []
+    if pred_path.exists():
+        pdf = pd.read_csv(pred_path)
+        qualified = set(s["symbol"] for s in top_stocks)
+        todays_signals = pdf[
+            pdf["symbol"].isin(qualified) & (pdf["direction"] == "UP")
+        ].to_dict(orient="records")
+
+    session = {
+        "session_id":   session_id,
+        "run_id":       run_id,
+        "created_at":   datetime.now().isoformat(),
+        "initial_cash": 500000,
+        "cash":         500000,
+        "qualified_stocks": top_stocks,
+        "todays_signals":   sanitize_dict(todays_signals),
+        "holdings":     {},
+        "trades":       [],
+        "status":       "active",
+        "note": (
+            f"Paper trading {len(top_stocks)} stocks with Sharpe>=0.5 from run {run_id}. "
+            "Buy signals at tomorrow open, exit at next close."
+        ),
+    }
+
+    with open(_PT_DIR / f"session_{session_id}.json", "w") as f:
+        json.dump(session, f, indent=2)
+
+    return sanitize_dict({
+        "session_id":       session_id,
+        "qualified_stocks": top_stocks,
+        "todays_signals":   sanitize_dict(todays_signals),
+        "message": f"Paper trading session started with {len(top_stocks)} stocks",
+    })
+
+
+@app.get("/api/v3/paper/latest")
+async def get_latest_paper_session():
+    """Most recent paper trading session."""
+    _PT_DIR.mkdir(parents=True, exist_ok=True)
+    files = sorted(_PT_DIR.glob("session_*.json"), reverse=True)
+    if not files:
+        raise HTTPException(404, detail="No paper trading sessions yet")
+    with open(files[0]) as f:
+        return sanitize_dict(json.load(f))
+
+
+# ── Per-stock predictions history ─────────────────────────────────────────────
+
+@app.get("/api/v3/runs/{run_id}/stock/{symbol}/predictions")
+async def get_stock_predictions(run_id: str, symbol: str):
+    """Full OOS prediction history for one stock in a run."""
+    path = _RUNS_DIR / run_id / symbol / "predictions.csv"
+    if not path.exists():
+        raise HTTPException(404, detail=f"{symbol} predictions not found in run {run_id}")
+    df = pd.read_csv(path)
+    accuracy = float((df["actual"] == df["ensemble_pred"]).mean()) if "actual" in df.columns else None
+    return sanitize_dict({
+        "run_id": run_id, "symbol": symbol,
+        "oos_accuracy": round(accuracy, 4) if accuracy else None,
+        "predictions": df.to_dict(orient="records"),
+        "count": len(df),
+    })
+
+
+# ── Approved orders ───────────────────────────────────────────────────────────
+
+@app.get("/api/v3/orders/latest")
+async def get_latest_orders():
+    """Most recent approved order set from signal_publisher."""
+    files = sorted(_ORDERS_DIR.glob("orders_*.json"), reverse=True)
+    if not files:
+        raise HTTPException(404, detail="No order files found. Run signal_publisher.py first.")
+    with open(files[0]) as f:
+        orders = json.load(f)
+    return sanitize_dict({
+        "file": files[0].name,
+        "orders": orders,
+        "count": len(orders),
+        "total_deployed": sum(o.get("order_value", 0) for o in orders),
+    })
+
+
+@app.get("/api/v3/orders/history")
+async def get_order_history():
+    """All historical order files."""
+    files = sorted(_ORDERS_DIR.glob("orders_*.json"), reverse=True)
+    history = []
+    for f in files[:30]:  # last 30
+        try:
+            with open(f) as fh:
+                orders = json.load(fh)
+            history.append({
+                "file": f.name,
+                "count": len(orders),
+                "total_deployed": round(sum(o.get("order_value", 0) for o in orders), 0),
+                "date": f.name.split("_")[-1].replace(".json", ""),
+            })
+        except Exception:
+            pass
+    return {"history": history, "total_files": len(files)}
+
+
+# ── Serve plot images ─────────────────────────────────────────────────────────
+
+@app.get("/api/v3/runs/{run_id}/plots/{filename}")
+async def get_run_plot(run_id: str, filename: str):
+    """Serve run-level plot PNG (cross_stock_comparison, model_comparison_heatmap, etc.)."""
+    path = _RUNS_DIR / run_id / "plots" / filename
+    if not path.exists() or path.suffix != ".png":
+        raise HTTPException(404, detail=f"Plot {filename} not found")
+    return FileResponse(str(path), media_type="image/png")
+
+
+@app.get("/api/v3/runs/{run_id}/stock/{symbol}/plots/{filename}")
+async def get_stock_plot(run_id: str, symbol: str, filename: str):
+    """Serve per-stock plot PNG (confidence_timeline, oos_accuracy, confusion_matrix)."""
+    path = _RUNS_DIR / run_id / symbol / "plots" / filename
+    if not path.exists() or path.suffix != ".png":
+        raise HTTPException(404, detail=f"Plot {filename} not found for {symbol}")
+    return FileResponse(str(path), media_type="image/png")
+
+
+# ── Live prices via WebSocket ─────────────────────────────────────────────────
+
+@app.websocket("/ws/live-prices")
+async def live_prices_ws(websocket: WebSocket):
+    """
+    WebSocket endpoint that streams live NSE prices every 5 seconds.
+    Client sends: {"symbols": ["SBIN", "HDFCBANK", ...]}
+    Server sends: {"prices": {"SBIN": 812.5, ...}, "timestamp": "..."}
+    """
+    await websocket.accept()
+    websocket_connections.append(websocket)
+    symbols = []
+    try:
+        # First message must be symbol list
+        msg = await asyncio.wait_for(websocket.receive_json(), timeout=10)
+        symbols = msg.get("symbols", [])[:50]  # cap at 50
+        import yfinance as yf
+
+        # Load verified ticker map
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(_V3_ROOT / "00_config"))
+            from tickers import to_yf, to_nse  # type: ignore
+        except Exception:
+            def to_yf(s: str) -> str: return f"{s}.NS"   # type: ignore
+            def to_nse(t: str) -> str: return t.replace(".NS", "")  # type: ignore
+        _TICKER_OVERRIDES: dict = {}  # kept for compat — mapping now in tickers.py
+        # Cache of last known good prices (avoids gaps when one ticker fails)
+        _price_cache: dict = {}
+
+        import logging as _log
+        _yf_logger = _log.getLogger("yfinance")
+        _yf_logger.setLevel(_log.CRITICAL)  # silence yfinance warnings
+
+        while True:
+            try:
+                if symbols:
+                    tickers = [to_yf(s) for s in symbols]
+                    import io, contextlib
+                    buf = io.StringIO()
+                    with contextlib.redirect_stderr(buf), contextlib.redirect_stdout(buf):
+                        data = yf.download(
+                            tickers, period="1d", interval="1m",
+                            auto_adjust=True, progress=False, threads=True,
+                            ignore_tz=True,
+                        )
+                    prices = dict(_price_cache)  # start from cache
+                    if not data.empty:
+                        closes = data["Close"].iloc[-1] if "Close" in data.columns else data.iloc[-1]
+                        for sym, ticker in zip(symbols, tickers):
+                            val = closes.get(ticker, float("nan"))
+                            if not (isinstance(val, float) and math.isnan(val)):
+                                prices[sym] = round(float(val), 2)
+                                _price_cache[sym] = prices[sym]
+                    await websocket.send_json({
+                        "prices": prices,
+                        "timestamp": datetime.now().isoformat(),
+                    })
+            except Exception:
+                pass
+            await asyncio.sleep(10)  # 10s instead of 5s — less load
+    except (WebSocketDisconnect, asyncio.TimeoutError):
+        pass
+    finally:
+        if websocket in websocket_connections:
+            websocket_connections.remove(websocket)
+
+
+# ── Sentiment history endpoint ────────────────────────────────────────────────
+
+@app.get("/api/v3/sentiment/{symbol}")
+async def get_v3_sentiment(symbol: str):
+    """Get FinBERT sentiment history for a symbol from sentiment_history.parquet."""
+    sent_path = _V3_ROOT / "01_data" / "news" / "sentiment_history.parquet"
+    if not sent_path.exists():
+        raise HTTPException(404, detail="No sentiment history found. Run sentiment_history.py first.")
+    try:
+        df = pd.read_parquet(sent_path)
+    except Exception as e:
+        raise HTTPException(500, detail=f"Sentiment file corrupted: {e}")
+    df = df[df["symbol"] == symbol.upper()].copy()
+    if df.empty:
+        raise HTTPException(404, detail=f"No sentiment history for {symbol}")
+    df["date"] = df["date"].astype(str)
+    latest = df.sort_values("date").iloc[-1]
+    return sanitize_dict({
+        "symbol": symbol,
+        "latest_score": float(latest.get("raw_score", 0)),
+        "latest_date":  str(latest["date"]),
+        "n_articles":   int(latest.get("n_articles", 0)),
+        "model_used":   str(latest.get("model_used", "unknown")),
+        "history": df.sort_values("date", ascending=False).head(30).to_dict(orient="records"),
+    })
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  ANGEL ONE LIVE TRADING ENDPOINTS
+#  Thin wrappers over angel_one_client + order_manager + daily_runner.
+#  Credentials live in .env — never in source.
+# ══════════════════════════════════════════════════════════════════════════════
+
+_LIVE_DIR     = _V3_ROOT / "05_live_trading"
+_EXEC_LOG_DIR = _LIVE_DIR / "execution_logs"
+_HISTORY_PATH = _LIVE_DIR / "trade_history.parquet"
+sys.path.insert(0, str(_LIVE_DIR))
+
+
+_angel_session_lock  = threading.Lock()
+_angel_session_cache: dict = {"client": None, "expires_at": 0.0}
+_ANGEL_SESSION_TTL = 270  # 4.5 minutes — well under Angel One's token expiry
+
+
+def _angel_client():
+    """Return a cached logged-in AngelOneClient. Logins once per 4.5 min, not per request."""
+    import time as _t
+    now = _t.time()
+    # Fast path — no lock needed when cache is warm
+    if _angel_session_cache["client"] is not None and now < _angel_session_cache["expires_at"]:
+        return _angel_session_cache["client"]
+
+    with _angel_session_lock:
+        # Re-check inside lock to prevent double login under concurrent requests
+        now = _t.time()
+        if _angel_session_cache["client"] is not None and now < _angel_session_cache["expires_at"]:
+            return _angel_session_cache["client"]
+        try:
+            from angel_one_client import AngelOneClient  # type: ignore
+            c = AngelOneClient()
+            if not c.login():
+                raise RuntimeError("Login failed")
+            _angel_session_cache["client"]     = c
+            _angel_session_cache["expires_at"] = now + _ANGEL_SESSION_TTL
+            return c
+        except EnvironmentError as e:
+            _angel_session_cache["client"] = None
+            raise HTTPException(503, detail=f"Angel One credentials missing: {e}")
+        except Exception as e:
+            _angel_session_cache["client"] = None
+            raise HTTPException(503, detail=f"Angel One unavailable: {e}")
+
+
+# ── Account & Portfolio ──────────────────────────────────────────────────────
+
+# Cache angel status — only re-test every 5 minutes to avoid login spam
+_angel_status_cache: dict = {"result": None, "checked_at": 0.0}
+_ANGEL_CACHE_TTL = 300  # 5 minutes
+
+
+@app.get("/api/v3/angel/status")
+async def angel_status():
+    """Check Angel One connectivity. Result cached for 5 min to avoid login spam."""
+    import os, time, logging
+    from dotenv import load_dotenv
+
+    # Silence SmartAPI's internal loggers
+    for _log_name in ["SmartApi", "smartConnect", "logzero"]:
+        logging.getLogger(_log_name).setLevel(logging.CRITICAL)
+
+    env_path = FilePath(__file__).resolve().parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+
+    has_creds = all(os.getenv(k) for k in [
+        "ANGEL_API_KEY", "ANGEL_CLIENT_ID", "ANGEL_PASSWORD", "ANGEL_TOTP_SECRET"
+    ])
+    if not has_creds:
+        return {"credentials_present": False, "login_ok": False,
+                "message": "Missing credentials in .env", "env_path": str(env_path)}
+
+    # Return cached result if still fresh
+    now = time.time()
+    cached = _angel_status_cache
+    if cached["result"] and (now - cached["checked_at"]) < _ANGEL_CACHE_TTL:
+        return cached["result"]
+
+    # Try actual login
+    try:
+        sys.path.insert(0, str(_LIVE_DIR))
+
+        # Suppress SmartAPI stdout/stderr during init
+        import io, contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf), contextlib.redirect_stdout(buf):
+            from angel_one_client import AngelOneClient  # type: ignore
+            c = AngelOneClient()
+            login_ok = c.login()
+
+        result = {
+            "credentials_present": True,
+            "login_ok": login_ok,
+            "message": "Connected" if login_ok else "Login failed — check TOTP secret",
+            "env_path": str(env_path),
+        }
+    except Exception as e:
+        result = {"credentials_present": True, "login_ok": False,
+                  "message": str(e), "env_path": str(env_path)}
+
+    # Cache result
+    _angel_status_cache["result"] = result
+    _angel_status_cache["checked_at"] = now
+    return result
+
+
+@app.get("/api/v3/angel/funds")
+async def get_angel_funds():
+    """Return available cash and margin from Angel One."""
+    c = _angel_client()
+    funds = c.get_funds()
+    return sanitize_dict({"funds": funds, "timestamp": datetime.now().isoformat()})
+
+
+@app.get("/api/v3/angel/holdings")
+async def get_angel_holdings():
+    """Return current CNC holdings from Angel One."""
+    c = _angel_client()
+    holdings = c.get_holdings()
+    rows = [{"symbol": sym, "qty": p.qty, "avg_price": p.avg_price,
+             "ltp": p.ltp, "pnl": p.pnl}
+            for sym, p in holdings.items()]
+    total_pnl = sum(p.pnl for p in holdings.values())
+    return sanitize_dict({
+        "holdings": rows,
+        "count": len(rows),
+        "total_pnl": round(total_pnl, 2),
+        "timestamp": datetime.now().isoformat(),
+    })
+
+
+@app.get("/api/v3/angel/orders")
+async def get_angel_order_book():
+    """Return today's order book from Angel One."""
+    c = _angel_client()
+    orders = c.get_order_book()
+    return sanitize_dict({"orders": orders, "count": len(orders),
+                           "timestamp": datetime.now().isoformat()})
+
+
+@app.get("/api/v3/angel/ltp/{symbol}")
+async def get_angel_ltp(symbol: str):
+    """Get live LTP for a symbol from Angel One."""
+    c = _angel_client()
+    ltp = c.get_ltp(symbol.upper())
+    if ltp is None:
+        raise HTTPException(404, detail=f"No LTP for {symbol}")
+    return {"symbol": symbol.upper(), "ltp": ltp, "timestamp": datetime.now().isoformat()}
+
+
+# ── Order execution endpoints ─────────────────────────────────────────────────
+
+class PlaceOrderRequest(BaseModel):
+    symbol:     str
+    qty:        int
+    price:      float
+    order_type: str = "LIMIT"
+    side:       str = "BUY"
+    product:    str = "CNC"
+
+
+@app.post("/api/v3/angel/place-order")
+async def place_angel_order(req: PlaceOrderRequest):
+    """Place a single order on Angel One (live)."""
+    c = _angel_client()
+    resp = c.place_order(
+        symbol=req.symbol.upper(), qty=req.qty, price=req.price,
+        order_type=req.order_type, side=req.side, product=req.product,
+    )
+    return sanitize_dict({
+        "order_id": resp.order_id,
+        "symbol":   resp.symbol,
+        "status":   resp.status,
+        "message":  resp.message,
+        "timestamp": datetime.now().isoformat(),
+    })
+
+
+@app.post("/api/v3/angel/execute-today")
+async def execute_today_orders(background_tasks: BackgroundTasks,
+                                capital: float = 500_000,
+                                paper: bool = True):
+    """
+    Execute today's approved orders from signal_publisher.
+    paper=True (default): simulate fills only, no real orders.
+    paper=False: live execution on Angel One.
+    """
+    job_id = f"exec_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    v3_jobs[job_id] = {
+        "status": "running", "progress": 0,
+        "message": "Loading approved orders …", "result": None,
+    }
+
+    def _exec():
+        try:
+            order_files = sorted(_ORDERS_DIR.glob("orders_*.json"), reverse=True)
+            if not order_files:
+                v3_jobs[job_id]["status"] = "failed"
+                v3_jobs[job_id]["message"] = "No approved orders found. Run evening pipeline first."
+                return
+
+            with open(order_files[0]) as f:
+                orders = json.load(f)
+
+            v3_jobs[job_id]["message"] = f"Placing {len(orders)} orders …"
+
+            sys.path.insert(0, str(_LIVE_DIR))
+            from order_manager import OrderManager  # type: ignore
+
+            if paper:
+                mgr = OrderManager(client=None, paper_mode=True)
+            else:
+                c = _angel_client()
+                mgr = OrderManager(client=c, paper_mode=False)
+
+            mgr.execute_orders(orders)
+            mgr.wait_for_fills(timeout_min=30) if not paper else None
+            log_path = mgr.save_execution_log()
+            summary  = mgr.summary()
+
+            v3_jobs[job_id]["status"]   = "completed"
+            v3_jobs[job_id]["progress"] = 100
+            v3_jobs[job_id]["message"]  = "Execution complete"
+            v3_jobs[job_id]["result"]   = sanitize_dict({
+                **summary,
+                "log_file": log_path.name,
+                "paper_mode": paper,
+                "timestamp": datetime.now().isoformat(),
+            })
+        except Exception as e:
+            v3_jobs[job_id]["status"]  = "failed"
+            v3_jobs[job_id]["message"] = str(e)
+
+    background_tasks.add_task(_exec)
+    return {"job_id": job_id, "paper": paper, "status": "started"}
+
+
+# ── Execution logs ────────────────────────────────────────────────────────────
+
+@app.get("/api/v3/execution/logs")
+async def get_execution_logs():
+    """List all execution log files."""
+    _EXEC_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    files = sorted(_EXEC_LOG_DIR.glob("execution_*.json"), reverse=True)
+    logs = []
+    for f in files[:20]:
+        try:
+            with open(f) as fh:
+                data = json.load(fh)
+            filled    = sum(1 for r in data if r.get("status") == "FILLED")
+            total_val = sum(r.get("order_value", 0) for r in data if r.get("status") == "FILLED")
+            logs.append({
+                "file": f.name,
+                "date": f.name.split("_")[1] if "_" in f.name else "",
+                "total_orders": len(data),
+                "filled": filled,
+                "total_value": round(total_val, 0),
+            })
+        except Exception:
+            pass
+    return {"logs": logs, "count": len(files)}
+
+
+@app.get("/api/v3/execution/logs/{filename}")
+async def get_execution_log_detail(filename: str):
+    """Get fill details from a specific execution log."""
+    path = _EXEC_LOG_DIR / filename
+    if not path.exists() or path.suffix != ".json":
+        raise HTTPException(404, detail="Log not found")
+    with open(path) as f:
+        data = json.load(f)
+    return sanitize_dict({"fills": data, "count": len(data)})
+
+
+@app.get("/api/v3/execution/history")
+async def get_trade_history(limit: int = 200):
+    """Return fills from the most recent execution log file."""
+    _EXEC_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    files = sorted(_EXEC_LOG_DIR.glob("execution_*.json"), reverse=True)
+    if not files:
+        return {"trades": [], "count": 0}
+    try:
+        with open(files[0]) as f:
+            trades = json.load(f)
+        return sanitize_dict({"trades": trades[:limit], "count": len(trades), "file": files[0].name})
+    except Exception:
+        return {"trades": [], "count": 0}
+
+
+# ── Dashboard summary endpoint ────────────────────────────────────────────────
+
+@app.get("/api/v3/dashboard")
+async def get_dashboard(run_id: Optional[str] = None):
+    """
+    Single endpoint for frontend dashboard.
+    Returns: latest predictions, orders, pipeline status, sentiment health.
+    No Angel One call — pure file reads, always fast.
+    Pass ?run_id=<id> to view a specific run instead of the latest.
+    """
+    if not run_id:
+        run_id = _latest_run_id()
+    out: dict = {"timestamp": datetime.now().isoformat()}
+
+    # Latest run summary
+    if run_id:
+        out["run_id"] = run_id
+        summary_path  = _RUNS_DIR / run_id / "summary.csv"
+        # Symbols permanently skipped (insufficient history or structural break)
+        # SHRIRAMFIN: merged from Shriram Transport + Shriram City (2022-23) —
+        #   model trains on pre-merger data, tests on different entity → 44.1% OOS, worst stock
+        _PERMANENTLY_SKIPPED = {"BAJAJHFL", "SHRIRAMFIN"}
+
+        if summary_path.exists():
+            df  = pd.read_csv(summary_path)
+            trained = df[df["symbol"] != "AVERAGE"]
+            avg = df[df["symbol"] == "AVERAGE"]
+            n_trained   = int(trained.shape[0])
+            # n_total = however many were actually attempted in this run
+            n_total     = n_trained  # summary only contains trained stocks; show X/X when complete
+            # Check if a symbols file was saved for this run
+            sym_file = _RUNS_DIR / run_id / "symbols.txt"
+            if sym_file.exists():
+                attempted = [l.strip() for l in sym_file.read_text().splitlines() if l.strip()]
+                n_total = len(attempted)
+            is_complete = n_trained >= n_total
+            out["pipeline"] = {
+                "n_stocks":    n_trained,
+                "n_total":     n_total,
+                "is_complete": is_complete,
+                "avg_accuracy": round(float(avg.iloc[0]["oos_accuracy"]), 4) if not avg.empty else None,
+            }
+
+        pred_path = _RUNS_DIR / run_id / "next_day_predictions.csv"
+        if pred_path.exists():
+            pdf = pd.read_csv(pred_path)
+            # Normalise avg_prob → prob_up
+            if "avg_prob" in pdf.columns and "prob_up" not in pdf.columns:
+                pdf["prob_up"] = pdf["avg_prob"]
+            prob_col = "prob_up" if "prob_up" in pdf.columns else "confidence"
+            up = (pdf["direction"] == "UP").sum() if "direction" in pdf.columns else 0
+            out["predictions"] = {
+                "total": len(pdf),
+                "up": int(up),
+                "down": int(len(pdf) - up),
+                "top5": sanitize_dict(
+                    pdf[pdf["direction"] == "UP"]
+                    .sort_values(prob_col, ascending=False)
+                    .head(5)[["symbol", "direction", prob_col]]
+                    .rename(columns={prob_col: "prob_up"})
+                    .to_dict(orient="records")
+                ) if len(pdf) > 0 else [],
+            }
+
+    # Orders — prefer file tied to current run_id, then generate on-the-fly
+    orders = None
+    orders_source = None
+    if run_id:
+        run_order_files = sorted(_ORDERS_DIR.glob(f"orders_{run_id}_*.json"), reverse=True)
+        if run_order_files:
+            with open(run_order_files[0]) as f:
+                orders = json.load(f)
+            orders_source = run_order_files[0].name
+
+    # If no run-specific file, generate orders from predictions using last_close as price
+    if orders is None and run_id:
+        pred_path = _RUNS_DIR / run_id / "next_day_predictions.csv"
+        if pred_path.exists():
+            try:
+                pdf = pd.read_csv(pred_path)
+                if "avg_prob" in pdf.columns and "prob_up" not in pdf.columns:
+                    pdf["prob_up"] = pdf["avg_prob"]
+                prob_col = "prob_up" if "prob_up" in pdf.columns else "confidence"
+                up_df = pdf[pdf["direction"] == "UP"].copy()
+                up_df = up_df[up_df[prob_col] >= 0.52].sort_values(prob_col, ascending=False).head(15)
+                capital = 500_000.0
+                MAX_POS = 0.12
+                built = []
+                for _, row in up_df.iterrows():
+                    sym = str(row["symbol"])
+                    prob = float(row.get(prob_col, 0.55))
+                    price = float(row.get("last_close", 0) or row.get("price_hint", 0) or 0)
+                    if price <= 0:
+                        continue
+                    b = 1.5
+                    kf = max(0.0, min((b * prob - (1 - prob)) / b * 0.5, MAX_POS))
+                    target_inr = capital * kf
+                    qty = max(1, int(target_inr / price))
+                    built.append({
+                        "symbol": sym, "exchange": "NSE", "direction": "BUY",
+                        "prob_up": round(prob, 4), "kelly_frac": round(kf, 4),
+                        "target_pct": round(kf * 100, 2),
+                        "target_inr": round(target_inr, 0),
+                        "qty": qty, "price": round(price, 2),
+                        "order_value": round(qty * price, 0),
+                        "order_type": "LIMIT", "product": "CNC", "validity": "DAY",
+                        "generated_at": datetime.now().isoformat(),
+                    })
+                if built:
+                    orders = built
+                    orders_source = f"generated:{run_id}"
+            except Exception:
+                pass
+
+    if orders:
+        out["orders"] = {
+            "file": orders_source or "",
+            "count": len(orders),
+            "total_deployed": round(sum(o.get("order_value", 0) for o in orders), 0),
+            "orders": sanitize_dict(orders[:10]),
+        }
+    else:
+        out["orders"] = {"count": 0}
+
+    # Sentiment health
+    sent_path = _V3_ROOT / "01_data" / "news" / "sentiment_history.parquet"
+    if sent_path.exists():
+        try:
+            sdf = pd.read_parquet(sent_path)
+            latest_date = str(sdf["date"].max()) if "date" in sdf.columns else "unknown"
+            out["sentiment"] = {
+                "n_symbols": int(sdf["symbol"].nunique()),
+                "n_dates":   int(sdf["date"].nunique()),
+                "latest_date": latest_date,
+            }
+        except Exception:
+            pass  # corrupted sentiment file — skip gracefully
+
+    # Trade history
+    if _HISTORY_PATH.exists():
+        try:
+            df = pd.read_parquet(_HISTORY_PATH)
+            out["trade_history"] = {
+                "total_trades": len(df),
+                "latest_date": str(df["date"].max()) if "date" in df.columns else None,
+            }
+        except Exception:
+            pass  # corrupted history file — skip gracefully
+
+    return sanitize_dict(out)
+
+
+# ── Angel One postback webhook ────────────────────────────────────────────────
+# Register this URL in Angel One SmartAPI app dashboard:
+#   Dev:  https://<ngrok-id>.ngrok-free.app/api/v3/angel/webhook
+#   Prod: https://yourdomain.com/api/v3/angel/webhook
+
+_WEBHOOK_LOG = _LIVE_DIR / "execution_logs" / "webhook_events.jsonl"
+
+
+@app.post("/api/v3/angel/webhook")
+async def angel_webhook(request: Request):
+    """
+    Receives order postback events from Angel One SmartAPI.
+    Angel One POSTs JSON here when any order status changes
+    (placed → pending → complete/rejected).
+
+    Wire this URL in: SmartAPI Dashboard → My Apps → Edit App → Postback URL
+    """
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    # Log every event to JSONL for audit trail
+    _WEBHOOK_LOG.parent.mkdir(parents=True, exist_ok=True)
+    event = {
+        "received_at": datetime.now().isoformat(),
+        "payload": payload,
+    }
+    with open(_WEBHOOK_LOG, "a") as f:
+        f.write(json.dumps(event) + "\n")
+
+    # Extract key fields
+    order_id = payload.get("orderid", payload.get("order_id", ""))
+    status   = payload.get("orderstatus", payload.get("status", "")).lower()
+    symbol   = payload.get("tradingsymbol", payload.get("symbol", ""))
+    filled   = payload.get("filledshares", payload.get("filled_qty", 0))
+    avg_px   = payload.get("averageprice",  payload.get("avg_price", 0))
+
+    # Broadcast to any connected WebSocket clients (frontend gets live fill updates)
+    ws_msg = {
+        "type":     "order_update",
+        "order_id": order_id,
+        "symbol":   symbol,
+        "status":   status,
+        "filled":   filled,
+        "avg_price": avg_px,
+        "timestamp": datetime.now().isoformat(),
+    }
+    dead = []
+    for ws in websocket_connections:
+        try:
+            await ws.send_json(ws_msg)
+        except Exception:
+            dead.append(ws)
+    for ws in dead:
+        websocket_connections.remove(ws)
+
+    return {"status": "received", "order_id": order_id}
+
+
+@app.get("/api/v3/angel/webhook/events")
+async def get_webhook_events(limit: int = 50):
+    """Return recent postback events (for debugging order fills)."""
+    if not _WEBHOOK_LOG.exists():
+        return {"events": [], "count": 0}
+    lines = _WEBHOOK_LOG.read_text().strip().splitlines()
+    events = [json.loads(l) for l in lines[-limit:]][::-1]
+    return {"events": events, "count": len(lines)}
 
 
 if __name__ == "__main__":

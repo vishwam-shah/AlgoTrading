@@ -4,16 +4,17 @@
   "description": "AI-powered stock trading system with FastAPI backend and Next.js frontend",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "dev": "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\" --kill-others-on-fail \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "bash start_backend.sh",
     "dev:frontend": "cd frontend && npm run dev",
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "start:backend": "cd backend && uvicorn main:app --host 0.0.0.0 --port 8000",
+    "start": "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "PYTHONPATH=. venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000",
     "start:frontend": "cd frontend && npm run start",
     "build": "cd frontend && npm run build",
     "install:all": "npm install && cd frontend && npm install",
-    "backend": "cd backend && uvicorn main:app --reload --host 0.0.0.0 --port 8000",
-    "frontend": "cd frontend && npm run dev"
+    "backend": "PYTHONPATH=. venv/bin/uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000",
+    "frontend": "cd frontend && npm run dev",
+    "kill-backend": "lsof -ti:8000 | xargs kill -9 2>/dev/null || true"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

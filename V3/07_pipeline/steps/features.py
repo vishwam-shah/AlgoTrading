@@ -155,12 +155,120 @@ def _add_global_cues_features(d: pd.DataFrame, global_cues_df: pd.DataFrame) -> 
             nk = pd.Series(merged["nikkei_close"].values)
             d["nikkei_ret_5d"] = nk.pct_change(5).values
 
+    if "nifty50_ret" in merged.columns:
+        d["nifty50_ret_prev"] = merged["nifty50_ret"].values
+        if "nifty50_close" in merged.columns:
+            n5 = pd.Series(merged["nifty50_close"].values)
+            d["nifty50_ret_5d"]  = n5.pct_change(5).values
+            d["nifty50_ret_20d"] = n5.pct_change(20).values
+
+    if "niftybank_ret" in merged.columns:
+        d["niftybank_ret_prev"] = merged["niftybank_ret"].values
+        if "niftybank_close" in merged.columns:
+            nb = pd.Series(merged["niftybank_close"].values)
+            d["niftybank_ret_5d"]  = nb.pct_change(5).values
+            d["niftybank_ret_20d"] = nb.pct_change(20).values
+            # Banking-specific: Nifty Bank vs stock alpha
+            d["alpha_vs_niftybank_1d"] = d.get("ret_1d", 0) - d["niftybank_ret_prev"]
+
     return d
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  MAIN FEATURE COMPUTATION
 # ══════════════════════════════════════════════════════════════════════════════
+
+def _add_sentiment_features(
+    d: pd.DataFrame,
+    sentiment_df: pd.DataFrame,
+    symbol: str,
+) -> pd.DataFrame:
+    """
+    Merge daily FinBERT sentiment into stock features.
+
+    LEAKAGE SAFETY: Sentiment for day T reflects news from T's trading session.
+    We shift by 1 day so only T-1 sentiment is used to predict T's direction.
+
+    Features added:
+      sentiment_score       — raw FinBERT score [-1, +1], T-1
+      sentiment_ma_7d       — 7-day rolling mean
+      sentiment_ma_30d      — 30-day rolling mean
+      sentiment_trend       — ma_7d − ma_30d (momentum of sentiment)
+      sentiment_zscore      — z-score vs 30-day window
+      sentiment_vol_7d      — rolling std (uncertainty measure)
+      sentiment_n_articles  — article count (signal strength proxy)
+      sentiment_positive    — positive_ratio T-1
+      sentiment_negative    — negative_ratio T-1
+
+    When history is missing (early dates), features are filled with 0 (neutral prior).
+    """
+    if sentiment_df is None or sentiment_df.empty:
+        for col in ["sentiment_score", "sentiment_ma_7d", "sentiment_ma_30d",
+                    "sentiment_trend", "sentiment_zscore", "sentiment_vol_7d",
+                    "sentiment_n_articles", "sentiment_positive", "sentiment_negative"]:
+            d[col] = 0.0
+        return d
+
+    # Extract rows for this symbol
+    sym_sent = sentiment_df[sentiment_df["symbol"] == symbol].copy()
+    if sym_sent.empty:
+        for col in ["sentiment_score", "sentiment_ma_7d", "sentiment_ma_30d",
+                    "sentiment_trend", "sentiment_zscore", "sentiment_vol_7d",
+                    "sentiment_n_articles", "sentiment_positive", "sentiment_negative"]:
+            d[col] = 0.0
+        return d
+
+    sym_sent = sym_sent.sort_values("date").reset_index(drop=True)
+
+    # Compute rolling stats on the sentiment series itself
+    sc   = sym_sent["raw_score"]
+    ma7  = sc.rolling(7,  min_periods=1).mean()
+    ma30 = sc.rolling(30, min_periods=5).mean()
+    std7 = sc.rolling(7,  min_periods=3).std().fillna(0)
+    ma30_std = sc.rolling(30, min_periods=10).std().replace(0, np.nan)
+    zscore   = ((sc - ma30) / (ma30_std + 1e-8)).clip(-3, 3)
+
+    sym_sent["sc_ma7"]    = ma7.values
+    sym_sent["sc_ma30"]   = ma30.values
+    sym_sent["sc_trend"]  = (ma7 - ma30).values
+    sym_sent["sc_zscore"] = zscore.values
+    sym_sent["sc_vol7"]   = std7.values
+
+    # Shift by 1 day: sentiment from T-1 predicts T
+    sym_sent["date_shifted"] = sym_sent["date"] + pd.Timedelta(days=1)
+    sym_sent = sym_sent.rename(columns={"date_shifted": "merge_date"})
+
+    # Merge onto stock df
+    stock_dates = pd.DataFrame({
+        "date":    pd.to_datetime(d["date"]).astype("datetime64[us]"),
+        "_idx":    np.arange(len(d)),
+    }).sort_values("date")
+
+    sym_sent["merge_date"] = sym_sent["merge_date"].astype("datetime64[us]")
+    sym_sent_s = sym_sent.sort_values("merge_date")
+
+    merged = pd.merge_asof(
+        stock_dates, sym_sent_s,
+        left_on="date", right_on="merge_date",
+        direction="backward",
+        tolerance=pd.Timedelta("7 days"),
+    ).sort_values("_idx").reset_index(drop=True)
+
+    def _safe(col, fill=0.0):
+        return merged[col].fillna(fill).values if col in merged.columns else np.full(len(d), fill)
+
+    d["sentiment_score"]      = _safe("raw_score")
+    d["sentiment_ma_7d"]      = _safe("sc_ma7")
+    d["sentiment_ma_30d"]     = _safe("sc_ma30")
+    d["sentiment_trend"]      = _safe("sc_trend")
+    d["sentiment_zscore"]     = _safe("sc_zscore")
+    d["sentiment_vol_7d"]     = _safe("sc_vol7")
+    d["sentiment_n_articles"] = _safe("n_articles", 0.0)
+    d["sentiment_positive"]   = _safe("positive_ratio")
+    d["sentiment_negative"]   = _safe("negative_ratio")
+
+    return d
+
 
 def compute_features(
     df: pd.DataFrame,
@@ -169,6 +277,7 @@ def compute_features(
     market_df: Optional[pd.DataFrame] = None,
     usdinr_df: Optional[pd.DataFrame] = None,
     global_cues_df: Optional[pd.DataFrame] = None,
+    sentiment_df: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
     """Build 260+ features from OHLCV + global cues + NSE calendar. Zero look-ahead."""
     d = df.copy()
@@ -383,6 +492,21 @@ def compute_features(
     # 26. NSE calendar features (Phase 1)
     d = _add_nse_calendar_features(d)
 
+    # 29. News sentiment features (FinBERT — T-1 shifted, zero-filled when missing)
+    if sentiment_df is not None and symbol is not None:
+        d = _add_sentiment_features(d, sentiment_df, symbol)
+
+    # 28. Earnings proximity features
+    try:
+        import sys as _sys
+        _data_dir = Path(__file__).resolve().parent.parent.parent / "01_data"
+        if str(_data_dir) not in _sys.path:
+            _sys.path.insert(0, str(_data_dir))
+        from earnings_calendar import compute_earnings_features  # type: ignore
+        d = compute_earnings_features(d, symbol=symbol, use_live=False)
+    except Exception:
+        pass
+
     # 27. GARCH(1,1) conditional volatility
     try:
         from arch import arch_model as _arch_model
@@ -433,22 +557,27 @@ def get_or_compute_features(
     market_df: Optional[pd.DataFrame] = None,
     usdinr_df: Optional[pd.DataFrame] = None,
     global_cues_df: Optional[pd.DataFrame] = None,
+    sentiment_df: Optional[pd.DataFrame] = None,
     force_recompute: bool = False,
 ) -> pd.DataFrame:
     """
     Return features from cache when fresh, else recompute.
-    Cache stale if raw data or global_cues.parquet is newer than feature cache.
+    Cache stale if raw data, global_cues.parquet, or sentiment_history.parquet
+    is newer than the feature cache.
     """
     raw_path    = RAW_DATA_DIR    / f"{symbol}.parquet"
     feat_path   = FEAT_RAW_DIR   / f"{symbol}_features.parquet"
     scaled_path = FEAT_SCALED_DIR / f"{symbol}_scaled.parquet"
     gcues_path  = RAW_DATA_DIR   / "global_cues.parquet"
+    sent_path   = _V3_ROOT / "01_data" / "news" / "sentiment_history.parquet"
 
     if not force_recompute and feat_path.exists() and raw_path.exists():
         raw_mtime   = raw_path.stat().st_mtime
         feat_mtime  = feat_path.stat().st_mtime
         gcues_mtime = gcues_path.stat().st_mtime if gcues_path.exists() else 0.0
-        if feat_mtime >= raw_mtime and feat_mtime >= gcues_mtime:
+        sent_mtime  = sent_path.stat().st_mtime  if sent_path.exists() else 0.0
+        if (feat_mtime >= raw_mtime and feat_mtime >= gcues_mtime
+                and feat_mtime >= sent_mtime):
             cached = load_parquet(feat_path)
             if cached is not None and not cached.empty:
                 print(f"  {symbol:<12} ✓ features cached  ({len(cached)} rows × {len(feature_cols(cached))} feat)")
@@ -457,7 +586,8 @@ def get_or_compute_features(
     print(f"  {symbol:<12} ↻ computing features ...", end=" ", flush=True)
     df    = compute_features(raw_df, symbol=symbol, peer_returns=peer_returns,
                              market_df=market_df, usdinr_df=usdinr_df,
-                             global_cues_df=global_cues_df)
+                             global_cues_df=global_cues_df,
+                             sentiment_df=sentiment_df)
     df    = add_target(df)
     fcols = feature_cols(df)
     df    = df.dropna(subset=["target"])

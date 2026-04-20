@@ -16,8 +16,14 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import threading
+
 import numpy as np
 import pandas as pd
+
+# yfinance 1.x is NOT thread-safe — concurrent calls return wrong symbol data.
+# Serialise every yf.download() call with this lock.
+_YF_LOCK = threading.Lock()
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 _STEPS_DIR = Path(__file__).resolve().parent
@@ -60,7 +66,8 @@ def fetch_yfinance(ticker: str, start: str, end: str, retries: int = 3) -> Optio
 
     for attempt in range(retries):
         try:
-            raw = yf.download(ticker, start=start, end=end, progress=False, auto_adjust=True)
+            with _YF_LOCK:   # yfinance 1.x is not thread-safe
+                raw = yf.download(ticker, start=start, end=end, progress=False, auto_adjust=True)
             if raw is None or raw.empty:
                 if attempt < retries - 1:
                     _time.sleep(1.0 * (attempt + 1))

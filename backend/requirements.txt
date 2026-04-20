@@ -1,0 +1,21 @@
+# Backend API requirements
+# Install: pip install -r backend/requirements.txt
+
+fastapi[standard]>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.5
+
+# Data
+pandas>=2.0
+numpy>=1.26
+pyarrow>=14.0
+
+# Angel One
+smartapi-python
+pyotp
+logzero
+websocket-client
+requests
+
+# Utils
+python-dotenv

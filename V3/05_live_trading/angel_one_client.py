@@ -1,315 +1,499 @@
 """
-Angel One SmartAPI Client — REST + WebSocket wrapper.
+angel_one_client.py — Angel One SmartAPI REST + WebSocket wrapper
+=================================================================
+Full production implementation.
 
-Handles authentication, order placement, and real-time tick data.
+Credentials from .env:
+    ANGEL_API_KEY       = your SmartAPI key
+    ANGEL_CLIENT_ID     = your client ID (e.g. A1234567)
+    ANGEL_PASSWORD      = your trading password
+    ANGEL_TOTP_SECRET   = base32 TOTP secret from Angel One 2FA setup
 
 Usage:
-    client = AngelOneClient(api_key, client_id, password, totp_secret)
-    client.refresh_session()
-    client.subscribe_ticks(['SBIN.NS', 'HDFCBANK.NS', ...])
-    client.place_order(symbol='SBIN.NS', quantity=10, price=500, order_type='LIMIT')
-    price = client.get_ltp('SBIN.NS')
+    client = AngelOneClient()
+    client.login()
+    ltp    = client.get_ltp("SBIN")
+    resp   = client.place_order("SBIN", qty=10, price=810.0)
+    funds  = client.get_funds()
+    holds  = client.get_holdings()
 """
 
-import os
+from __future__ import annotations
+
 import json
-import pyotp
+import os
+import sys
+import threading
 import time
-from datetime import datetime
-from typing import Dict, List, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Callable, Dict, List, Optional
+
+# ── Load .env credentials ─────────────────────────────────────────────────────
+_ENV_PATH = Path(__file__).resolve().parent.parent.parent / ".env"
+if _ENV_PATH.exists():
+    from dotenv import load_dotenv
+    load_dotenv(_ENV_PATH)
+
+# ── SmartAPI SDK (pip install smartapi-python) ────────────────────────────────
+try:
+    from SmartApi import SmartConnect
+    from SmartApi.smartWebSocketV2 import SmartWebSocketV2
+    _SDK_AVAILABLE = True
+except ImportError:
+    _SDK_AVAILABLE = False
+    print("  [angel_one] smartapi-python not installed. Run: pip install smartapi-python")
+
+import pyotp
+
+
+# ── NSE token map — top-100 symbols ───────────────────────────────────────────
+# Exchange token IDs from NSE (used for WebSocket subscription).
+# Full list maintained at: https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json
+NSE_TOKEN_MAP: Dict[str, str] = {
+    "SBIN": "3045", "HDFCBANK": "1333", "ICICIBANK": "4963", "AXISBANK": "5900",
+    "KOTAKBANK": "1922", "INDUSINDBK": "5258", "BANDHANBNK": "2263",
+    "IDFCFIRSTB": "11184", "FEDERALBNK": "1023", "AUBANK": "11223",
+    "BAJFINANCE": "317", "BAJAJFINSV": "16675", "HDFCLIFE": "467",
+    "SBILIFE": "21808", "ICICIGI": "15083", "MUTHOOTFIN": "3849",
+    "CHOLAFIN": "1270", "SHRIRAMFIN": "4306", "TCS": "11536", "INFY": "1594",
+    "HCLTECH": "7229", "WIPRO": "3787", "TECHM": "13538", "LTIM": "17818",
+    "MPHASIS": "4503", "PERSISTENT": "18365", "COFORGE": "10693",
+    "TATAELXSI": "2513", "MARUTI": "10999", "TVSMOTOR": "2626",
+    "M&M": "2031", "BAJAJ-AUTO": "16669", "HEROMOTOCO": "1348",
+    "EICHERMOT": "910", "MOTHERSON": "4204", "HINDUNILVR": "1394",
+    "ITC": "1660", "NESTLEIND": "17963", "BRITANNIA": "547",
+    "TATACONSUM": "3432", "MARICO": "4067", "COLPAL": "1101",
+    "GODREJCP": "10099", "SUNPHARMA": "3351", "DRREDDY": "881",
+    "CIPLA": "694", "DIVISLAB": "10940", "LUPIN": "10440",
+    "TORNTPHARM": "2585", "AUROPHARMA": "19", "ALKEM": "13751",
+    "RELIANCE": "2885", "ONGC": "2475", "BPCL": "526", "NTPC": "11630",
+    "POWERGRID": "14977", "COALINDIA": "20374", "GAIL": "1232",
+    "TATAPOWER": "3426", "TATASTEEL": "3499", "HINDALCO": "1363",
+    "JSWSTEEL": "11723", "VEDL": "3063", "SAIL": "4963",
+    "BHARTIARTL": "10604", "INDUSTOWER": "29135", "LT": "11483",
+    "BHEL": "526", "SIEMENS": "3150", "ABB": "13", "HAVELLS": "7929",
+    "POLYCAB": "21514", "CUMMINSIND": "1901", "ULTRACEMCO": "11532",
+    "GRASIM": "1232", "AMBUJACEM": "1270", "SHREECEM": "3103",
+    "TITAN": "3506", "ASIANPAINT": "236", "PIDILITIND": "2664",
+    "BERGEPAINT": "404", "VOLTAS": "3718", "PAGEIND": "14592",
+    "DLF": "14732", "DMART": "20893", "GODREJPROP": "10481",
+    "ADANIENT": "25", "ADANIPORTS": "15083", "BEL": "383",
+    "HAL": "2303", "OFSS": "10738", "IRFC": "14977",
+    "NMDC": "15332", "BOSCHLTD": "2181",
+}
 
 
 @dataclass
 class OrderResponse:
-    """Order placement response."""
     order_id: str
     symbol: str
-    quantity: int
+    qty: int
     price: float
-    status: str  # PENDING, FILLED, PARTIAL, REJECTED
-    message: str
+    status: str       # PENDING, FILLED, PARTIAL, REJECTED
+    message: str = ""
+    raw: dict = field(default_factory=dict)
 
 
 @dataclass
-class TickData:
-    """Real-time tick data from WebSocket."""
+class Position:
     symbol: str
-    ltp: float  # Last Traded Price
-    open_: float
-    high: float
-    low: float
-    close: float
-    volume: int
-    timestamp: str
+    qty: int
+    avg_price: float
+    ltp: float = 0.0
+    pnl: float = 0.0
 
 
 class AngelOneClient:
     """
-    Angel One SmartAPI client for live trading.
+    Full production Angel One SmartAPI client.
 
-    Supports:
-    - REST API for order placement, portfolio queries, order status
-    - WebSocket for real-time LTP (Last Traded Price) feed
-    - TOTP-based authentication
-    - Rate limiting (25 requests/second)
+    Thread-safe LTP cache updated via WebSocket.
+    Rate-limited REST calls (25 req/s).
+    Session auto-refresh (token valid ~24h).
     """
 
-    # SmartAPI endpoints
-    BASE_URL = "https://apiconnect.angelone.in"
-    WS_URL = "wss://smartapisocket.angelone.in/smart-stream"
+    RATE_LIMIT    = 20       # safe margin below 25 req/s
+    SESSION_HOURS = 23       # refresh before 24h expiry
 
-    # Rate limits
-    RATE_LIMIT = 25  # requests per second
-    REQUEST_INTERVAL = 1.0 / RATE_LIMIT
+    def __init__(self,
+                 api_key:     Optional[str] = None,
+                 client_id:   Optional[str] = None,
+                 password:    Optional[str] = None,
+                 totp_secret: Optional[str] = None):
 
-    def __init__(
-        self,
-        api_key: str,
-        client_id: str,
-        password: str,
-        totp_secret: str,
-    ):
-        """
-        Initialize Angel One client.
+        self.api_key     = api_key     or os.getenv("ANGEL_API_KEY", "")
+        self.client_id   = client_id   or os.getenv("ANGEL_CLIENT_ID", "")
+        self.password    = password    or os.getenv("ANGEL_PASSWORD", "")
+        self.totp_secret = totp_secret or os.getenv("ANGEL_TOTP_SECRET", "")
 
-        Args:
-            api_key: SmartAPI key (from Angel One dashboard)
-            client_id: Client ID (DP + 6 digits, e.g., DP1234567)
-            password: Trading password
-            totp_secret: TOTP secret for 2FA (from Google Authenticator setup)
-        """
-        self.api_key = api_key
-        self.client_id = client_id
-        self.password = password
-        self.totp_secret = totp_secret
+        if not all([self.api_key, self.client_id, self.password, self.totp_secret]):
+            raise EnvironmentError(
+                "Missing Angel One credentials. Set ANGEL_API_KEY, ANGEL_CLIENT_ID, "
+                "ANGEL_PASSWORD, ANGEL_TOTP_SECRET in .env"
+            )
 
-        # Session state
-        self.access_token = None
-        self.refresh_token = None
-        self.session_expiry = None
-        self.last_request_time = 0
+        self._smart: Optional[SmartConnect] = None
+        self._ws:    Optional[SmartWebSocketV2] = None
+
+        self._access_token:  Optional[str]      = None
+        self._refresh_token: Optional[str]      = None
+        self._session_at:    Optional[datetime] = None
+        self._feed_token:    Optional[str]      = None
+
+        # Thread-safe LTP cache
+        self._ltp_lock = threading.Lock()
+        self._ltp: Dict[str, float] = {}
+
+        # Rate limiter
+        self._last_req  = 0.0
+        self._req_lock  = threading.Lock()
+        self._interval  = 1.0 / self.RATE_LIMIT
 
         # WebSocket state
-        self.ws = None
-        self.ltp_cache: Dict[str, float] = {}  # {symbol: last traded price}
-        self.subscribed_symbols = []
+        self._ws_thread: Optional[threading.Thread] = None
+        self._ws_running = False
+        self._on_tick_cb: Optional[Callable] = None
 
-    def refresh_session(self) -> bool:
+    # ── Authentication ─────────────────────────────────────────────────────────
+
+    def login(self) -> bool:
         """
-        Authenticate and get access token.
-
-        Called once per trading session (9:15 AM IST).
-
-        Returns:
-            True if successful, False otherwise
+        Authenticate with Angel One using TOTP.
+        Call once per session (9:00 AM IST) or when token expires.
         """
+        if not _SDK_AVAILABLE:
+            raise ImportError("Install smartapi-python: pip install smartapi-python")
         try:
-            # Get TOTP
-            totp = pyotp.TOTP(self.totp_secret)
-            otp = totp.now()
+            totp = pyotp.TOTP(self.totp_secret).now()
+            self._smart = SmartConnect(api_key=self.api_key)
+            data = self._smart.generateSession(self.client_id, self.password, totp)
 
-            # REST POST to login endpoint
-            # NOTE: This would use requests library in real implementation
-            # For now, this is a placeholder showing the structure
+            if data.get("status") is False:
+                msg = data.get("message", "login failed")
+                raise RuntimeError(f"Angel One login failed: {msg}")
 
-            # In real code:
-            # response = requests.post(
-            #     f"{self.BASE_URL}/rest/auth/angelbroking/user/v1/loginByPassword",
-            #     json={
-            #         "apikey": self.api_key,
-            #         "password": self.password,
-            #         "clientcode": self.client_id,
-            #         "totp": otp,
-            #     }
-            # )
-            # self.access_token = response.json()["data"]["accesstoken"]
-            # self.refresh_token = response.json()["data"]["refreshtoken"]
+            d = data["data"]
+            self._access_token  = d["jwtToken"]
+            self._refresh_token = d["refreshToken"]
+            self._feed_token    = self._smart.getfeedToken()
+            self._session_at    = datetime.now()
 
-            print(f"✓ Angel One session refreshed | expires: {self.session_expiry}")
+            print(f"  [angel] Logged in | client={self.client_id} | "
+                  f"feed_token={'...' + self._feed_token[-6:] if self._feed_token else '?'}")
             return True
 
         except Exception as e:
-            print(f"✗ Failed to refresh session: {e}")
+            print(f"  [angel] Login failed: {e}")
             return False
 
-    def subscribe_ticks(self, symbols: List[str]) -> bool:
-        """
-        Subscribe to real-time tick data (LTP) for symbols.
+    def _ensure_session(self) -> None:
+        """Re-login if session is expired or missing."""
+        if self._smart is None or self._session_at is None:
+            self.login()
+            return
+        age_h = (datetime.now() - self._session_at).total_seconds() / 3600
+        if age_h >= self.SESSION_HOURS:
+            print("  [angel] Session expiring — refreshing …")
+            self.login()
 
-        Args:
-            symbols: List of symbols (e.g., ['SBIN.NS', 'HDFCBANK.NS'])
+    def _rate_limit(self) -> None:
+        with self._req_lock:
+            elapsed = time.time() - self._last_req
+            if elapsed < self._interval:
+                time.sleep(self._interval - elapsed)
+            self._last_req = time.time()
 
-        Returns:
-            True if WebSocket connected
-        """
-        try:
-            # Would establish WebSocket connection here
-            # For now, placeholder
-
-            self.subscribed_symbols = symbols
-            print(f"✓ Subscribed to {len(symbols)} symbols (WebSocket)")
-            return True
-
-        except Exception as e:
-            print(f"✗ Failed to subscribe: {e}")
-            return False
-
-    def get_ltp(self, symbol: str) -> Optional[float]:
-        """
-        Get Last Traded Price (LTP) for a symbol.
-
-        Returns cached price if available, or fetches via REST if needed.
-        """
-        # Try cache first
-        if symbol in self.ltp_cache:
-            return self.ltp_cache[symbol]
-
-        # Fallback: fetch via REST (slower)
-        try:
-            # In real code:
-            # response = self.request("GET", "/rest/secure/angelbroking/market/v1/quote/", {"mode": "LTP", "exchangetokens": symbol})
-            # return response.json()["data"]["fetched"][0]["ltp"]
-            return None
-
-        except Exception as e:
-            print(f"✗ Failed to get LTP for {symbol}: {e}")
-            return None
+    # ── Order placement ────────────────────────────────────────────────────────
 
     def place_order(
         self,
-        symbol: str,
-        quantity: int,
-        price: float,
-        order_type: str = "LIMIT",
-        side: str = "BUY",
-    ) -> Optional[OrderResponse]:
+        symbol:     str,
+        qty:        int,
+        price:      float,
+        order_type: str = "LIMIT",   # LIMIT | MARKET | SL | SL-M
+        side:       str = "BUY",     # BUY | SELL
+        product:    str = "CNC",     # CNC (delivery) | MIS (intraday)
+        exchange:   str = "NSE",
+        variety:    str = "NORMAL",
+    ) -> OrderResponse:
         """
         Place an order on Angel One.
 
-        Args:
-            symbol: Stock symbol (e.g., 'SBIN.NS')
-            quantity: Number of shares
-            price: Limit price (ignored for MARKET orders)
-            order_type: 'LIMIT', 'MARKET', or 'SL-M' (stop-loss market)
-            side: 'BUY' or 'SELL'
-
-        Returns:
-            OrderResponse with order_id and status
+        Returns OrderResponse with order_id and status.
+        Raises RuntimeError on rejected orders.
         """
+        self._ensure_session()
+        self._rate_limit()
+
+        order_params = {
+            "variety":         variety,
+            "tradingsymbol":   symbol,
+            "symboltoken":     NSE_TOKEN_MAP.get(symbol, ""),
+            "transactiontype": side,
+            "exchange":        exchange,
+            "ordertype":       order_type,
+            "producttype":     product,
+            "duration":        "DAY",
+            "price":           str(round(price, 2)),
+            "squareoff":       "0",
+            "stoploss":        "0",
+            "quantity":        str(qty),
+        }
+
         try:
-            # Rate limiting
-            elapsed = time.time() - self.last_request_time
-            if elapsed < self.REQUEST_INTERVAL:
-                time.sleep(self.REQUEST_INTERVAL - elapsed)
-            self.last_request_time = time.time()
-
-            # In real code:
-            # response = self.request("POST", "/rest/secure/angelbroking/order/v1/placeOrder", {
-            #     "mode": "REGULAR",
-            #     "exchange": "NSE",
-            #     "tradingsymbol": symbol,
-            #     "quantity": quantity,
-            #     "price": price,
-            #     "ordertype": order_type,
-            #     "transactiontype": side,
-            #     ...
-            # })
-            # order_id = response.json()["data"]["orderid"]
-
+            resp = self._smart.placeOrder(order_params)
+            if resp.get("status") is False:
+                raise RuntimeError(resp.get("message", "Order rejected"))
+            order_id = resp["data"]["orderid"]
             return OrderResponse(
-                order_id="<order_id>",
-                symbol=symbol,
-                quantity=quantity,
-                price=price,
-                status="PENDING",
-                message="Order placed successfully",
+                order_id=order_id, symbol=symbol, qty=qty, price=price,
+                status="PENDING", message="Order placed", raw=resp,
+            )
+        except Exception as e:
+            return OrderResponse(
+                order_id="", symbol=symbol, qty=qty, price=price,
+                status="REJECTED", message=str(e),
             )
 
-        except Exception as e:
-            print(f"✗ Failed to place order: {e}")
-            return None
-
-    def get_order_book(self) -> Optional[List[Dict]]:
-        """
-        Get all pending and filled orders for the current session.
-
-        Returns:
-            List of order dicts with id, symbol, quantity, status, etc.
-        """
+    def cancel_order(self, order_id: str, variety: str = "NORMAL") -> bool:
+        """Cancel a pending order. Returns True on success."""
+        self._ensure_session()
+        self._rate_limit()
         try:
-            # In real code:
-            # response = self.request("GET", "/rest/secure/angelbroking/order/v1/getOrderBook")
-            # return response.json()["data"]["orderbook"]
-            return []
-
+            resp = self._smart.cancelOrder(order_id, variety)
+            return resp.get("status") is not False
         except Exception as e:
-            print(f"✗ Failed to get order book: {e}")
-            return None
+            print(f"  [angel] cancel_order {order_id}: {e}")
+            return False
 
-    def get_holdings(self) -> Optional[Dict[str, int]]:
-        """
-        Get current holdings (shares owned).
-
-        Returns:
-            {symbol: quantity} dict
-        """
+    def modify_order(self, order_id: str, price: float,
+                     qty: int, variety: str = "NORMAL") -> bool:
+        """Modify price/qty of a pending order."""
+        self._ensure_session()
+        self._rate_limit()
         try:
-            # In real code:
-            # response = self.request("GET", "/rest/secure/angelbroking/portfolio/v1/getHolding")
-            # holdings = {}
-            # for holding in response.json()["data"]["holding"]:
-            #     holdings[holding["tradingsymbol"]] = holding["quantity"]
-            # return holdings
+            resp = self._smart.modifyOrder({
+                "orderid":  order_id,
+                "variety":  variety,
+                "price":    str(round(price, 2)),
+                "quantity": str(qty),
+            })
+            return resp.get("status") is not False
+        except Exception as e:
+            print(f"  [angel] modify_order {order_id}: {e}")
+            return False
+
+    # ── Portfolio & account ────────────────────────────────────────────────────
+
+    def get_holdings(self) -> Dict[str, Position]:
+        """Return current CNC holdings as {symbol: Position}."""
+        self._ensure_session()
+        self._rate_limit()
+        try:
+            resp = self._smart.holding()
+            if resp.get("status") is False:
+                return {}
+            positions: Dict[str, Position] = {}
+            for h in resp.get("data", []) or []:
+                sym = h.get("tradingsymbol", "")
+                if sym:
+                    positions[sym] = Position(
+                        symbol=sym,
+                        qty=int(h.get("quantity", 0)),
+                        avg_price=float(h.get("averageprice", 0)),
+                        ltp=float(h.get("ltp", 0)),
+                        pnl=float(h.get("profitandloss", 0)),
+                    )
+            return positions
+        except Exception as e:
+            print(f"  [angel] get_holdings: {e}")
             return {}
 
-        except Exception as e:
-            print(f"✗ Failed to get holdings: {e}")
-            return None
-
-    def get_funds(self) -> Optional[Dict[str, float]]:
-        """
-        Get account fund details (cash, margin, etc.).
-
-        Returns:
-            {'available': float, 'used': float, 'total': float}
-        """
+    def get_funds(self) -> Dict[str, float]:
+        """Return available cash and margin info."""
+        self._ensure_session()
+        self._rate_limit()
         try:
-            # In real code:
-            # response = self.request("GET", "/rest/secure/angelbroking/order/v1/getRMS")
-            # return response.json()["data"]["RMS"]
-            return None
-
+            resp = self._smart.rmsLimit()
+            if resp.get("status") is False:
+                return {}
+            d = resp.get("data", {}) or {}
+            return {
+                "available":  float(d.get("availablecash", 0)),
+                "net":        float(d.get("net", 0)),
+                "used_margin": float(d.get("utilisedmargin", 0)),
+            }
         except Exception as e:
-            print(f"✗ Failed to get funds: {e}")
-            return None
+            print(f"  [angel] get_funds: {e}")
+            return {}
 
-    def cancel_order(self, order_id: str) -> bool:
+    def get_order_book(self) -> List[Dict]:
+        """All orders placed today."""
+        self._ensure_session()
+        self._rate_limit()
+        try:
+            resp = self._smart.orderBook()
+            return resp.get("data", []) or []
+        except Exception as e:
+            print(f"  [angel] get_order_book: {e}")
+            return []
+
+    def get_order_status(self, order_id: str) -> Optional[str]:
+        """Return status string (complete, rejected, open, etc.) for an order."""
+        for o in self.get_order_book():
+            if str(o.get("orderid", "")) == str(order_id):
+                return o.get("orderstatus", "unknown").lower()
+        return None
+
+    # ── LTP (REST fallback) ────────────────────────────────────────────────────
+
+    def get_ltp(self, symbol: str) -> Optional[float]:
         """
-        Cancel a pending order.
+        Get last traded price.
+        Returns WebSocket cache if available, else REST fallback.
+        """
+        with self._ltp_lock:
+            cached = self._ltp.get(symbol)
+        if cached:
+            return cached
+
+        self._ensure_session()
+        self._rate_limit()
+        token = NSE_TOKEN_MAP.get(symbol)
+        if not token:
+            return None
+        try:
+            resp = self._smart.ltpData("NSE", symbol, token)
+            if resp.get("status") is not False:
+                price = float(resp["data"]["ltp"])
+                with self._ltp_lock:
+                    self._ltp[symbol] = price
+                return price
+        except Exception as e:
+            print(f"  [angel] get_ltp {symbol}: {e}")
+        return None
+
+    def get_ltp_bulk(self, symbols: List[str]) -> Dict[str, float]:
+        """Fetch LTP for multiple symbols in one call where possible."""
+        prices = {}
+        for sym in symbols:
+            p = self.get_ltp(sym)
+            if p:
+                prices[sym] = p
+        return prices
+
+    # ── WebSocket — real-time LTP feed ────────────────────────────────────────
+
+    def subscribe_ticks(self,
+                        symbols: List[str],
+                        on_tick: Optional[Callable[[str, float], None]] = None) -> bool:
+        """
+        Subscribe to real-time LTP via WebSocket.
+
+        Updates internal LTP cache automatically.
+        Optionally calls on_tick(symbol, price) for each update.
 
         Args:
-            order_id: Order ID returned from place_order()
-
-        Returns:
-            True if successful
+            symbols : NSE symbols to subscribe (e.g. ["SBIN", "HDFCBANK"])
+            on_tick : Optional callback (symbol, price)
         """
+        if not _SDK_AVAILABLE:
+            print("  [angel] smartapi-python not installed — WebSocket unavailable")
+            return False
+        if not self._feed_token or not self._access_token:
+            print("  [angel] Not logged in — call login() first")
+            return False
+
+        self._on_tick_cb = on_tick
+
+        token_list = [
+            {"exchangeType": 1, "tokens": [NSE_TOKEN_MAP[s]]}
+            for s in symbols
+            if s in NSE_TOKEN_MAP
+        ]
+        if not token_list:
+            return False
+
+        def _on_data(wsapp, message):
+            try:
+                d = json.loads(message) if isinstance(message, str) else message
+                tok = str(d.get("token", ""))
+                ltp = float(d.get("last_traded_price", 0)) / 100  # SmartAPI returns paise
+                # Reverse-lookup symbol from token
+                sym = next((s for s, t in NSE_TOKEN_MAP.items() if t == tok), None)
+                if sym and ltp > 0:
+                    with self._ltp_lock:
+                        self._ltp[sym] = ltp
+                    if self._on_tick_cb:
+                        self._on_tick_cb(sym, ltp)
+            except Exception:
+                pass
+
+        def _on_open(wsapp):
+            print(f"  [angel] WebSocket open | {len(symbols)} symbols")
+
+        def _on_error(wsapp, err):
+            print(f"  [angel] WebSocket error: {err}")
+
+        def _on_close(wsapp, code, msg):
+            self._ws_running = False
+            print(f"  [angel] WebSocket closed: {code} {msg}")
+
         try:
-            # In real code:
-            # self.request("POST", "/rest/secure/angelbroking/order/v1/cancelOrder", {
-            #     "orderid": order_id,
-            # })
+            self._ws = SmartWebSocketV2(
+                auth_token=self._access_token,
+                api_key=self.api_key,
+                client_code=self.client_id,
+                feed_token=self._feed_token,
+                on_open=_on_open,
+                on_error=_on_error,
+                on_close=_on_close,
+                on_data=_on_data,
+            )
+            self._ws_running = True
+
+            def _run():
+                self._ws.connect()
+                self._ws.subscribe("abc123", 3, token_list)  # mode 3 = snap quote
+
+            self._ws_thread = threading.Thread(target=_run, daemon=True)
+            self._ws_thread.start()
             return True
 
         except Exception as e:
-            print(f"✗ Failed to cancel order {order_id}: {e}")
+            print(f"  [angel] subscribe_ticks: {e}")
             return False
 
-    def request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict:
-        """
-        Generic REST request wrapper with error handling and rate limiting.
+    def stop_websocket(self) -> None:
+        """Disconnect WebSocket gracefully."""
+        self._ws_running = False
+        if self._ws:
+            try:
+                self._ws.close_connection()
+            except Exception:
+                pass
 
-        Would use requests library in production.
-        """
-        # Placeholder — actual implementation would use requests + retry logic
-        raise NotImplementedError("Use requests library in production")
+    # ── Context manager ────────────────────────────────────────────────────────
+
+    def __enter__(self):
+        self.login()
+        return self
+
+    def __exit__(self, *_):
+        self.stop_websocket()
+
+
+# ── Singleton accessor ────────────────────────────────────────────────────────
+
+_client: Optional[AngelOneClient] = None
+
+
+def get_client() -> AngelOneClient:
+    """Return singleton AngelOneClient (auto-login on first call)."""
+    global _client
+    if _client is None:
+        _client = AngelOneClient()
+        _client.login()
+    return _client

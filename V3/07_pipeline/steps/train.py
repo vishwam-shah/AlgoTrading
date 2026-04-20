@@ -23,6 +23,10 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 
+# ── Backend: TensorFlow CPU ───────────────────────────────────────────────────
+os.environ.setdefault("KERAS_BACKEND", "tensorflow")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+
 # ── Path setup ────────────────────────────────────────────────────────────────
 _STEPS_DIR = Path(__file__).resolve().parent
 _V3_ROOT   = _STEPS_DIR.parent.parent
@@ -37,17 +41,31 @@ from config_v3 import (  # type: ignore  # noqa: E402
     DL_RLROP_FACTOR, DL_RLROP_PATIENCE, DL_RLROP_MIN_LR,
     MIN_REGIME_SAMPLES, RANDOM_SEED,
 )
-from traditional.lightgbm_classifier import LightGBMClassifier  # type: ignore
-from traditional.xgboost_classifier  import XGBoostClassifier   # type: ignore
+from traditional.lightgbm_classifier  import LightGBMClassifier   # type: ignore
+from traditional.xgboost_classifier   import XGBoostClassifier    # type: ignore
+from traditional.catboost_classifier  import CatBoostClassifier   # type: ignore
 
 # ── Deep Learning — lazy-loaded once ─────────────────────────────────────────
 _DL_AVAILABLE: bool = False
 _DL_CLASSES: list   = []
 _N_JOBS: int        = -1   # set by worker initialiser in parallel mode
+_FAST_MODE: bool    = False  # True → skip all DL, use tree models only
+
+
+def set_fast_mode(fast: bool) -> None:
+    """
+    Call before training to disable all DL models (trees only).
+    Use for production runs / quick iteration.  Persists for the process lifetime.
+    """
+    global _FAST_MODE, _DL_CLASSES
+    _FAST_MODE = fast
+    if fast:
+        _DL_CLASSES = []
+        print("  [train] FAST MODE — DL models disabled, trees only (LightGBM + XGBoost + CatBoost)")
 
 def _load_dl_models() -> None:
     global _DL_AVAILABLE, _DL_CLASSES
-    if _DL_AVAILABLE:
+    if _DL_AVAILABLE or _FAST_MODE:
         return
     try:
         from deep_learning.lstm_classifier            import LSTMClassifier
@@ -59,13 +77,12 @@ def _load_dl_models() -> None:
         from deep_learning.nbeats_classifier          import NBEATSClassifier
         from deep_learning.base_deep                  import get_dl_splits  # noqa: F401
         _DL_AVAILABLE = True
+        # Top-3 DL by OOS accuracy (SBIN benchmark + cross-stock validation):
+        # BiLSTM=54.7%, NBEATS=53.7%, TCN_Transformer=52.5%
+        # Dropped: LSTM(50.5%), GRU(49.5%), CNN_LSTM(51.6%), TCN_GRU(51.4%)
+        # Reduces DL training from 7→3 models: ~3× speedup per stock.
         _DL_CLASSES = [
-            (LSTMClassifier,           "LSTM"),
             (BiLSTMClassifier,         "BiLSTM"),
-            (GRUClassifier,            "GRU"),
-            (CNNLSTMClassifier,        "CNN_LSTM"),
-            # CNN_GRU removed — statistically identical to CNN_LSTM, adds correlated noise
-            (TCNGRUClassifier,         "TCN_GRU"),
             (TCNTransformerClassifier, "TCN_Transformer"),
             (NBEATSClassifier,         "NBEATS"),
         ]
@@ -128,8 +145,15 @@ def temperature_scale(val_probs: "np.ndarray", y_val: "np.ndarray") -> float:
         return -float(np.mean(y_val * np.log(cal) + (1 - y_val) * np.log(1 - cal)))
 
     try:
-        res = minimize_scalar(nll, bounds=(0.1, 8.0), method="bounded")
-        return float(res.x)
+        res = minimize_scalar(nll, bounds=(0.1, 3.0), method="bounded")
+        T = float(res.x)
+        # If T hits the upper bound or NLL barely improved, calibration failed —
+        # fall back to T=1 (no calibration) rather than a hard-clamped value.
+        nll_uncal = nll(1.0)
+        nll_cal   = nll(T)
+        if T >= 2.9 or (nll_cal > nll_uncal - 1e-4):
+            return 1.0
+        return T
     except Exception:
         return 1.0
 
@@ -263,17 +287,22 @@ def train_window(
     val_probs_each: Dict = {}
 
     # ── Tree models ───────────────────────────────────────────────────────────
-    for ModelClass, name in [(LightGBMClassifier, "LightGBM"), (XGBoostClassifier, "XGBoost")]:
+    _tree_specs = [
+        (LightGBMClassifier,  "LightGBM",  dict(n_jobs=_N_JOBS, is_unbalance=True)),
+        (XGBoostClassifier,   "XGBoost",   dict(n_jobs=_N_JOBS, scale_pos_weight=_spw)),
+        (CatBoostClassifier,  "CatBoost",  dict(thread_count=_N_JOBS)),
+    ]
+    for ModelClass, name, extra_kw in _tree_specs:
         try:
-            mdl = (ModelClass(n_jobs=_N_JOBS, scale_pos_weight=_spw)
-                   if name == "XGBoost"
-                   else ModelClass(n_jobs=_N_JOBS, is_unbalance=True))
+            mdl = ModelClass(**extra_kw)
             mdl.train(X_train, y_train, X_val, y_val,
                       feature_names=pca_names, verbose=False, sample_weight=w)
             test_preds[name]     = mdl.predict(X_test)
             test_probs[name]     = mdl.predict_proba(X_test)
             val_probs_each[name] = mdl.predict_proba(X_val)
             trained_models[name] = mdl
+            tree_acc = float(np.mean(test_preds[name] == y_test))
+            print(f"      [{name:8s}] acc={tree_acc:.3f}")
         except Exception as exc:
             print(f"      [{name}] ✗ {exc}")
 
@@ -419,7 +448,7 @@ def train_window(
     # ── Save checkpoint ───────────────────────────────────────────────────────
     win_path.mkdir(parents=True, exist_ok=True)
 
-    for name in ("LightGBM", "XGBoost"):
+    for name in ("LightGBM", "XGBoost", "CatBoost"):
         if name in trained_models:
             with open(win_path / f"{name.lower()}.pkl", "wb") as f:
                 pickle.dump(trained_models[name], f)

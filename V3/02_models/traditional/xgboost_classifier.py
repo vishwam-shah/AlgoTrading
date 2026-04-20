@@ -35,7 +35,9 @@ class XGBoostClassifier:
             "verbosity":       0,
         }
         params.update(kwargs)
-        self._early_stopping_rounds = params.pop("early_stopping_rounds", 50)
+        # XGBoost ≥2.0: early_stopping_rounds moves to constructor, not fit()
+        params.setdefault("early_stopping_rounds", 50)
+        self._early_stopping_rounds = params["early_stopping_rounds"]
         self.model = xgb.XGBClassifier(**params)
         self.feature_names: List[str] = []
 
@@ -55,9 +57,9 @@ class XGBoostClassifier:
 
         fit_kwargs: dict = {}
         if X_val is not None and y_val is not None:
-            fit_kwargs["eval_set"]              = [(X_val, y_val)]
-            fit_kwargs["early_stopping_rounds"] = self._early_stopping_rounds
-            fit_kwargs["verbose"]               = False
+            # early_stopping_rounds is in constructor (XGBoost ≥2.0)
+            fit_kwargs["eval_set"] = [(X_val, y_val)]
+            fit_kwargs["verbose"]  = False
 
         if sample_weight is not None:
             fit_kwargs["sample_weight"] = sample_weight

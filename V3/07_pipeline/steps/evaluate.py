@@ -171,46 +171,49 @@ def plot_confusion(window_rows: List[Dict], symbol: str, out_dir: Path) -> None:
     fig.savefig(out_dir / "confusion_matrix.png", dpi=PLOT_DPI); plt.close(fig)
 
 
-def plot_prediction_history(pred_df: pd.DataFrame, symbol: str, out_dir: Path) -> None:
-    plt = _mpl()
-    df  = pred_df.copy(); df["date"] = pd.to_datetime(df["date"])
-    df["correct"]  = (df["actual"] == df["ensemble_pred"]).astype(int)
-    df             = df.sort_values("date")
-    df["roll_acc"] = df["correct"].rolling(30, min_periods=10).mean()
-
-    fig, axes = plt.subplots(2, 1, figsize=PLOT_FIGSIZE_TALL, sharex=True)
-    axes[0].plot(df["date"], df["roll_acc"], color="#2196F3", lw=1.5, label="30-day rolling acc")
-    axes[0].axhline(0.58, color="red",    ls="--", lw=1, label="58% target")
-    axes[0].axhline(0.50, color="orange", ls=":",  lw=1, label="50% baseline")
-    axes[0].set_ylabel("Accuracy"); axes[0].set_title(f"{symbol} — Rolling OOS Accuracy")
-    axes[0].legend(fontsize=8); axes[0].set_ylim(0.2, 0.95)
-    if "close_price" in df.columns:
-        axes[1].plot(df["date"], df["close_price"], color="#555", lw=1)
-        axes[1].set_ylabel("Close Price (₹)")
-    fig.tight_layout(); out_dir.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_dir / "prediction_history.png", dpi=PLOT_DPI); plt.close(fig)
-
-
-def plot_calibration_curve(pred_df: pd.DataFrame, symbol: str, out_dir: Path) -> None:
+def plot_confidence_timeline(pred_df: pd.DataFrame, symbol: str, out_dir: Path) -> None:
+    """
+    prob_up over time coloured by correct/incorrect + rolling accuracy.
+    Replaces prediction_history.png and window_accuracy.png.
+    Journal-quality: shows calibration quality and temporal stability.
+    """
     try:
         plt = _mpl()
-        df  = pred_df.copy()
-        wids = sorted(df["window_id"].unique())
-        window_accs = []
-        for wid in wids:
-            sub = df[df["window_id"] == wid]
-            if len(sub) >= 10:
-                window_accs.append((wid, (sub["actual"] == sub["ensemble_pred"]).mean(), len(sub)))
-        fig, ax = plt.subplots(figsize=PLOT_FIGSIZE_SQUARE)
-        xs = [w[0] for w in window_accs]; ys = [w[1] for w in window_accs]
-        ax.plot(xs, ys, "o-", color="#2196F3", lw=2, ms=8, label="Window accuracy")
-        ax.axhline(0.58, color="red",    ls="--", lw=1, label="58% target")
-        ax.axhline(0.50, color="orange", ls=":",  lw=1, label="50% baseline")
-        ax.set_xlabel("Window ID"); ax.set_ylabel("Accuracy")
-        ax.set_title(f"{symbol} — Accuracy per Window")
-        ax.legend(fontsize=8); ax.set_ylim(0.35, 0.80)
+        df  = pred_df.copy(); df["date"] = pd.to_datetime(df["date"])
+        df  = df.sort_values("date").reset_index(drop=True)
+        df["roll_acc"] = (df["actual"] == df["ensemble_pred"]).astype(int).rolling(30, min_periods=10).mean()
+
+        has_prob = "prob_up" in df.columns and df["prob_up"].notna().any()
+
+        fig, axes = plt.subplots(2, 1, figsize=PLOT_FIGSIZE_TALL, sharex=True)
+
+        # Top panel: prob_up or rolling accuracy
+        if has_prob:
+            c_ok  = df["actual"] == df["ensemble_pred"]
+            axes[0].scatter(df.loc[c_ok,  "date"], df.loc[c_ok,  "prob_up"],
+                            s=6, alpha=0.5, color="#4CAF50", label="Correct")
+            axes[0].scatter(df.loc[~c_ok, "date"], df.loc[~c_ok, "prob_up"],
+                            s=6, alpha=0.4, color="#F44336", label="Incorrect")
+            axes[0].axhline(0.5, color="grey", ls="--", lw=0.8)
+            axes[0].set_ylabel("P(UP)"); axes[0].set_ylim(0, 1)
+            axes[0].set_title(f"{symbol} — Calibrated P(UP) vs Outcome")
+        else:
+            axes[0].plot(df["date"], df["roll_acc"], color="#2196F3", lw=1.5, label="30-day rolling acc")
+            axes[0].axhline(0.58, color="red",    ls="--", lw=1, label="58% target")
+            axes[0].axhline(0.50, color="orange", ls=":",  lw=1, label="50% baseline")
+            axes[0].set_ylabel("Accuracy"); axes[0].set_ylim(0.2, 0.95)
+            axes[0].set_title(f"{symbol} — Rolling OOS Accuracy")
+        axes[0].legend(fontsize=7)
+
+        # Bottom panel: 30-day rolling accuracy
+        axes[1].plot(df["date"], df["roll_acc"], color="#2196F3", lw=1.5)
+        axes[1].axhline(0.58, color="red",    ls="--", lw=1, label="58% target")
+        axes[1].axhline(0.50, color="orange", ls=":",  lw=1, label="50% baseline")
+        axes[1].set_ylabel("30d Rolling Acc"); axes[1].set_ylim(0.25, 0.85)
+        axes[1].legend(fontsize=7)
+
         fig.tight_layout(); out_dir.mkdir(parents=True, exist_ok=True)
-        fig.savefig(out_dir / "window_accuracy.png", dpi=PLOT_DPI); plt.close(fig)
+        fig.savefig(out_dir / "confidence_timeline.png", dpi=PLOT_DPI); plt.close(fig)
     except Exception:
         pass
 
@@ -233,25 +236,101 @@ def plot_cross_stock_comparison(summary_df: pd.DataFrame, out_dir: Path) -> None
     fig.savefig(out_dir / "cross_stock_comparison.png", dpi=PLOT_DPI); plt.close(fig)
 
 
-def plot_signal_heatmap(predictions: List[Dict], out_dir: Path) -> None:
+def plot_model_comparison_heatmap(run_result_path: Path, out_dir: Path) -> None:
+    """
+    Per-model OOS accuracy matrix across all stocks.
+    Rows = stocks, columns = models (LightGBM, XGBoost, BiLSTM, TCN-Transformer, NBeats).
+    Journal-quality: reveals which models work on which stocks/regimes.
+    """
     plt = _mpl()
-    if not predictions: return
-    df  = pd.DataFrame(predictions)[["symbol", "confidence", "direction"]].copy()
-    df["conf_sign"] = df.apply(
-        lambda r: r["confidence"] if r["direction"] == "UP" else -r["confidence"], axis=1)
-    df = df.sort_values("conf_sign", ascending=False)
-    colors = ["#4CAF50" if d == "UP" else "#F44336" for d in df["direction"]]
-    fig, ax = plt.subplots(figsize=(10, max(4, len(df)*0.5)))
-    ax.barh(df["symbol"], df["conf_sign"], color=colors, alpha=0.85)
-    ax.axvline(0,                     color="grey",  lw=0.8)
-    ax.axvline( CONFIDENCE_THRESHOLD, color="green", ls="--", lw=1,
-                label=f"+{CONFIDENCE_THRESHOLD:.0%} gate")
-    ax.axvline(-CONFIDENCE_THRESHOLD, color="red",   ls="--", lw=1,
-                label=f"-{CONFIDENCE_THRESHOLD:.0%} gate")
-    ax.set_xlabel("Confidence"); ax.set_title("Next-Day Signal Confidence")
-    ax.legend(fontsize=8)
+    model_cols = ["lgbm_pred", "xgb_pred", "bilstm_pred", "tcn_transformer_pred", "nbeats_pred"]
+    model_names = ["LightGBM", "XGBoost", "BiLSTM", "TCN-Transformer", "N-BEATS"]
+    records = []
+    for sym_dir in sorted(run_result_path.glob("*/predictions.csv")):
+        sym = sym_dir.parent.name
+        try:
+            df = pd.read_csv(sym_dir)
+            if "actual" not in df.columns: continue
+            row = {"symbol": sym}
+            for col, name in zip(model_cols, model_names):
+                if col in df.columns:
+                    row[name] = (df[col] == df["actual"]).mean()
+            row["Ensemble"] = (df["ensemble_pred"] == df["actual"]).mean()
+            records.append(row)
+        except Exception:
+            continue
+    if not records: return
+    mat = pd.DataFrame(records).set_index("symbol")
+    fig, ax = plt.subplots(figsize=(max(8, len(mat.columns)*1.4), max(6, len(mat)*0.35)))
+    import numpy as np
+    data = mat.values.astype(float)
+    im = ax.imshow(data, aspect="auto", cmap="RdYlGn", vmin=0.40, vmax=0.65)
+    ax.set_xticks(range(len(mat.columns))); ax.set_xticklabels(mat.columns, rotation=30, ha="right", fontsize=9)
+    ax.set_yticks(range(len(mat.index)));  ax.set_yticklabels(mat.index, fontsize=7)
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            if not np.isnan(data[i, j]):
+                ax.text(j, i, f"{data[i,j]:.2f}", ha="center", va="center", fontsize=6,
+                        color="black" if 0.45 < data[i, j] < 0.60 else "white")
+    fig.colorbar(im, ax=ax, label="OOS Accuracy", fraction=0.02, pad=0.02)
+    ax.set_title("Per-Model OOS Accuracy Heatmap (All Stocks)")
     fig.tight_layout(); out_dir.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_dir / "signal_heatmap.png", dpi=PLOT_DPI); plt.close(fig)
+    fig.savefig(out_dir / "model_comparison_heatmap.png", dpi=PLOT_DPI, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_feature_importance_top20(run_result_path: Path, out_dir: Path) -> None:
+    """
+    Aggregate LightGBM feature importance (gain) across all stocks.
+    Shows top-20 features by mean gain — journal-quality feature analysis.
+    """
+    plt = _mpl()
+    import pickle, numpy as np
+    gain_agg: dict = {}
+    for pkl_path in sorted(run_result_path.glob("*/lgbm_*.pkl")):
+        try:
+            with open(pkl_path, "rb") as f:
+                mdl = pickle.load(f)
+            imp = mdl.feature_importances_ if hasattr(mdl, "feature_importances_") else None
+            if imp is None:
+                try: imp = np.array(list(mdl.get_score(importance_type="gain").values()))
+                except Exception: continue
+            names = (mdl.feature_name_ if hasattr(mdl, "feature_name_") else
+                     [f"f{i}" for i in range(len(imp))])
+            for n, v in zip(names, imp):
+                gain_agg[n] = gain_agg.get(n, 0.0) + float(v)
+        except Exception:
+            continue
+    # Also try production models dir
+    prod_dir = run_result_path.parent.parent / "models" / "production"
+    if prod_dir.exists():
+        for pkl_path in sorted(prod_dir.glob("*/lightgbm.pkl")):
+            try:
+                with open(pkl_path, "rb") as f:
+                    mdl = pickle.load(f)
+                imp   = mdl.feature_importances_ if hasattr(mdl, "feature_importances_") else None
+                names = (mdl.feature_name_ if hasattr(mdl, "feature_name_") else
+                         [f"f{i}" for i in range(len(imp))])
+                if imp is not None:
+                    for n, v in zip(names, imp):
+                        gain_agg[n] = gain_agg.get(n, 0.0) + float(v)
+            except Exception:
+                continue
+    if not gain_agg: return
+    series = pd.Series(gain_agg).sort_values(ascending=False).head(20)
+    fig, ax = plt.subplots(figsize=PLOT_FIGSIZE_WIDE)
+    colors = ["#1565C0" if "sentiment" in n else "#4CAF50" if any(x in n for x in ["rsi","macd","ema","sma"]) else "#FF9800"
+              for n in series.index]
+    ax.barh(series.index[::-1], series.values[::-1], color=colors[::-1], alpha=0.85)
+    ax.set_xlabel("Aggregate Gain Importance"); ax.set_title("Top-20 LightGBM Features (All Stocks)")
+    from matplotlib.patches import Patch
+    legend_elements = [Patch(facecolor="#1565C0", label="Sentiment"),
+                       Patch(facecolor="#4CAF50", label="Technical"),
+                       Patch(facecolor="#FF9800", label="Other")]
+    ax.legend(handles=legend_elements, fontsize=8)
+    fig.tight_layout(); out_dir.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_dir / "feature_importance_top20.png", dpi=PLOT_DPI, bbox_inches="tight")
+    plt.close(fig)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -268,6 +347,7 @@ def run_symbol(
     market_df: Optional[pd.DataFrame] = None,
     usdinr_df: Optional[pd.DataFrame] = None,
     global_cues_df: Optional[pd.DataFrame] = None,
+    sentiment_df: Optional[pd.DataFrame] = None,
     force_recompute_features: bool = False,
 ) -> Dict:
     from sklearn.metrics import accuracy_score, f1_score
@@ -280,6 +360,7 @@ def run_symbol(
     feat_df  = get_or_compute_features(
         symbol, raw_df, peer_returns=peer_returns, market_df=market_df,
         usdinr_df=usdinr_df, global_cues_df=global_cues_df,
+        sentiment_df=sentiment_df,
         force_recompute=force_recompute_features,
     )
     fcols  = feature_cols(feat_df)
@@ -328,6 +409,7 @@ def run_symbol(
     all_cnnlstm_preds   = []; all_cnngru_preds= []
     all_tcngru_preds    = []; all_tcntransf_preds = []; all_nbeats_preds = []
     all_closes          = []; all_next_closes = []
+    all_probs_up        = []   # calibrated P(UP) — the key for confidence filtering
     last_result         = None
 
     for idx, win in enumerate(windows):
@@ -346,6 +428,7 @@ def run_symbol(
         test_dates = dates[ts:te]; n_test = len(res["y_test"])
 
         all_preds.extend(res["ens_pred"]); all_actuals.extend(res["y_test"])
+        all_probs_up.extend(res["avg_prob"].tolist())
         all_dates.extend(test_dates); all_window_ids.extend([win["id"]] * n_test)
         tp_ = res.get("test_preds", {})
         all_lgbm_preds.extend(     tp_.get("LightGBM",       [None]*n_test))
@@ -459,6 +542,7 @@ def run_symbol(
         "date": pd.to_datetime(all_dates), "window_id": all_window_ids,
         "close_price": all_closes, "next_close_price": all_next_closes,
         "actual": all_actuals,
+        "prob_up":              np.round(all_probs_up, 4),   # calibrated P(UP) — for confidence filtering
         "lgbm_pred":            all_lgbm_preds,
         "xgb_pred":             all_xgb_preds,
         "lstm_pred":            all_lstm_preds,
@@ -479,8 +563,7 @@ def run_symbol(
     try:
         plot_oos_accuracy(window_rows, symbol, sym_plot_path)
         plot_confusion(window_rows, symbol, sym_plot_path)
-        plot_prediction_history(pred_df, symbol, sym_plot_path)
-        plot_calibration_curve(pred_df, symbol, sym_plot_path)
+        plot_confidence_timeline(pred_df, symbol, sym_plot_path)
         print(f"  Plots → {sym_plot_path.relative_to(_V3_ROOT)}")
     except Exception as exc:
         print(f"  ⚠ Plot error: {exc}")
@@ -545,10 +628,16 @@ def run_symbol(
 #  PARALLEL WORKER WRAPPERS
 # ══════════════════════════════════════════════════════════════════════════════
 
-def worker_init(n_jobs: int) -> None:
-    """Called once per ProcessPoolExecutor worker. Sets thread limits."""
+def worker_init(n_jobs: int, fast_mode: bool = False) -> None:
+    """Called once per ProcessPoolExecutor worker. Sets thread limits and GPU backend."""
+    # ── Backend: TensorFlow CPU ──────────────────────────────────────────────
+    os.environ.setdefault("KERAS_BACKEND", "tensorflow")
+    os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+
     import steps.train as _train_mod  # type: ignore
     _train_mod._N_JOBS = n_jobs
+    if fast_mode:
+        _train_mod.set_fast_mode(True)
     s = str(n_jobs)
     for k in ["OMP_NUM_THREADS","MKL_NUM_THREADS","OPENBLAS_NUM_THREADS",
               "NUMEXPR_NUM_THREADS","TF_NUM_INTEROP_THREADS","TF_NUM_INTRAOP_THREADS"]:
@@ -558,9 +647,6 @@ def worker_init(n_jobs: int) -> None:
     os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
     try:
         import logging as _log; _log.getLogger("tensorflow").setLevel(_log.ERROR)
-        import tensorflow as tf
-        tf.config.threading.set_inter_op_parallelism_threads(n_jobs)
-        tf.config.threading.set_intra_op_parallelism_threads(n_jobs)
     except Exception:
         pass
 
@@ -575,6 +661,7 @@ def run_symbol_worker(
     market_df,
     usdinr_df,
     global_cues_df,
+    sentiment_df=None,
 ) -> dict:
     """Top-level picklable function for ProcessPoolExecutor. Redirects per-symbol stdout to file."""
     log_dir  = result_run_path / symbol
@@ -588,6 +675,7 @@ def run_symbol_worker(
                     model_run_path=model_run_path, result_run_path=result_run_path,
                     peer_returns=peer_returns, market_df=market_df,
                     usdinr_df=usdinr_df, global_cues_df=global_cues_df,
+                    sentiment_df=sentiment_df,
                 )
     except Exception as exc:
         return {"symbol": symbol, "status": "error", "reason": str(exc)}

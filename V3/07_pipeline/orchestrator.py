@@ -6,7 +6,7 @@ Entry point for the full pipeline. Coordinates all steps autonomously:
 
   Step 1 — Download      : NSE OHLCV + USD/INR + Global cues (incremental)
   Step 2 — Features      : 260+ features (cached, stale-check)
-  Step 3 — Train         : Walk-forward ensemble (LightGBM + XGBoost + 7 DL)
+  Step 3 — Train         : Walk-forward ensemble (LightGBM + XGBoost + CatBoost + 3 DL)
   Step 4 — Evaluate      : Per-symbol metrics + plots + production model save
   Step 5 — Predict       : Next-day directional signals for all symbols
   Step 6 — Backtest      : HRP portfolio simulation (optional)
@@ -37,10 +37,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
-# Suppress TF/protobuf noise before any imports
+# ── Backend: TensorFlow CPU (stable on Python 3.13 + M1) ─────────────────────
+# GPU notes: tensorflow-metal (Py≤3.11 only), jax-metal (StableHLO incompat
+# with Keras 3.14), torch backend (Keras LSTM/GRU broken). TF CPU is stable.
+os.environ.setdefault("KERAS_BACKEND", "tensorflow")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
 os.environ.setdefault("CUDA_VISIBLE_DEVICES", "-1")
+
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 warnings.filterwarnings("ignore")
 
@@ -66,9 +70,12 @@ from steps.download import (  # type: ignore  # noqa: E402
 )
 from steps.evaluate import (  # type: ignore  # noqa: E402
     run_symbol, run_symbol_worker, worker_init, flush_aggregate_csvs,
-    plot_cross_stock_comparison, plot_signal_heatmap,
+    plot_cross_stock_comparison, plot_model_comparison_heatmap, plot_feature_importance_top20,
 )
-from steps.predict import predict_next_day, predict_worker  # type: ignore  # noqa: E402
+from steps.predict import (  # type: ignore  # noqa: E402
+    predict_next_day, predict_worker,
+    predict_with_news, _print_prediction, _download_fresh,
+)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -95,6 +102,75 @@ def setup_loguru(run_id: str) -> None:
 #  MAIN PIPELINE
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _run_predict_mode(symbols: List[str], verbose: bool = False,
+                      as_json: bool = False) -> None:
+    """
+    --predict mode: full inference with FinBERT news + earnings proximity.
+    Replaces the old V3/scripts/predict_today.py.
+
+    Usage:
+        python orchestrator.py --predict HDFCBANK
+        python orchestrator.py --predict HDFCBANK SBIN --verbose
+        python orchestrator.py --predict HDFCBANK --json
+    """
+    import logging
+    logging.getLogger("tensorflow").setLevel(logging.ERROR)
+
+    symbols = [s.upper() for s in symbols]
+
+    print(f"\n  AI Stock Prediction  —  V3 with News + Earnings Sentiment")
+    print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"  Symbols : {', '.join(symbols)}\n")
+
+    # Load auxiliary data once (shared across symbols)
+    global_cues_df: Optional[pd.DataFrame] = None
+    usdinr_df:      Optional[pd.DataFrame] = None
+    try:
+        from config_v3 import RAW_DATA_DIR  # type: ignore
+        p = RAW_DATA_DIR / "global_cues.parquet"
+        if p.exists():
+            global_cues_df = pd.read_parquet(p)
+            global_cues_df["date"] = pd.to_datetime(global_cues_df["date"]).astype("datetime64[us]")
+    except Exception:
+        pass
+    try:
+        from config_v3 import RAW_DATA_DIR  # type: ignore
+        p = RAW_DATA_DIR / "usdinr.parquet"
+        if p.exists():
+            usdinr_df = pd.read_parquet(p)
+            usdinr_df["date"] = pd.to_datetime(usdinr_df["date"]).astype("datetime64[us]")
+    except Exception:
+        pass
+
+    results = []
+    for sym in symbols:
+        r = predict_with_news(
+            sym,
+            usdinr_df=usdinr_df,
+            global_cues_df=global_cues_df,
+            verbose=verbose,
+        )
+        if r is None:
+            continue
+        results.append(r)
+        if as_json:
+            print(json.dumps(r, indent=2))
+        else:
+            _print_prediction(r)
+
+    # Multi-symbol summary
+    if len(results) > 1 and not as_json:
+        print("\n  ── Multi-symbol Summary ──")
+        print(f"  {'Symbol':<14} {'Dir':<5} {'Conf':>6} {'News':>7} {'Regime':<10} {'Signal':<6}")
+        print(f"  {'──────':<14} {'───':<5} {'────':>6} {'─────':>7} {'──────':<10} {'──────':<6}")
+        for r in results:
+            dirn = "▲ UP" if r["direction"] == "UP" else "▼ DN"
+            ns   = r["news"]["raw_score"]
+            print(f"  {r['symbol']:<14} {dirn:<5} {r['confidence']*100:>5.1f}%"
+                  f" {ns:>+6.3f} {r['regime']:<10} {r['signal']:<6}")
+        print()
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -115,13 +191,34 @@ def main() -> None:
                         help="Run HRP portfolio backtest after training")
     parser.add_argument("--force-features", action="store_true",
                         help="Recompute features even if cache is fresh")
+    parser.add_argument("--predict", nargs="+", metavar="SYMBOL",
+                        help="Predict-only mode: skip training, run full news+earnings "
+                             "inference for listed symbols. "
+                             "Example: --predict HDFCBANK SBIN")
+    parser.add_argument("--verbose", action="store_true",
+                        help="Verbose output for --predict mode")
+    parser.add_argument("--json",    action="store_true",
+                        help="Output JSON instead of display for --predict mode")
+    parser.add_argument("--fast",    action="store_true",
+                        help="Fast mode: skip DL models, trees only (LightGBM + XGBoost + CatBoost). "
+                             "~3× faster per stock. Use for production / quick iteration.")
     args = parser.parse_args()
+
+    # ── --predict SYMBOL [SYMBOL …]  (fast path — no training) ──────────────
+    if args.predict:
+        _run_predict_mode(args.predict, verbose=args.verbose, as_json=args.json)
+        return
 
     symbols_to_run: List[str] = args.symbols if args.symbols else list(SYMBOLS)
     run_id = args.resume or datetime.now().strftime("%Y%m%d_%H%M%S")
     t0     = time.time()
 
     setup_loguru(run_id)
+
+    # ── Fast mode: disable DL, trees only ────────────────────────────────────
+    if args.fast:
+        from steps.train import set_fast_mode
+        set_fast_mode(True)
 
     # ── Worker / CPU math ─────────────────────────────────────────────────────
     n_cpu = os.cpu_count() or 4
@@ -151,6 +248,9 @@ def main() -> None:
     for p in [model_run_path, result_run_path, run_plot_path]:
         p.mkdir(parents=True, exist_ok=True)
 
+    # Save symbols attempted so dashboard can show correct n_total
+    (result_run_path / "symbols.txt").write_text("\n".join(symbols_to_run))
+
     # ══════════════════════════════════════════════════════════════════════════
     #  STEP 1 — DOWNLOAD
     # ══════════════════════════════════════════════════════════════════════════
@@ -169,6 +269,22 @@ def main() -> None:
     if usdinr_df      is not None: print(f"  USD/INR     : {len(usdinr_df)} rows")
     if global_cues_df is not None: print(f"  Global cues : {len(global_cues_df)} rows  "
                                          f"cols={list(global_cues_df.columns[:6])}...")
+
+    # Load sentiment history (accumulated daily by sentiment_history.py)
+    sentiment_df: Optional[pd.DataFrame] = None
+    try:
+        _sent_path = _V3_ROOT / "01_data" / "news" / "sentiment_history.parquet"
+        if _sent_path.exists():
+            sentiment_df = pd.read_parquet(_sent_path)
+            sentiment_df["date"] = pd.to_datetime(sentiment_df["date"]).astype("datetime64[us]")
+            n_sym  = sentiment_df["symbol"].nunique()
+            n_days = sentiment_df["date"].nunique()
+            print(f"  Sentiment   : {len(sentiment_df)} rows  "
+                  f"({n_sym} symbols × {n_days} dates)")
+        else:
+            print("  Sentiment   : no history yet — run sentiment_history.py daily to build it")
+    except Exception as _e:
+        print(f"  Sentiment   : skipped ({_e})")
 
     market_df: Optional[pd.DataFrame] = None
 
@@ -222,6 +338,7 @@ def main() -> None:
                     model_run_path=model_run_path, result_run_path=result_run_path,
                     peer_returns=peer_returns, market_df=market_df,
                     usdinr_df=usdinr_df, global_cues_df=global_cues_df,
+                    sentiment_df=sentiment_df,
                     force_recompute_features=args.force_features,
                 )
                 summary_rows.append(result)
@@ -247,7 +364,7 @@ def main() -> None:
                 max_workers=n_workers,
                 mp_context=mp_ctx,
                 initializer=worker_init,
-                initargs=(n_jobs_per_worker,),
+                initargs=(n_jobs_per_worker, args.fast),
             ) as pool:
                 future_to_sym = {
                     pool.submit(
@@ -255,6 +372,7 @@ def main() -> None:
                         sym, raw_data[sym], run_id,
                         model_run_path, result_run_path,
                         peer_returns, market_df, usdinr_df, global_cues_df,
+                        sentiment_df,
                     ): sym
                     for sym in batch
                 }
@@ -349,7 +467,7 @@ def main() -> None:
         if all_win_rows:
             aw_df = pd.DataFrame(all_win_rows)
             model_cols = {
-                "lgbm_acc": "LightGBM", "xgb_acc": "XGBoost",
+                "lgbm_acc": "LightGBM", "xgb_acc": "XGBoost", "catboost_acc": "CatBoost",
                 "lstm_acc": "LSTM", "bilstm_acc": "BiLSTM", "gru_acc": "GRU",
                 "cnn_lstm_acc": "CNN_LSTM", "cnn_gru_acc": "CNN_GRU",
                 "tcn_gru_acc": "TCN_GRU", "tcn_transformer_acc": "TCN_Transformer",
@@ -405,11 +523,48 @@ def main() -> None:
             pass
 
     if predictions:
-        pd.DataFrame(predictions).to_csv(result_run_path / "next_day_predictions.csv", index=False)
-        try:
-            plot_signal_heatmap(predictions, run_plot_path)
-        except Exception:
-            pass
+        pred_df = pd.DataFrame(predictions)
+        # Join OOS accuracy from summary; tradeable will be updated after backtest
+        if ok_rows:
+            acc_map = {r["symbol"]: r["oos_accuracy"] for r in ok_rows}
+            pred_df["oos_accuracy"] = pred_df["symbol"].map(acc_map).fillna(0.0)
+            pred_df["tradeable"]    = pred_df["oos_accuracy"] >= 0.52  # preliminary
+        pred_df.to_csv(result_run_path / "next_day_predictions.csv", index=False)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    #  STEP 6 — TRADE SIMULATION BACKTEST  (always runs, uses predictions.csv)
+    # ══════════════════════════════════════════════════════════════════════════
+    print(f"\n{'='*70}")
+    print("  STEP 6 — TRADE SIMULATION BACKTEST")
+    print(f"{'='*70}")
+    try:
+        from steps.backtest import run_trade_backtest  # type: ignore
+        run_trade_backtest(result_run_path, min_confidence=CONFIDENCE_THRESHOLD)
+
+        # Update next_day_predictions.csv tradeable flag from sharpe-based results
+        bt_path   = result_run_path / "backtest_results.csv"
+        pred_path = result_run_path / "next_day_predictions.csv"
+        if bt_path.exists() and pred_path.exists():
+            bt_df   = pd.read_csv(bt_path)[["symbol", "tradeable", "sharpe"]]
+            bt_map  = dict(zip(bt_df["symbol"], bt_df["tradeable"]))
+            pred_df = pd.read_csv(pred_path)
+            pred_df["tradeable"] = pred_df["symbol"].map(bt_map).fillna(False)
+            pred_df.to_csv(pred_path, index=False)
+            n_tradeable = pred_df["tradeable"].sum()
+            print(f"  ✓ Updated tradeable flag: {n_tradeable} profitable stocks (sharpe>0 + OOS>50%)")
+    except Exception as bt_exc:
+        print(f"  ⚠ Backtest error: {bt_exc}")
+        import traceback; traceback.print_exc()
+
+    # Run-level journal plots
+    try:
+        plot_model_comparison_heatmap(result_run_path, run_plot_path)
+    except Exception:
+        pass
+    try:
+        plot_feature_importance_top20(result_run_path, run_plot_path)
+    except Exception:
+        pass
 
     # Run metadata
     with open(result_run_path / "run_metadata.json", "w") as f:

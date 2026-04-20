@@ -1,4 +1,4 @@
-# Python
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
@@ -23,89 +23,140 @@ wheels/
 .installed.cfg
 *.egg
 
-# Node.js / Frontend
+# ── Node.js / Frontend ────────────────────────────────────────────────────────
 node_modules/
 frontend/node_modules/
 frontend/.next/
+frontend/out/
 .next/
 .pnp/
 .pnp.js
 
-# Data
-*.csv
-*.txt
+# ── Data files (large, regeneratable) ────────────────────────────────────────
 *.parquet
-*.json
-data/raw/*.csv
-data/processed/*.csv
-data/features/*.csv
-data/features/*.npy
-*.h5
 *.pkl
 *.joblib
-
-# Models
-models/**/*.h5
-models/**/*.pkl
-models/**/*.json
-models/**/*.pt
+*.h5
 *.keras
+*.npy
+*.npz
+*.arrow
 
-# Logs
-logs/*.log
-logs/*.csv
+# Keep source CSVs (stock lists, configs) but not generated ones
+data/raw/
+data/processed/
+data/features/
 
-# Images
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.pdf
-
-# Results
-results/**/*.csv
-results/**/*.png
-results/**/*.jpg
-results/**/*.html
-
-# V3 generated data — never commit (large, regeneratable)
+# ── V3 generated data — never commit ─────────────────────────────────────────
 V3/01_data/raw/
 V3/01_data/features/
 V3/02_models/runs/
 V3/02_models/production/
 V3/07_pipeline/logs/
+V3/05_live_trading/execution_logs/
 
-# V3 result runs — ignore new runs by timestamp pattern (8-digit date prefix)
-# Reference run 20260408_163433 (full 100-stock) is explicitly kept below
-V3/06_results/runs/2*/
+# ── V3 run results (plots + per-stock CSVs) — all runs ignored ───────────────
+V3/06_results/runs/
 
-# V3 results archive — keep the reference 100-stock run
-!V3/06_results/runs/20260408_163433
-!V3/06_results/runs/20260408_163433/
+# ── ML model files ────────────────────────────────────────────────────────────
+*.pt
+*.pth
+*.onnx
+*.bin
+*.safetensors
+models/**/*.h5
+models/**/*.pkl
+models/**/*.json
+models/**/*.pt
 
-# Jupyter
-.ipynb_checkpoints
+# ── FinBERT / HuggingFace checkpoints (very large) ───────────────────────────
+V3/02_models/finbert_india/checkpoints/
+V3/02_models/finbert_india/runs/
+
+# ── Earnings / news cache ─────────────────────────────────────────────────────
+V3/01_data/_earnings_cache/
+V3/01_data/_news_cache/
+
+# ── FinBERT base model weights ────────────────────────────────────────────────
+V3/02_models/finbert_india/*.safetensors
+V3/02_models/finbert_india/*.bin
+V3/02_models/finbert_india/*.pt
+
+# ── ngrok binary ─────────────────────────────────────────────────────────────
+ngrok
+ngrok.zip
+*.zip
+
+# ── Archive / old model outputs ───────────────────────────────────────────────
+_archive/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Images / plots (generated, not source assets) ────────────────────────────
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
+
+# Allow frontend public assets
+!frontend/public/**/*.png
+!frontend/public/**/*.jpg
+!frontend/public/**/*.svg
+!frontend/public/**/*.ico
+
+# ── Large JSON outputs (keep small config JSONs) ──────────────────────────────
+# Ignore per-stock/per-run JSON blobs but keep small configs
+V3/06_results/**/*.json
+V3/05_live_trading/**/*.json
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
 *.ipynb
 
-# IDE
+# ── IDE ───────────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
+.DS_Store?
 Thumbs.db
+._*
+.Spotlight-V100
+.Trashes
 
-# Secrets
+# ── Secrets ───────────────────────────────────────────────────────────────────
 .env
+.env.*
+!.env.example
 *.key
 *.secret
+*.pem
+*.p12
 config_secret.py
 
-# Temporary
+# ── Temporary / cache ─────────────────────────────────────────────────────────
 *.tmp
 *.bak
 *.cache
+.cache/
+*.lock
+!package-lock.json
+!yarn.lock
+
+# ── Frontend build artifacts ──────────────────────────────────────────────────
+frontend/.turbo/
+frontend/build/
+frontend/dist/
+
+# ── Coverage / test ───────────────────────────────────────────────────────────
+htmlcov/
+.coverage
+.pytest_cache/
+coverage/

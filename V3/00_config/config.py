@@ -172,12 +172,14 @@ YFINANCE_DELAY  = 0.3           # seconds between downloads (rate-limit safety)
 # Global market cues — downloaded once per run (incremental)
 # Saved to 01_data/raw/global_cues.parquet
 GLOBAL_CUES_TICKERS: dict = {
-    "sp500":    "^GSPC",      # S&P 500 (US market sentiment)
-    "nasdaq":   "^IXIC",      # Nasdaq (US tech, critical for IT stocks)
-    "us_vix":   "^VIX",       # CBOE VIX (fear gauge)
-    "dxy":      "DX-Y.NYB",   # US Dollar Index (FII flow proxy)
-    "crude":    "CL=F",       # Crude Oil (India is major importer)
-    "nikkei":   "^N225",      # Nikkei 225 (Asian session cue)
+    "sp500":      "^GSPC",      # S&P 500 (US market sentiment)
+    "nasdaq":     "^IXIC",      # Nasdaq (US tech, critical for IT stocks)
+    "us_vix":     "^VIX",       # CBOE VIX (fear gauge)
+    "dxy":        "DX-Y.NYB",   # US Dollar Index (FII flow proxy)
+    "crude":      "CL=F",       # Crude Oil (India is major importer)
+    "nikkei":     "^N225",      # Nikkei 225 (Asian session cue)
+    "nifty50":    "^NSEI",      # Nifty 50 index (broad Indian market)
+    "niftybank":  "^NSEBANK",   # Nifty Bank index (banking sector)
 }
 
 
@@ -219,11 +221,17 @@ MIN_REGIME_SAMPLES = 150
 # Global cues features force-included in feature selection for ALL stocks.
 # These capture 70% of next-day move drivers not in OHLCV alone.
 GLOBAL_CUES_FEATURES: list = [
-    "sp500_ret_prev",   # S&P 500 previous day return
-    "sp500_ret_5d",     # S&P 500 5-day return (trend)
-    "us_vix_level",     # US VIX level (fear gauge)
-    "us_vix_zscore",    # US VIX z-score vs 20-day mean
-    "us_vix_spike",     # Binary: VIX spike > 1.5 std
+    "sp500_ret_prev",     # S&P 500 previous day return
+    "sp500_ret_5d",       # S&P 500 5-day return (trend)
+    "us_vix_level",       # US VIX level (fear gauge)
+    "us_vix_zscore",      # US VIX z-score vs 20-day mean
+    "us_vix_spike",       # Binary: VIX spike > 1.5 std
+    "nifty50_ret_prev",   # Nifty 50 previous day return (broad market)
+    "nifty50_ret_5d",     # Nifty 50 5-day trend
+    "days_to_earnings",   # Days until next results announcement
+    "pre_results_drift",  # Binary: 1-5 days before results (buy-the-rumour)
+    "post_results_day",   # Binary: 0-2 days after results (sell-the-news)
+    "earnings_proximity", # Smooth 1/(1+days) proximity score
     "dxy_ret_prev",     # Dollar Index previous day return
     "dxy_ret_5d",       # Dollar Index 5-day trend
     "crude_ret_prev",   # Crude oil previous day return
@@ -241,9 +249,11 @@ USDINR_FEATURES: list = [
 
 # Additional force-included for Banking stocks
 BANKING_CUES_FEATURES: list = [
-    "crude_ret_prev", "crude_ret_5d",
-    "dxy_ret_prev",   "dxy_ret_5d",
-    "days_to_rbi",    "is_rbi_week",
+    "crude_ret_prev",      "crude_ret_5d",
+    "dxy_ret_prev",        "dxy_ret_5d",
+    "days_to_rbi",         "is_rbi_week",
+    "niftybank_ret_prev",  "niftybank_ret_5d",   # Nifty Bank sector index
+    "niftybank_ret_20d",                          # Nifty Bank 20-day trend
 ]
 
 
@@ -365,10 +375,10 @@ XGB_PARAMS: dict = {
 
 DL_SEQ_LEN     = 20    # 20 trading days = 1 calendar month (4 F&O weeks)
 DL_BATCH_SIZE  = 32    # Smaller batch = noisier gradients, better generalisation
-DL_MAX_EPOCHS  = 150   # Raised from 80; EarlyStopping controls actual stopping
+DL_MAX_EPOCHS  = 100   # Capped; EarlyStopping fires well before this
 
 # EarlyStopping — monitor val_loss, restore best weights
-DL_ES_PATIENCE  = 15   # Raised from 8 — gives DL models time to converge
+DL_ES_PATIENCE  = 8    # Tight patience — small datasets converge fast
 DL_ES_MIN_DELTA = 5e-5 # Finer threshold — counts smaller real improvements
 
 # ReduceLROnPlateau — halve LR when stuck

@@ -7,9 +7,18 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from pathlib import Path
+import sys
 import time
 from datetime import datetime, timedelta
 from typing import Optional, List
+
+# Load verified ticker map
+try:
+    _CONFIG_DIR = Path(__file__).resolve().parent.parent / "00_config"
+    sys.path.insert(0, str(_CONFIG_DIR))
+    from tickers import to_yf  # type: ignore
+except Exception:
+    def to_yf(s: str) -> str: return f"{s}.NS"  # type: ignore
 
 
 class DataDownloader:
@@ -46,7 +55,7 @@ class DataDownloader:
             return self._load_cached(symbol, cache_file, start_date, end_date)
 
         # Download fresh
-        ticker = f"{symbol}.NS"
+        ticker = to_yf(symbol)
         try:
             data = yf.download(
                 ticker,
@@ -137,7 +146,7 @@ class DataDownloader:
                 # Fetch new data
                 ticker = f"{symbol}.NS"
                 new_data = yf.download(
-                    ticker,
+                    to_yf(symbol),
                     start=fetch_start,
                     end=datetime.now().strftime("%Y-%m-%d"),
                     progress=False,

@@ -1,252 +1,321 @@
 """
-News sentiment fetcher — Google News RSS + FinBERT.
-
-Two-tier architecture:
-1. Tier 1 (Google News RSS): Fast, zero-cost, headline-level sentiment
-2. Tier 2 (FinBERT): Deep learning embeddings, takes longer but more accurate
+news_fetcher.py — Google News RSS + FinBERT (India fine-tuned)
+==============================================================
+Three-tier sentiment pipeline:
+  Tier 1: Fine-tuned FinBERT (V3/02_models/finbert_india/) — best accuracy
+  Tier 2: Base ProsusAI/finbert from HuggingFace              — good accuracy
+  Tier 3: VADER keyword scorer                                — fallback
 
 Usage:
-    fetcher = NewsFeaturizer()
-    sentiment = fetcher.fetch_and_score('SBIN', use_finbert=False)
-    # Returns: {score: float [-1, 1], articles: int, spike_flag: bool}
+    nf = NewsFeaturizer()
+    result = nf.fetch_and_score('HDFCBANK')
+    # returns: {raw_score, positive_ratio, negative_ratio, n_articles, ...}
+
+Fine-tune the India model:
+    python V3/01_data/news/finetune_finbert.py
 """
 
-import feedparser
-import hashlib
-import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional
-from pathlib import Path
+from __future__ import annotations
 
+import json
+import numpy as np
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional
+
+
+_NEWS_DIR  = Path(__file__).resolve().parent
+_V3_ROOT   = _NEWS_DIR.parent.parent
+_MODEL_DIR = _V3_ROOT / "02_models" / "finbert_india"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  VADER FALLBACK  (keyword-based, no ML model needed)
+# ══════════════════════════════════════════════════════════════════════════════
+
+_POSITIVE_WORDS = {
+    # Generic financial
+    "gain", "up", "rise", "jump", "bullish", "strong", "beat", "beat",
+    "profit", "rally", "surge", "boom", "growth", "positive", "outperform",
+    "upgrade", "recovery", "high", "record", "soar", "climb",
+    # Indian market specific
+    "inflows", "buying", "accumulate", "overweight", "outperform",
+    "target raised", "upgrade", "beat", "expansion", "improvement",
+    "improvement", "narrowing", "declined npa", "credit growth",
+    "buyback", "dividend", "casa", "nim expansion", "deal win",
+    "guidance raised", "fii buying", "dii buying", "rate cut",
+    "repo cut", "accommodative", "ipo listing gains", "all time high",
+}
+
+_NEGATIVE_WORDS = {
+    # Generic financial
+    "loss", "down", "fall", "drop", "bearish", "weak", "miss",
+    "decline", "crash", "plunge", "fear", "contraction", "negative",
+    "downgrade", "underperform", "recession", "sell", "low", "slump",
+    # Indian market specific
+    "outflows", "selling", "npa", "npa rises", "provision",
+    "fraud", "scam", "default", "restructured", "stressed",
+    "ban", "penalty", "notice", "sebi", "enforcement", "violation",
+    "guidance cut", "margin pressure", "attrition", "fii selling",
+    "rate hike", "hawkish", "repo hike", "inflation spike",
+    "circuit breaker", "52 week low", "crash", "rout",
+}
+
+
+def _vader_score(text: str) -> float:
+    """Simple word-count sentiment [-1, 1]."""
+    t = text.lower()
+    pos = sum(1 for w in _POSITIVE_WORDS if w in t)
+    neg = sum(1 for w in _NEGATIVE_WORDS if w in t)
+    total = pos + neg
+    if total == 0:
+        return 0.0
+    return float(np.clip((pos - neg) / total, -1.0, 1.0))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  FINBERT WRAPPER
+# ══════════════════════════════════════════════════════════════════════════════
+
+class _FinBERTScorer:
+    """
+    Lazy-loaded FinBERT scorer.
+    Loads fine-tuned India model if available, else base ProsusAI/finbert.
+    """
+
+    _instance: Optional["_FinBERTScorer"] = None
+    _pipe = None
+    _source: str = "none"
+
+    @classmethod
+    def get(cls) -> Optional["_FinBERTScorer"]:
+        if cls._instance is None:
+            inst = cls()
+            inst._load()
+            cls._instance = inst
+        return cls._instance if cls._instance._pipe is not None else None
+
+    def _load(self) -> None:
+        try:
+            import torch
+            from transformers import pipeline as hf_pipeline
+
+            device = 0 if torch.cuda.is_available() else \
+                     ("mps" if torch.backends.mps.is_available() else -1)
+
+            # Tier 1: local fine-tuned India model
+            if (_MODEL_DIR / "config.json").exists():
+                self._pipe = hf_pipeline(
+                    "text-classification",
+                    model=str(_MODEL_DIR),
+                    tokenizer=str(_MODEL_DIR),
+                    device=device,
+                    top_k=None,
+                )
+                self._source = "finbert-india"
+                print(f"  [FinBERT] loaded fine-tuned India model from {_MODEL_DIR}")
+                return
+
+            # Tier 2: base FinBERT from HuggingFace
+            self._pipe = hf_pipeline(
+                "text-classification",
+                model="ProsusAI/finbert",
+                device=device,
+                top_k=None,
+            )
+            self._source = "finbert-base"
+            print("  [FinBERT] loaded base ProsusAI/finbert")
+
+        except Exception as e:
+            print(f"  [FinBERT] load failed ({e}), falling back to VADER")
+            self._pipe = None
+
+    def score_batch(self, texts: List[str]) -> List[Dict]:
+        """
+        Score a list of headlines. Returns list of dicts:
+          {positive: float, neutral: float, negative: float}
+        """
+        if self._pipe is None or not texts:
+            return [{"positive": 0.33, "neutral": 0.34, "negative": 0.33}] * len(texts)
+
+        results = []
+        try:
+            # Run in batches of 32 to avoid OOM
+            batch_size = 32
+            all_outputs = []
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i:i + batch_size]
+                out   = self._pipe(batch, truncation=True, max_length=128)
+                all_outputs.extend(out)
+
+            for out in all_outputs:
+                scores = {item["label"].lower(): item["score"] for item in out}
+                # Normalise label names (finbert uses "positive"/"negative"/"neutral")
+                d = {
+                    "positive": scores.get("positive", scores.get("pos", 0.33)),
+                    "negative": scores.get("negative", scores.get("neg", 0.33)),
+                    "neutral":  scores.get("neutral",  scores.get("neu", 0.34)),
+                }
+                results.append(d)
+        except Exception as e:
+            print(f"  [FinBERT] inference error: {e}")
+            results = [{"positive": 0.33, "neutral": 0.34, "negative": 0.33}] * len(texts)
+
+        return results
+
+    @property
+    def source(self) -> str:
+        return self._source
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  MAIN CLASS
+# ══════════════════════════════════════════════════════════════════════════════
 
 class NewsFeaturizer:
-    """Fetch news and compute sentiment scores."""
+    """Fetch Google News RSS + compute FinBERT sentiment for NSE stocks."""
 
-    # VADER lexicon (simplified sentiment scoring)
-    POSITIVE_WORDS = {
-        "gain", "up", "rise", "jump", "bullish", "strong", "beat",
-        "success", "profit", "rally", "surge", "boom", "hope",
-        "growth", "positive", "outperform", "upgrade", "recovery"
-    }
-
-    NEGATIVE_WORDS = {
-        "loss", "down", "fall", "drop", "bearish", "weak", "miss",
-        "failure", "decline", "crash", "plunge", "doom", "fear",
-        "contraction", "negative", "downgrade", "underperform", "recession"
-    }
-
-    def __init__(self, cache_dir: Path = None):
-        """
-        Initialize news fetcher.
-
-        Args:
-            cache_dir: Directory to cache sentiment scores (optional)
-        """
+    def __init__(self, cache_dir: Optional[Path] = None):
         self.cache_dir = Path(cache_dir) if cache_dir else Path.home() / ".cache" / "nse_news"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def fetch_google_news(
-        self,
-        symbol: str,
-        max_articles: int = 20,
-    ) -> List[str]:
-        """
-        Fetch headlines from Google News RSS for a symbol.
+    # ── Fetch headlines ───────────────────────────────────────────────────────
 
-        Args:
-            symbol: Stock symbol (e.g., 'SBIN')
-            max_articles: Maximum articles to fetch
-
-        Returns:
-            List of headline strings
-        """
+    def fetch_google_news(self, symbol: str, max_articles: int = 20) -> List[str]:
+        """Fetch headlines from Google News RSS. Requires internet access."""
         try:
-            # Google News RSS URL for Indian markets
-            # Format: https://news.google.com/rss/search?q={query}
-            query = f"{symbol} NSE stock India"
-            url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
+            import feedparser
+            import requests as _req
+            from urllib.parse import quote_plus
 
-            feed = feedparser.parse(url)
-            headlines = []
-
-            for entry in feed.entries[:max_articles]:
-                headline = entry.get("title", "")
-                if headline:
-                    headlines.append(headline)
-
-            return headlines
+            query   = f"{symbol} NSE stock India"
+            url     = (f"https://news.google.com/rss/search?q={quote_plus(query)}"
+                       f"&hl=en-IN&gl=IN&ceid=IN:en")
+            headers = {
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/124.0.0.0 Safari/537.36"
+                )
+            }
+            resp = _req.get(url, headers=headers, timeout=10)
+            resp.raise_for_status()
+            feed = feedparser.parse(resp.text)
+            return [e.get("title", "") for e in feed.entries[:max_articles] if e.get("title")]
 
         except Exception as e:
-            print(f"⚠ Failed to fetch news for {symbol}: {e}")
+            print(f"  [news] fetch failed for {symbol}: {e}")
             return []
 
-    def simple_sentiment_score(self, text: str) -> float:
+    # ── Score headlines ───────────────────────────────────────────────────────
+
+    def score_headlines(self, headlines: List[str]) -> Dict:
         """
-        Simple VADER-style sentiment scoring.
+        Score headlines using FinBERT (India fine-tuned if available) or VADER fallback.
 
         Returns:
-            Score in [-1, 1] where -1 = very negative, 1 = very positive
-        """
-        text_lower = text.lower()
-
-        # Count positive and negative words
-        positive_count = sum(1 for word in self.POSITIVE_WORDS if word in text_lower)
-        negative_count = sum(1 for word in self.NEGATIVE_WORDS if word in text_lower)
-
-        total = positive_count + negative_count
-        if total == 0:
-            return 0.0  # Neutral
-
-        # Score: (pos - neg) / (pos + neg)
-        score = (positive_count - negative_count) / total
-        return np.clip(score, -1.0, 1.0)
-
-    def finbert_sentiment(self, headlines: List[str]) -> Dict[str, float]:
-        """
-        Analyze headlines with FinBERT (requires transformers + torch).
-
-        This is a placeholder. Real implementation would:
-            from transformers import pipeline
-            classifier = pipeline("text-classification", model="ProsusAI/finbert")
-            results = [classifier(h)[0] for h in headlines]
-
-        Returns:
-            {
-                'positive_ratio': fraction classified positive,
-                'negative_ratio': fraction classified negative,
-                'neutral_ratio': fraction classified neutral,
-                'confidence_avg': average confidence
-            }
+          {
+            raw_score       : float [-1, 1]
+            positive_ratio  : float [0, 1]
+            negative_ratio  : float [0, 1]
+            neutral_ratio   : float [0, 1]
+            n_articles      : int
+            model_used      : str
+          }
         """
         if not headlines:
             return {
-                "positive_ratio": 0.0,
-                "negative_ratio": 0.0,
-                "neutral_ratio": 1.0,
-                "confidence_avg": 0.0,
+                "raw_score": 0.0, "positive_ratio": 0.0,
+                "negative_ratio": 0.0, "neutral_ratio": 1.0,
+                "n_articles": 0, "model_used": "none",
             }
 
-        # Placeholder: would use FinBERT in production
-        # For now, use simple scoring as fallback
-        scores = [self.simple_sentiment_score(h) for h in headlines]
-        avg_score = np.mean(scores) if scores else 0.0
+        scorer = _FinBERTScorer.get()
 
-        positive = sum(1 for s in scores if s > 0.3)
-        negative = sum(1 for s in scores if s < -0.3)
-        neutral = len(scores) - positive - negative
+        if scorer is not None:
+            # ── FinBERT path ──────────────────────────────────────────────
+            batch   = scorer.score_batch(headlines)
+            pos_arr = np.array([d["positive"] for d in batch])
+            neg_arr = np.array([d["negative"] for d in batch])
+            neu_arr = np.array([d["neutral"]  for d in batch])
 
-        return {
-            "positive_ratio": positive / len(scores) if scores else 0.0,
-            "negative_ratio": negative / len(scores) if scores else 0.0,
-            "neutral_ratio": neutral / len(scores) if scores else 0.0,
-            "confidence_avg": abs(avg_score),
-        }
+            pos_ratio = float(np.mean(pos_arr))
+            neg_ratio = float(np.mean(neg_arr))
+            neu_ratio = float(np.mean(neu_arr))
+            # raw_score: +1 = all positive, -1 = all negative
+            raw_score = float(pos_ratio - neg_ratio)
+
+            return {
+                "raw_score":       float(np.clip(raw_score, -1.0, 1.0)),
+                "positive_ratio":  pos_ratio,
+                "negative_ratio":  neg_ratio,
+                "neutral_ratio":   neu_ratio,
+                "n_articles":      len(headlines),
+                "model_used":      scorer.source,
+            }
+        else:
+            # ── VADER fallback path ───────────────────────────────────────
+            scores    = [_vader_score(h) for h in headlines]
+            raw_score = float(np.mean(scores))
+            pos_ratio = sum(1 for s in scores if s > 0.2)  / len(scores)
+            neg_ratio = sum(1 for s in scores if s < -0.2) / len(scores)
+            neu_ratio = 1.0 - pos_ratio - neg_ratio
+
+            return {
+                "raw_score":       float(np.clip(raw_score, -1.0, 1.0)),
+                "positive_ratio":  pos_ratio,
+                "negative_ratio":  neg_ratio,
+                "neutral_ratio":   neu_ratio,
+                "n_articles":      len(headlines),
+                "model_used":      "vader",
+            }
+
+    # ── Main public API ───────────────────────────────────────────────────────
 
     def fetch_and_score(
         self,
         symbol: str,
-        date: str = None,
-        use_finbert: bool = False,
-        lookback_days: int = 1,
-    ) -> Dict[str, float]:
+        date: Optional[str] = None,
+        max_articles: int = 20,
+        use_finbert: bool = True,   # kept for backwards compat, always True now
+    ) -> Dict:
         """
-        Fetch news for a symbol and compute sentiment score.
-
-        Args:
-            symbol: Stock symbol
-            date: Trading date (YYYY-MM-DD), defaults to today
-            use_finbert: Use FinBERT (slower but more accurate) vs simple scoring
-            lookback_days: How many days back to look for news
+        Fetch news and compute sentiment for a symbol.
 
         Returns:
-            {
-                'raw_score': float [-1, 1],
-                'positive_ratio': float [0, 1],
-                'negative_ratio': float [0, 1],
-                'n_articles': int,
-                'spike_flag': bool (if score is extreme),
-                'timestamp': str
-            }
+          {
+            raw_score, positive_ratio, negative_ratio, neutral_ratio,
+            n_articles, spike_flag, timestamp, model_used
+          }
         """
         if date is None:
             date = datetime.now().strftime("%Y-%m-%d")
 
-        # Fetch headlines
-        headlines = self.fetch_google_news(symbol, max_articles=20)
+        headlines = self.fetch_google_news(symbol, max_articles=max_articles)
+        scores    = self.score_headlines(headlines)
 
-        if not headlines:
-            return {
-                "raw_score": 0.0,
-                "positive_ratio": 0.0,
-                "negative_ratio": 0.0,
-                "n_articles": 0,
-                "spike_flag": False,
-                "timestamp": date,
-            }
-
-        # Score with FinBERT or simple method
-        if use_finbert:
-            finbert_scores = self.finbert_sentiment(headlines)
-            # Convert to -1 to 1 scale
-            raw_score = (
-                finbert_scores["positive_ratio"]
-                - finbert_scores["negative_ratio"]
-            )
-        else:
-            # Simple scoring
-            scores = [self.simple_sentiment_score(h) for h in headlines]
-            raw_score = np.mean(scores)
-            finbert_scores = {
-                "positive_ratio": sum(1 for s in scores if s > 0.3) / len(scores),
-                "negative_ratio": sum(1 for s in scores if s < -0.3) / len(scores),
-            }
-
-        # Spike detection: if score is >2 std above 30-day mean
-        # (simplified, would need historical cache in production)
-        is_spike = abs(raw_score) > 0.7
+        # Spike: score extreme enough to warrant hard signal adjustment
+        is_spike = abs(scores["raw_score"]) > 0.6
 
         return {
-            "raw_score": float(raw_score),
-            "positive_ratio": float(finbert_scores["positive_ratio"]),
-            "negative_ratio": float(finbert_scores["negative_ratio"]),
-            "n_articles": len(headlines),
+            **scores,
             "spike_flag": is_spike,
-            "timestamp": date,
+            "timestamp":  date,
         }
 
     def adjust_confidence_threshold(
         self,
         base_threshold: float,
-        sentiment: Dict[str, float],
+        sentiment: Dict,
     ) -> float:
-        """
-        Adjust signal confidence threshold based on sentiment.
-
-        High-confidence signals are confirmed by positive sentiment.
-        Negative sentiment raises the bar for trading.
-
-        Args:
-            base_threshold: Base threshold (e.g., 0.58)
-            sentiment: Sentiment dict from fetch_and_score()
-
-        Returns:
-            Adjusted threshold (higher = harder to trade)
-        """
-        raw_score = sentiment["raw_score"]
+        """Adjust signal confidence threshold based on sentiment score."""
+        score = sentiment["raw_score"]
         spike = sentiment["spike_flag"]
 
-        if spike and raw_score < 0:
-            # Strong negative news: raise threshold
+        if spike and score < 0:
             return min(base_threshold + 0.05, 0.75)
-
-        elif raw_score > 0.5 and not spike:
-            # Consistent positive sentiment: lower threshold slightly
+        elif score > 0.5:
             return max(base_threshold - 0.02, 0.50)
-
-        elif raw_score < -0.5:
-            # Moderate negative: raise threshold
+        elif score < -0.5:
             return base_threshold + 0.02
-
-        else:
-            # Neutral or mixed: use base
-            return base_threshold
+        return base_threshold

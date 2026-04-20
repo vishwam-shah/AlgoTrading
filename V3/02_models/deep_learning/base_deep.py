@@ -228,18 +228,17 @@ class BaseDLClassifier:
         y_train/y_val shape : (n,)  binary int
         sample_weight       : (n,)  temporal decay weights (passed to model.fit)
         """
+        # ── Backend: TensorFlow CPU (stable, proven) ─────────────────────────
+        # tensorflow-metal requires Python ≤3.11; jax-metal has StableHLO
+        # bytecode incompatibility with Keras 3.14; torch backend breaks LSTM.
+        # TF CPU with all 8 cores is the reliable choice on Python 3.13/M1.
+        os.environ.setdefault("KERAS_BACKEND", "tensorflow")
         os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
-        os.environ.setdefault("KERAS_BACKEND",         "tensorflow")
 
         import keras                                    # lazy import — startup speed
         from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
         np.random.seed(RANDOM_SEED)
-        try:
-            import tensorflow as tf
-            tf.random.set_seed(RANDOM_SEED)
-        except ImportError:
-            pass
 
         if self._model is None:
             self._model = self._build()

@@ -28,6 +28,9 @@
     --chart-2: 142 71% 45%;
     --chart-3: 43 74% 66%;
     --chart-4: 0 84.2% 60.2%;
+    /* iMac layout */
+    --page-px: 2rem;
+    --page-max: 100%;
   }
 
   .dark {
@@ -58,13 +61,27 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  * { @apply border-border; }
+
+  html {
+    /* Use full viewport — no artificial max-width on html */
+    width: 100%;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Red Hat Display', system-ui, sans-serif;
+    /* Smooth scrollbar on macOS */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  /* iMac: scale up base font slightly for retina 5K */
+  @media (min-width: 1800px) {
+    html { font-size: 16.5px; }
+  }
+  @media (min-width: 2200px) {
+    html { font-size: 17px; }
   }
 }
 
@@ -72,6 +89,27 @@
   .gradient-text {
     @apply bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent;
   }
+
+  /* Full-bleed page wrapper — use instead of max-w-screen-2xl */
+  .page-container {
+    width: 100%;
+    padding-left: var(--page-px);
+    padding-right: var(--page-px);
+  }
+
+  @media (min-width: 1800px) {
+    .page-container { --page-px: 2.5rem; }
+  }
+  @media (min-width: 2200px) {
+    .page-container { --page-px: 3.5rem; }
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
 }
 
 .select-trigger:focus {
