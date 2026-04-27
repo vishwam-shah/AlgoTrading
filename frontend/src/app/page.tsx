@@ -7,6 +7,7 @@ import {
   BarChart2, Activity, RefreshCw, CheckCircle2,
   LineChart, ShoppingCart, PieChart, Award,
   ChevronDown, History, Zap, FlaskConical,
+  Download,
 } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -42,7 +43,27 @@ interface Dashboard {
   trade_history?: { total_trades: number };
 }
 interface RunSummary  { stocks: any[] }
-interface Prediction  { symbol: string; direction: 'UP'|'DOWN'; prob_up?: number; confidence?: number }
+interface Prediction  {
+  symbol: string;
+  direction: 'UP'|'DOWN';
+  prob_up?: number;
+  confidence?: number;
+  prediction_date?: string;
+  prediction_for?: string;
+  last_close?: number;
+  predicted_price?: number;
+  predicted_move_pct?: number;
+  range_low?: number;
+  range_high?: number;
+  range_down_pct?: number;
+  range_up_pct?: number;
+  ensemble_accuracy?: number;
+  directional_accuracy_for_signal?: number;
+  up_signal_accuracy?: number;
+  down_signal_accuracy?: number;
+  best_model?: string;
+  best_model_accuracy?: number;
+}
 interface AngelStatus { credentials_present: boolean; login_ok?: boolean; message?: string }
 interface AngelFunds  { funds: { available: number; net: number; used_margin: number } }
 interface VirtualWallet {
@@ -110,7 +131,7 @@ export default function TradingDashboard() {
 
   const allSymbols = useMemo(() => {
     const fromSummary = (summary?.stocks || []).map((s: any) => s.symbol).filter((s: string) => s !== 'AVERAGE');
-    return [...new Set([...watchlist, ...fromSummary])].slice(0, 50);
+    return Array.from(new Set([...watchlist, ...fromSummary])).slice(0, 50);
   }, [summary, watchlist]);
 
   const { prices, change, connected } = useLivePrices(allSymbols);
@@ -201,8 +222,7 @@ export default function TradingDashboard() {
       .filter((s: any) => s.symbol !== 'AVERAGE')
       .map((s: any) => ({
         ...s,
-        direction: predMap[s.symbol]?.direction,
-        prob_up:   predMap[s.symbol]?.prob_up,
+        ...predMap[s.symbol],
         ltp:       prices[s.symbol],
         chg:       change(s.symbol),
       }));
@@ -213,6 +233,66 @@ export default function TradingDashboard() {
     .map(p => ({ date: ohlcv[ohlcv.length - 1]?.date ?? '', direction: 'UP' as const, prob_up: p.prob_up }));
 
   const summaryStocks = (summary?.stocks ?? []).filter((s: any) => s.symbol !== 'AVERAGE');
+
+  const exportPredictionsCsv = useCallback(() => {
+    if (!predictions.length) return;
+    const runLabel = selectedRunId ?? dashboard?.run_id ?? 'latest';
+    const headers = [
+      'symbol',
+      'prediction_date',
+      'prediction_for',
+      'direction',
+      'action_probability_up',
+      'confidence',
+      'last_close',
+      'predicted_price',
+      'predicted_move_pct',
+      'range_low',
+      'range_high',
+      'range_down_pct',
+      'range_up_pct',
+      'ensemble_accuracy',
+      'directional_accuracy_for_signal',
+      'up_signal_accuracy',
+      'down_signal_accuracy',
+      'best_model',
+      'best_model_accuracy',
+    ];
+    const rows = predictions.map((p) => [
+      p.symbol,
+      p.prediction_date ?? '',
+      p.prediction_for ?? '',
+      p.direction,
+      p.prob_up ?? '',
+      p.confidence ?? '',
+      p.last_close ?? '',
+      p.predicted_price ?? '',
+      p.predicted_move_pct ?? '',
+      p.range_low ?? '',
+      p.range_high ?? '',
+      p.range_down_pct ?? '',
+      p.range_up_pct ?? '',
+      p.ensemble_accuracy ?? '',
+      p.directional_accuracy_for_signal ?? '',
+      p.up_signal_accuracy ?? '',
+      p.down_signal_accuracy ?? '',
+      p.best_model ?? '',
+      p.best_model_accuracy ?? '',
+    ]);
+    const csv = [
+      headers.join(','),
+      ...rows.map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `signals_${runLabel}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [dashboard?.run_id, predictions, selectedRunId]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -537,10 +617,20 @@ export default function TradingDashboard() {
         {/* TRADE / SIGNALS */}
         {viewMode === 'trade' && tradeTab === 'signals' && (
           <div className="space-y-3">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-400"/>{upCount} UP signals</span>
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-400"/>{dashboard?.predictions?.down ?? 0} DOWN signals</span>
-              <span className="text-xs text-muted-foreground/60">· Click symbol to open chart</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-400"/>{upCount} UP signals</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-400"/>{dashboard?.predictions?.down ?? 0} DOWN signals</span>
+                <span className="text-xs text-muted-foreground/60">Click symbol to open chart</span>
+              </div>
+              <button
+                onClick={exportPredictionsCsv}
+                disabled={!predictions.length}
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export CSV
+              </button>
             </div>
             <SignalsTable predictions={predictions} onSymbolClick={sym => { setChartSym(sym); setTradeTab('chart'); }} />
           </div>
@@ -608,6 +698,9 @@ export default function TradingDashboard() {
                     { label: 'Best Model', value: s.best_model || '—',                             color: '' },
                     { label: 'Signal',     value: s.direction || 'None',                           color: s.direction === 'UP' ? 'text-green-400' : s.direction ? 'text-red-400' : '' },
                     { label: 'P(UP)',      value: s.prob_up ? `${(s.prob_up * 100).toFixed(1)}%` : '—', color: (s.prob_up || 0) >= 0.52 ? 'text-green-400' : '' },
+                    { label: 'Pred Range', value: s.range_low != null && s.range_high != null ? `₹${s.range_low.toFixed(0)} - ₹${s.range_high.toFixed(0)}` : '—', color: '' },
+                    { label: 'Move', value: s.predicted_move_pct != null ? `${s.predicted_move_pct > 0 ? '+' : ''}${s.predicted_move_pct.toFixed(2)}%` : '—', color: (s.predicted_move_pct || 0) > 0 ? 'text-green-400' : (s.predicted_move_pct || 0) < 0 ? 'text-red-400' : '' },
+                    { label: 'Pred For', value: s.prediction_for || '—', color: '' },
                     { label: 'Predictions', value: s.n_predictions || '—',                         color: '' },
                   ].map(item => (
                     <div key={item.label} className="rounded-xl border border-border bg-card p-3">

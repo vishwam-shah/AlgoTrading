@@ -19,6 +19,7 @@ import json
 import pickle
 import sys
 from datetime import date as _date
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -285,16 +286,42 @@ def predict_next_day(
     primary_ok    = confidence >= CONFIDENCE_THRESHOLD
     meta_ok       = (meta_prob >= META_THRESHOLD) or (arts.get("secondary_model") is None)
     signal_active = bool(primary_ok and meta_ok and direction == 1)
+    price_info    = _compute_price_range(raw_df, avg_prob)
+    last_date_str = str(df["date"].iloc[-1])[:10]
+    try:
+        last_dt = pd.Timestamp(last_date_str)
+        next_trading_day = (last_dt + pd.tseries.offsets.BDay(1)).strftime("%Y-%m-%d")
+    except Exception:
+        next_trading_day = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    prev_close = float(price_info["prev_close"])
+    range_low = float(price_info["low_est"])
+    range_high = float(price_info["high_est"])
+    predicted_price = float(price_info["point_estimate"])
+
+    def _pct(target: float) -> float:
+        if prev_close <= 0:
+            return 0.0
+        return ((target - prev_close) / prev_close) * 100.0
 
     return {
         "symbol":        symbol,
-        "last_date":     str(df["date"].iloc[-1])[:10],
+        "last_date":     last_date_str,
+        "prediction_date": datetime.now().strftime("%Y-%m-%d"),
+        "prediction_for": next_trading_day,
         "last_close":    float(raw_df["close"].iloc[-1]),
         "direction":     "UP" if direction == 1 else "DOWN",
         "action":        ("BUY" if direction == 1 else "SELL") if signal_active else "HOLD",
         "confidence":    round(confidence, 4),
         "avg_prob":      round(avg_prob, 4),
         "meta_prob":     round(meta_prob, 4),
+        "predicted_price": round(predicted_price, 2),
+        "range_low":     round(range_low, 2),
+        "range_high":    round(range_high, 2),
+        "predicted_move_pct": round(float(price_info["expected_move_pct"]), 2),
+        "range_down_pct": round(_pct(range_low), 2),
+        "range_up_pct":  round(_pct(range_high), 2),
+        "atr_14":        round(float(price_info["atr"]), 2),
         "signal_active": signal_active,
         "regime":        inf["regime_val"],
         "regime_label":  inf["regime_lbl"],

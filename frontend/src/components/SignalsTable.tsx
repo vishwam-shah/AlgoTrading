@@ -10,6 +10,17 @@ interface Prediction {
   prob_up?: number;
   confidence?: number;
   ensemble_pred?: number;
+  prediction_date?: string;
+  prediction_for?: string;
+  last_close?: number;
+  predicted_price?: number;
+  predicted_move_pct?: number;
+  range_low?: number;
+  range_high?: number;
+  range_down_pct?: number;
+  range_up_pct?: number;
+  ensemble_accuracy?: number;
+  directional_accuracy_for_signal?: number;
 }
 
 interface SignalsTableProps {
@@ -38,7 +49,7 @@ export default function SignalsTable({ predictions, onSymbolClick }: SignalsTabl
         method: 'POST',
       });
       if (res.ok) {
-        setExecuted(prev => new Set([...prev, sym]));
+        setExecuted(prev => new Set([...Array.from(prev), sym]));
         toast.success(`Order queued for ${sym}`);
       } else {
         toast.error(`Failed to queue ${sym}`);
@@ -62,8 +73,13 @@ export default function SignalsTable({ predictions, onSymbolClick }: SignalsTabl
         <thead className="bg-muted/30 border-b border-border">
           <tr>
             <th className="text-left px-4 py-3 font-medium">Symbol</th>
+            <th className="text-left px-4 py-3 font-medium">Prediction</th>
             <th className="text-center px-4 py-3 font-medium">Signal</th>
             <th className="text-right px-4 py-3 font-medium">P(UP)</th>
+            <th className="text-right px-4 py-3 font-medium">Move</th>
+            <th className="text-right px-4 py-3 font-medium">Range</th>
+            <th className="text-right px-4 py-3 font-medium">Ens. Acc</th>
+            <th className="text-right px-4 py-3 font-medium">Dir. Acc</th>
             <th className="text-right px-4 py-3 font-medium">Confidence</th>
             <th className="text-right px-4 py-3 font-medium">Action</th>
           </tr>
@@ -89,6 +105,10 @@ export default function SignalsTable({ predictions, onSymbolClick }: SignalsTabl
                     {p.symbol}
                   </button>
                 </td>
+                <td className="px-4 py-3 text-xs">
+                  <div className="font-mono text-foreground">{p.prediction_for ?? '—'}</div>
+                  <div className="text-muted-foreground">{p.prediction_date ?? '—'}</div>
+                </td>
                 <td className="px-4 py-3 text-center">
                   <span className={cn(
                     'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold',
@@ -109,6 +129,33 @@ export default function SignalsTable({ predictions, onSymbolClick }: SignalsTabl
                   )}>
                     {(conf * 100).toFixed(1)}%
                   </span>
+                </td>
+                <td className="px-4 py-3 text-right font-mono">
+                  <div className={cn(
+                    'font-bold',
+                    (p.predicted_move_pct ?? 0) > 0 ? 'text-green-400' : (p.predicted_move_pct ?? 0) < 0 ? 'text-red-400' : 'text-muted-foreground'
+                  )}>
+                    {p.predicted_move_pct != null ? `${p.predicted_move_pct > 0 ? '+' : ''}${p.predicted_move_pct.toFixed(2)}%` : '—'}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {p.predicted_price != null ? `₹${p.predicted_price.toFixed(2)}` : '—'}
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-xs">
+                  {p.range_low != null && p.range_high != null ? (
+                    <>
+                      <div>₹{p.range_low.toFixed(2)} - ₹{p.range_high.toFixed(2)}</div>
+                      <div className="text-muted-foreground">
+                        {p.range_down_pct != null ? `${p.range_down_pct.toFixed(2)}%` : '—'} / {p.range_up_pct != null ? `+${p.range_up_pct.toFixed(2)}%` : '—'}
+                      </div>
+                    </>
+                  ) : '—'}
+                </td>
+                <td className="px-4 py-3 text-right font-mono">
+                  {p.ensemble_accuracy != null ? `${(p.ensemble_accuracy * 100).toFixed(1)}%` : '—'}
+                </td>
+                <td className="px-4 py-3 text-right font-mono">
+                  {p.directional_accuracy_for_signal != null ? `${(p.directional_accuracy_for_signal * 100).toFixed(1)}%` : '—'}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="w-full bg-muted/30 rounded-full h-1.5 max-w-[80px] ml-auto">

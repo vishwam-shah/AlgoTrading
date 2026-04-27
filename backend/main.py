@@ -1748,13 +1748,15 @@ async def get_v3_predictions(run_id: str):
     # Use last_close as price hint if present
     if "last_close" in df.columns:
         df["price"] = df["last_close"]
+    if "predicted_price" in df.columns:
+        df["target_price"] = df["predicted_price"]
     return sanitize_dict({
         "run_id": run_id,
         "predictions": df.to_dict(orient="records"),
         "count": len(df),
         "up_count":   int((df["direction"] == "UP").sum())   if "direction" in df.columns else 0,
         "down_count": int((df["direction"] == "DOWN").sum()) if "direction" in df.columns else 0,
-        "generated_at": str(path.stat().st_mtime),
+        "generated_at": datetime.fromtimestamp(path.stat().st_mtime).isoformat(),
     })
 
 

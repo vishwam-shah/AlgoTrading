@@ -527,7 +527,21 @@ def main() -> None:
         # Join OOS accuracy from summary; tradeable will be updated after backtest
         if ok_rows:
             acc_map = {r["symbol"]: r["oos_accuracy"] for r in ok_rows}
+            up_acc_map = {r["symbol"]: r.get("avg_dir_acc_up", 0.0) for r in ok_rows}
+            down_acc_map = {r["symbol"]: r.get("avg_dir_acc_down", 0.0) for r in ok_rows}
+            best_model_map = {r["symbol"]: r.get("best_model", "") for r in ok_rows}
+            best_model_acc_map = {r["symbol"]: r.get("best_model_acc", 0.0) for r in ok_rows}
             pred_df["oos_accuracy"] = pred_df["symbol"].map(acc_map).fillna(0.0)
+            pred_df["ensemble_accuracy"] = pred_df["oos_accuracy"]
+            pred_df["up_signal_accuracy"] = pred_df["symbol"].map(up_acc_map).fillna(0.0)
+            pred_df["down_signal_accuracy"] = pred_df["symbol"].map(down_acc_map).fillna(0.0)
+            pred_df["directional_accuracy_for_signal"] = np.where(
+                pred_df["direction"].eq("UP"),
+                pred_df["up_signal_accuracy"],
+                pred_df["down_signal_accuracy"],
+            )
+            pred_df["best_model"] = pred_df["symbol"].map(best_model_map).fillna("")
+            pred_df["best_model_accuracy"] = pred_df["symbol"].map(best_model_acc_map).fillna(0.0)
             pred_df["tradeable"]    = pred_df["oos_accuracy"] >= 0.52  # preliminary
         pred_df.to_csv(result_run_path / "next_day_predictions.csv", index=False)
 
