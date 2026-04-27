@@ -21,6 +21,34 @@ except Exception:
     def to_yf(s: str) -> str: return f"{s}.NS"  # type: ignore
 
 
+def _filter_price_anomalies(df: pd.DataFrame, symbol: str = "") -> pd.DataFrame:
+    """
+    Remove rows where close price jumps >3x from surrounding days — yfinance
+    data errors (wrong ticker, decimal misplacement). Real stock splits are
+    already adjusted by auto_adjust=True so we should never see 3x+ jumps.
+
+    Returns cleaned DataFrame.
+    """
+    if len(df) < 3:
+        return df
+    # Handle both 'timestamp' and 'date' column names
+    ts_col = "timestamp" if "timestamp" in df.columns else ("date" if "date" in df.columns else None)
+    if ts_col is None or "close" not in df.columns:
+        return df
+    df = df.sort_values(ts_col).reset_index(drop=True)
+    prev_close = df["close"].shift(1)
+    next_close = df["close"].shift(-1)
+    ratio_prev = (df["close"] / prev_close).fillna(1.0)
+    ratio_next = (df["close"] / next_close).fillna(1.0)
+    bad = ((ratio_prev > 3) | (ratio_prev < 0.33)) & ((ratio_next > 3) | (ratio_next < 0.33))
+    if bad.any():
+        n_bad = int(bad.sum())
+        dates = df.loc[bad, ts_col].astype(str).tolist()
+        print(f"  ⚠ {symbol}: removed {n_bad} anomalous row(s): {dates}")
+        df = df[~bad].reset_index(drop=True)
+    return df
+
+
 class DataDownloader:
     """Download and cache stock data from yfinance."""
 
@@ -77,6 +105,7 @@ class DataDownloader:
             # Clean
             data["volume"] = data["volume"].astype(int)
             data = data.dropna()
+            data = _filter_price_anomalies(data, symbol)
 
             # Cache
             data.to_parquet(cache_file, compression="snappy", index=False)
@@ -167,6 +196,7 @@ class DataDownloader:
                 combined = pd.concat([existing, new_data], ignore_index=True)
                 combined = combined.drop_duplicates(subset=["timestamp"], keep="last")
                 combined = combined.sort_values("timestamp").reset_index(drop=True)
+                combined = _filter_price_anomalies(combined, symbol)
 
                 # Save back
                 combined.to_parquet(cache_file, compression="snappy", index=False)

@@ -103,7 +103,7 @@ export default function BacktestPanel({ runId, onLoaded }: Props) {
             <TrendingUp className="h-4 w-4 text-green-400" />
             <span className="text-sm font-semibold">Per-Stock Simulated P&L</span>
           </div>
-          <span className="text-[10px] text-muted-foreground">sorted by Sharpe · conf ≥52%</span>
+          <span className="text-[10px] text-muted-foreground">sorted by Sharpe · conf ≥58%</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">

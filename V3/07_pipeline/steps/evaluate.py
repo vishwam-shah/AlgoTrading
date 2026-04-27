@@ -374,6 +374,10 @@ def run_symbol(
     y       = feat_df["target"].values.astype(int)
     dates   = feat_df["date"].values
     regimes = feat_df["market_regime"].values.astype(int) if "market_regime" in feat_df.columns else None
+    # next_ret is populated by features.add_target (v2+) and is used by the
+    # meta-labeling secondary classifier. Pipeline still works with v1 features
+    # (next_ret column absent) — train_window just skips meta training.
+    next_ret = feat_df["next_ret"].values.astype(float) if "next_ret" in feat_df.columns else None
 
     windows = build_windows(n_rows)
     print(f"  [1/3] Walk-forward: {len(windows)} windows  |  {n_rows} rows  |  {len(fcols)} features")
@@ -410,12 +414,14 @@ def run_symbol(
     all_tcngru_preds    = []; all_tcntransf_preds = []; all_nbeats_preds = []
     all_closes          = []; all_next_closes = []
     all_probs_up        = []   # calibrated P(UP) — the key for confidence filtering
+    all_meta_probs      = []   # NEW — trade-selection meta prob (López de Prado)
     last_result         = None
 
     for idx, win in enumerate(windows):
         _is_last_win = (idx == len(windows) - 1)
         res = train_window(X, y, win, fcols, symbol, sym_model_path,
-                           regimes=regimes, save_dl_keras=_is_last_win)
+                           regimes=regimes, save_dl_keras=_is_last_win,
+                           next_ret=next_ret)
         if res is None:
             continue
         if last_result is not None and last_result is not res:
@@ -429,6 +435,11 @@ def run_symbol(
 
         all_preds.extend(res["ens_pred"]); all_actuals.extend(res["y_test"])
         all_probs_up.extend(res["avg_prob"].tolist())
+        # NEW — meta-prob (fallback 0.5 if meta wasn't trained in this window)
+        _mp = res.get("meta_prob")
+        if _mp is None:
+            _mp = np.full(n_test, 0.5, dtype=float)
+        all_meta_probs.extend(np.asarray(_mp).tolist())
         all_dates.extend(test_dates); all_window_ids.extend([win["id"]] * n_test)
         tp_ = res.get("test_preds", {})
         all_lgbm_preds.extend(     tp_.get("LightGBM",       [None]*n_test))
@@ -543,6 +554,7 @@ def run_symbol(
         "close_price": all_closes, "next_close_price": all_next_closes,
         "actual": all_actuals,
         "prob_up":              np.round(all_probs_up, 4),   # calibrated P(UP) — for confidence filtering
+        "meta_prob":            np.round(all_meta_probs, 4),  # NEW — meta-labeling filter (López de Prado)
         "lgbm_pred":            all_lgbm_preds,
         "xgb_pred":             all_xgb_preds,
         "lstm_pred":            all_lstm_preds,
@@ -590,8 +602,19 @@ def run_symbol(
         with open(prod_path / "winsor_bounds.pkl", "wb") as f: pickle.dump(last_result["winsor_bounds"], f)
         if last_result.get("meta_model"):
             with open(prod_path / "meta_model.pkl", "wb") as f: pickle.dump(last_result["meta_model"], f)
+        # NEW — trade-selection secondary (López de Prado meta-labeling). Copy to
+        # production so predict.py can apply the meta gate at inference time.
+        if last_result.get("secondary_model") is not None:
+            with open(prod_path / "secondary.pkl", "wb") as f: pickle.dump(last_result["secondary_model"], f)
+        elif (prod_path / "secondary.pkl").exists():
+            # If a previous run had a secondary but this one doesn't, remove stale copy
+            try: (prod_path / "secondary.pkl").unlink()
+            except Exception: pass
         with open(prod_path / "calibration.json", "w") as f:
-            json.dump({"temperature": last_result.get("temperature", 1.0)}, f)
+            json.dump({
+                "temperature": last_result.get("temperature", 1.0),
+                "meta_info":   last_result.get("meta_info", {}),
+            }, f)
         with open(prod_path / "dl_meta.json", "w") as f:
             json.dump(_last_dl_meta, f, indent=2)
         for rv, rmdl in last_result.get("regime_lgb_models", {}).items():

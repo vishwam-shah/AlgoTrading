@@ -1326,7 +1326,9 @@ def train_window(
         avg_prob = np.mean(list(test_probs.values()), axis=0)
         val_avg  = np.mean(list(val_probs_each.values()), axis=0)
 
-    # Meta-learner stacking
+    # Meta-learner stacking — elastic-net logistic (C=2.0, was 0.3) to avoid
+    # coefficient degeneration. L1 drops noisy models; keep only if val-acc lifts
+    # AND coefs are decisive (L1 > 0.1). Previously 49% of stocks got meta=uniform.
     meta_model = None
     if len(trained_models) >= 2:
         try:
@@ -1338,15 +1340,19 @@ def train_window(
             base_acc = _acc(y_val, (np.mean(meta_Xv, axis=1) >= 0.5).astype(int))
 
             if len(np.unique(y_val)) == 2:
-                meta_model = LogisticRegression(C=0.3, max_iter=300, random_state=RANDOM_SEED)
-                meta_model.fit(meta_Xv, y_val)
-                meta_acc  = _acc(y_val, meta_model.predict(meta_Xv))
-                meta_prob = meta_model.predict_proba(meta_Xt)[:, 1]
+                candidate = LogisticRegression(
+                    C=2.0, max_iter=500, random_state=RANDOM_SEED,
+                    penalty="elasticnet", l1_ratio=0.3, solver="saga",
+                )
+                candidate.fit(meta_Xv, y_val)
+                meta_acc  = _acc(y_val, candidate.predict(meta_Xv))
+                meta_prob = candidate.predict_proba(meta_Xt)[:, 1]
                 meta_pred = (meta_prob >= 0.5).astype(int)
-                if meta_acc > base_acc and len(np.unique(meta_pred)) > 1:
-                    avg_prob = meta_prob
-                    # Recompute val_avg using meta-learner for calibration
-                    val_avg  = meta_model.predict_proba(meta_Xv)[:, 1]
+                coef_l1   = float(np.sum(np.abs(candidate.coef_[0])))
+                if meta_acc > base_acc and len(np.unique(meta_pred)) > 1 and coef_l1 > 0.1:
+                    meta_model = candidate
+                    avg_prob   = meta_prob
+                    val_avg    = candidate.predict_proba(meta_Xv)[:, 1]
         except Exception:
             pass
 

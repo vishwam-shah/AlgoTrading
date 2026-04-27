@@ -90,7 +90,7 @@ def _load_artifacts(symbol: str) -> Optional[Dict]:
 
     tree_models = {}
     for pkl in prod_path.glob("*.pkl"):
-        if pkl.stem in ("scaler", "meta_model", "pca", "winsor_bounds"):
+        if pkl.stem in ("scaler", "meta_model", "pca", "winsor_bounds", "secondary"):
             continue
         try:
             with open(pkl, "rb") as f:
@@ -98,16 +98,28 @@ def _load_artifacts(symbol: str) -> Optional[Dict]:
         except Exception:
             pass
 
+    # Trade-selection secondary (López de Prado meta-labeling). Optional — only
+    # present once a v2-pipeline run has completed for this symbol.
+    secondary_model = None
+    sec_path = prod_path / "secondary.pkl"
+    if sec_path.exists():
+        try:
+            with open(sec_path, "rb") as f:
+                secondary_model = pickle.load(f)
+        except Exception:
+            secondary_model = None
+
     return {
-        "prod_path":   prod_path,
-        "feat_cols":   meta["feature_names"],
-        "scaler":      scaler,
-        "pca":         pca,
-        "wb":          wb,
-        "temperature": temperature,
-        "dl_meta":     dl_meta,
-        "tree_models": tree_models,
-        "meta":        meta,
+        "prod_path":       prod_path,
+        "feat_cols":       meta["feature_names"],
+        "scaler":          scaler,
+        "pca":             pca,
+        "wb":              wb,
+        "temperature":     temperature,
+        "dl_meta":         dl_meta,
+        "tree_models":     tree_models,
+        "secondary_model": secondary_model,
+        "meta":            meta,
     }
 
 
@@ -202,10 +214,22 @@ def _run_inference(arts: Dict, df: pd.DataFrame) -> Optional[Dict]:
         except Exception:
             pass
 
+    # ── Meta-labeling secondary — "should we act on this UP signal?" ────────
+    meta_prob = 0.5   # neutral when secondary is absent (no trade filter applied)
+    sec = arts.get("secondary_model")
+    if sec is not None:
+        try:
+            X_meta = np.column_stack([X_tree, np.array([[cal_prob]])])
+            if hasattr(sec, "n_features_in_") and X_meta.shape[1] == sec.n_features_in_:
+                meta_prob = float(sec.predict_proba(X_meta)[0, 1])
+        except Exception:
+            meta_prob = 0.5
+
     return {
         "probs_dict":   probs_dict,
         "raw_avg_prob": raw_avg_prob,
         "cal_prob":     cal_prob,
+        "meta_prob":    meta_prob,
         "regime_val":   regime_val,
         "regime_lbl":   regime_lbl,
         "X_tree":       X_tree,
@@ -253,9 +277,14 @@ def predict_next_day(
         return None
 
     avg_prob      = inf["cal_prob"]
+    meta_prob     = inf.get("meta_prob", 0.5)
     direction     = 1 if avg_prob >= 0.5 else 0
     confidence    = avg_prob if direction == 1 else 1 - avg_prob
-    signal_active = confidence >= CONFIDENCE_THRESHOLD
+    # v2 gate: primary must pass AND (meta passes OR secondary absent → meta_prob=0.5)
+    META_THRESHOLD = 0.60
+    primary_ok    = confidence >= CONFIDENCE_THRESHOLD
+    meta_ok       = (meta_prob >= META_THRESHOLD) or (arts.get("secondary_model") is None)
+    signal_active = bool(primary_ok and meta_ok and direction == 1)
 
     return {
         "symbol":        symbol,
@@ -265,6 +294,7 @@ def predict_next_day(
         "action":        ("BUY" if direction == 1 else "SELL") if signal_active else "HOLD",
         "confidence":    round(confidence, 4),
         "avg_prob":      round(avg_prob, 4),
+        "meta_prob":     round(meta_prob, 4),
         "signal_active": signal_active,
         "regime":        inf["regime_val"],
         "regime_label":  inf["regime_lbl"],

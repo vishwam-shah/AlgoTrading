@@ -33,15 +33,17 @@ sys.path.insert(0, str(_V3_ROOT / "07_pipeline"))
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-MAX_POSITION_PCT   = 0.12   # 12% max per stock
-MIN_CONFIDENCE     = 0.52   # only trade above this prob_up
+MAX_POSITION_PCT   = 0.34   # 34% max per stock (3-slot equal-weight = 33.3% each)
+MIN_CONFIDENCE     = 0.58   # primary gate — matches pipeline's CONFIDENCE_THRESHOLD
+META_THRESHOLD     = 0.60   # NEW — López de Prado meta-labeling secondary gate
 MIN_PROB_REQUIRED  = True   # skip order if prob_up missing in csv
-MAX_STOCKS         = 15     # max simultaneous positions
-TARGET_HOLD_DAYS   = 7      # expected hold (for sizing context, not enforced here)
+MAX_STOCKS         = 3      # n_max from Exp5 winner (concentration beats diversification here)
+MIN_TRADEABLE_UNIV = 3      # expand to cross-sectional top15 if fewer than this
+TARGET_HOLD_DAYS   = 10     # fixed holding period — matches backtest.HOLD_DAYS_V2
 ROUND_LOT          = 1      # NSE CNC: 1-share lots allowed
 
 # NSE round-trip cost estimate: STT 0.1% sell + ~0.09% other ≈ 0.19% one-way
-ROUND_TRIP_COST_PCT = 0.0038  # ~0.38% full round-trip for 7-day hold sizing
+ROUND_TRIP_COST_PCT = 0.0038  # ~0.38% full round-trip for 10-day hold sizing
 
 RESULTS_DIR = _V3_ROOT / "06_results" / "runs"
 ORDERS_DIR  = _V3_ROOT / "05_live_trading" / "orders"
@@ -140,30 +142,49 @@ def build_orders(
         return []
 
     # ── 2. Sharpe-profitable universe filter ──────────────────────────────
-    # Only trade stocks that are both directionally valid (OOS>50%) AND
-    # actually made money in backtest simulation (sharpe>0).
-    # Prefer the tradeable flag in predictions (updated by orchestrator after backtest).
-    # Fall back to loading backtest_results.csv directly.
-    profitable_symbols: Optional[set] = None
+    # Primary gate: tradeable==True  (sharpe>0 AND OOS>=50%) — strict, often ~8 stocks.
+    # Expansion:    cross_sectional_top15 (top-15 by Sharpe among OOS>=50%) — used
+    # when the strict universe is small (< MIN_TRADEABLE_UNIV) to avoid
+    # concentrating capital in too few names.
+    strict_syms: Optional[set]   = None
+    expanded_syms: Optional[set] = None
+
     if "tradeable" in df.columns:
-        profitable_symbols = set(df[df["tradeable"] == True]["symbol"].tolist())
-    elif run_id:
+        strict_syms = set(df[df["tradeable"] == True]["symbol"].tolist())
+    if "cross_sectional_top15" in df.columns:
+        expanded_syms = set(df[df["cross_sectional_top15"] == True]["symbol"].tolist())
+
+    if (strict_syms is None or expanded_syms is None) and run_id:
         bt_path = RESULTS_DIR / run_id / "backtest_results.csv"
         if bt_path.exists():
             bt_df = pd.read_csv(bt_path)
-            profitable_symbols = set(
-                bt_df[(bt_df["sharpe"] > 0) & (bt_df["oos_accuracy"] >= 0.50)]["symbol"].tolist()
-            )
+            if strict_syms is None and "tradeable" in bt_df.columns:
+                strict_syms = set(bt_df[bt_df["tradeable"] == True]["symbol"].tolist())
+            elif strict_syms is None:
+                strict_syms = set(
+                    bt_df[(bt_df["sharpe"] > 0) & (bt_df["oos_accuracy"] >= 0.50)]["symbol"].tolist()
+                )
+            if expanded_syms is None and "cross_sectional_top15" in bt_df.columns:
+                expanded_syms = set(bt_df[bt_df["cross_sectional_top15"] == True]["symbol"].tolist())
+
+    profitable_symbols: Optional[set] = None
+    if strict_syms is not None:
+        profitable_symbols = strict_syms
+        gate_label = f"strict tradeable (n={len(strict_syms)})"
+        if len(strict_syms) < MIN_TRADEABLE_UNIV and expanded_syms:
+            profitable_symbols = strict_syms | expanded_syms
+            gate_label = (f"strict ({len(strict_syms)}) ∪ cross-sectional top15 "
+                          f"({len(expanded_syms)}) → {len(profitable_symbols)} symbols")
 
     if profitable_symbols is not None:
         before = len(df)
         df = df[df["symbol"].isin(profitable_symbols)].copy()
-        print(f"  {len(df)}/{before} signals in profitable universe (sharpe>0, OOS>50%)")
+        print(f"  {len(df)}/{before} signals in {gate_label}")
         if df.empty:
             print("  No signals in profitable universe today.")
             return []
 
-    # ── 3. Confidence / prob_up filter ────────────────────────────────────
+    # ── 3. Primary (prob_up) gate ─────────────────────────────────────────
     if "prob_up" in df.columns and df["prob_up"].notna().any():
         df = df[df["prob_up"] >= MIN_CONFIDENCE].copy()
         print(f"  {len(df)} signals above prob_up ≥ {MIN_CONFIDENCE:.0%}")
@@ -179,9 +200,21 @@ def build_orders(
     if df.empty:
         return []
 
-    # ── 4. Sort by prob_up descending, take top N ─────────────────────────
-    sort_col = "prob_up" if "prob_up" in df.columns else "confidence"
-    df = df.sort_values(sort_col, ascending=False).head(MAX_STOCKS).reset_index(drop=True)
+    # ── 3b. Meta (López de Prado) gate — only when secondary is present ───
+    if "meta_prob" in df.columns and df["meta_prob"].notna().any() \
+            and float(df["meta_prob"].std()) > 1e-6:
+        before = len(df)
+        df = df[df["meta_prob"] >= META_THRESHOLD].copy()
+        print(f"  {len(df)}/{before} signals above meta_prob ≥ {META_THRESHOLD:.0%}")
+        if df.empty:
+            return []
+
+    # ── 4. Score-rank (prob_up × meta_prob) desc, take top n_max ──────────
+    if "meta_prob" in df.columns:
+        df["_score"] = df.get("prob_up", 0.55) * df["meta_prob"]
+    else:
+        df["_score"] = df.get("prob_up", df.get("confidence", 0.55))
+    df = df.sort_values("_score", ascending=False).head(MAX_STOCKS).reset_index(drop=True)
 
     # ── 4. Fetch prices if not provided ───────────────────────────────────
     if price_map is None:
@@ -207,21 +240,31 @@ def build_orders(
         target_inr = capital * target_pct
         qty        = max(1, int(target_inr / price))   # floor shares, min 1
 
+        # Planned exit date = TARGET_HOLD_DAYS trading days from today
+        # (calendar-approximate; the exit runner should close on the actual
+        # 10th trading day after entry regardless of the stored string).
+        from datetime import timedelta as _td
+        planned_exit = (datetime.now() + _td(days=int(TARGET_HOLD_DAYS * 1.45))).date().isoformat()
+
         orders.append({
-            "symbol":     sym,
-            "exchange":   "NSE",
-            "direction":  "BUY",
-            "prob_up":    round(prob_up, 4),
-            "kelly_frac": round(kf, 4),
-            "target_pct": round(target_pct * 100, 2),   # as %
-            "target_inr": round(target_inr, 0),
-            "qty":        qty,
-            "price":      round(price, 2),
-            "order_value":round(qty * price, 0),
-            "order_type": "LIMIT",
-            "product":    "CNC",     # delivery, not intraday MIS
-            "validity":   "DAY",
-            "generated_at": datetime.now().isoformat(),
+            "symbol":         sym,
+            "exchange":       "NSE",
+            "direction":      "BUY",
+            "prob_up":        round(prob_up, 4),
+            "meta_prob":      round(float(row.get("meta_prob", 0.5)), 4),
+            "score":          round(float(row.get("_score", prob_up)), 4),
+            "kelly_frac":     round(kf, 4),
+            "target_pct":     round(target_pct * 100, 2),       # as %
+            "target_inr":     round(target_inr, 0),
+            "qty":            qty,
+            "price":          round(price, 2),
+            "order_value":    round(qty * price, 0),
+            "order_type":     "LIMIT",
+            "product":        "CNC",                             # delivery, not intraday MIS
+            "validity":       "DAY",
+            "hold_days":      TARGET_HOLD_DAYS,                  # v2 — consumed by exit runner
+            "planned_exit":   planned_exit,
+            "generated_at":   datetime.now().isoformat(),
         })
 
     # Sort by target_inr desc

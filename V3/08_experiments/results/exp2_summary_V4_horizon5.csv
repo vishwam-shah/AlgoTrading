@@ -1,0 +1,6 @@
+strategy,n_stocks,avg_trades,avg_precision,avg_sharpe,med_sharpe,avg_ret,avg_winrate,n_profitable,n_pos_sharpe
+primary_0.58_AND_meta_0.60,20,65.9,0.5041,-0.5786,0.1405,-0.0448,0.5041,11,11
+meta_label_thr0.60,20,94.4,0.5117,-1.1306,-0.8055,-0.1165,0.5117,4,4
+primary_only_0.58,20,187.95,0.5182,-1.2855,-1.0372,-0.2153,0.5182,4,3
+meta_label_thr0.55,20,155.65,0.5059,-1.3549,-0.6692,-0.1727,0.5059,3,3
+meta_label_thr0.65,20,52.8,0.4681,-1.9706,-1.6723,-0.1095,0.4681,5,5

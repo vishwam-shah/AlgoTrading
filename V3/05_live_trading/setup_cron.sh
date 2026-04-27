@@ -34,7 +34,9 @@ echo ""
 # Build cron entries
 # IST = UTC+5:30 → 18:00 IST = 12:30 UTC | 09:00 IST = 03:30 UTC | 15:45 IST = 10:15 UTC
 EVENING_JOB="30 12 * * 1-5 $PYTHON $RUNNER --mode evening --capital 500000 >> $LOG_DIR/evening.log 2>&1"
-MORNING_JOB="30 3  * * 1-5 $PYTHON $RUNNER --mode morning --capital 500000 --paper >> $LOG_DIR/morning.log 2>&1"
+# Morning job honours TRADING_MODE from .env (paper by default, live if TRADING_MODE=live).
+# No --paper flag hardcoded here so user can flip modes by editing .env.
+MORNING_JOB="30 3  * * 1-5 $PYTHON $RUNNER --mode morning --capital 500000 >> $LOG_DIR/morning.log 2>&1"
 RECONCILE_JOB="15 10 * * 1-5 $PYTHON $RUNNER --mode reconcile >> $LOG_DIR/reconcile.log 2>&1"
 
 # Remove old entries, add new ones

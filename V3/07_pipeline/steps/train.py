@@ -178,6 +178,7 @@ def train_window(
     window_save_path: Path,
     regimes: Optional["np.ndarray"] = None,
     save_dl_keras: bool = True,
+    next_ret: Optional["np.ndarray"] = None,     # NEW — used for meta-labeling
 ) -> Optional[Dict]:
     """
     Train 9-model ensemble on one expanding window.
@@ -344,6 +345,10 @@ def train_window(
         val_avg  = np.mean(list(val_probs_each.values()), axis=0)
 
     # ── Meta-learner stacking ─────────────────────────────────────────────────
+    # Elastic-net logistic regression: sparse (L1 drops noisy models) + stable (L2).
+    # C=2.0 (was 0.3) — previous over-regularization degenerated 49% of stocks to
+    # near-uniform averaging (max|coef|<0.05). Accept meta only if it beats base
+    # on val AND has non-trivial coefs (L1 norm > 0.1) — else keep simple average.
     meta_model = None
     if len(trained_models) >= 2:
         try:
@@ -355,14 +360,19 @@ def train_window(
             base_acc = _acc(y_val, (np.mean(meta_Xv, axis=1) >= 0.5).astype(int))
 
             if len(np.unique(y_val)) == 2:
-                meta_model = LogisticRegression(C=0.3, max_iter=300, random_state=RANDOM_SEED)
-                meta_model.fit(meta_Xv, y_val)
-                meta_acc  = _acc(y_val, meta_model.predict(meta_Xv))
-                meta_prob = meta_model.predict_proba(meta_Xt)[:, 1]
+                candidate = LogisticRegression(
+                    C=2.0, max_iter=500, random_state=RANDOM_SEED,
+                    penalty="elasticnet", l1_ratio=0.3, solver="saga",
+                )
+                candidate.fit(meta_Xv, y_val)
+                meta_acc  = _acc(y_val, candidate.predict(meta_Xv))
+                meta_prob = candidate.predict_proba(meta_Xt)[:, 1]
                 meta_pred = (meta_prob >= 0.5).astype(int)
-                if meta_acc > base_acc and len(np.unique(meta_pred)) > 1:
-                    avg_prob = meta_prob
-                    val_avg  = meta_model.predict_proba(meta_Xv)[:, 1]
+                coef_l1   = float(np.sum(np.abs(candidate.coef_[0])))
+                if meta_acc > base_acc and len(np.unique(meta_pred)) > 1 and coef_l1 > 0.1:
+                    meta_model = candidate
+                    avg_prob   = meta_prob
+                    val_avg    = candidate.predict_proba(meta_Xv)[:, 1]
         except Exception:
             pass
 
@@ -418,10 +428,82 @@ def train_window(
     try:
         temperature = temperature_scale(val_avg, y_val)
         avg_prob    = apply_temperature(avg_prob, temperature)
+        val_avg     = apply_temperature(val_avg, temperature)
         print(f"      [calib]  T={temperature:.3f}  "
               f"(prob spread: [{avg_prob.min():.3f}, {avg_prob.max():.3f}])")
     except Exception:
         pass
+
+    # ══════════════════════════════════════════════════════════════════════════
+    #  META-LABELING  (López de Prado 2018 — trade-selection secondary)
+    # ══════════════════════════════════════════════════════════════════════════
+    # Secondary (M2) learns "given primary says UP, will the next-day trade be
+    # profitable after round-trip cost". Features = PCA X + primary prob.
+    # Trained on rows where the tree-ensemble primary said UP.
+    secondary_model = None
+    meta_prob_test  = np.full(len(y_test), 0.5, dtype=float)
+    meta_info       = {"trained": False, "n_train_pos": 0, "val_auc": 0.0}
+
+    if next_ret is not None:
+        try:
+            # Build per-split tree-ensemble primary prob (DL excluded — uses sequences,
+            # different sample indexing; tree branch is enough for a meta-filter).
+            _tree_names = [n for n in ("LightGBM", "XGBoost", "CatBoost") if n in trained_models]
+            if _tree_names:
+                from sklearn.metrics import log_loss as _ll
+                _wts = {n: 1.0 / max(_ll(y_val, val_probs_each[n]), 1e-6) for n in _tree_names}
+                _tw  = sum(_wts.values())
+                p_tr_primary = sum((_wts[n] / _tw) * trained_models[n].predict_proba(X_train) for n in _tree_names)
+                p_va_primary = sum((_wts[n] / _tw) * val_probs_each[n] for n in _tree_names)
+                # p_te_primary already in avg_prob (calibrated, includes DL) — use as test-time meta feature
+                # For train/val we use tree-only to keep sample indexing simple; M2 is a filter, not the predictor.
+
+                nr_tr = next_ret[ws:we]; nr_va = next_ret[vs:ve]
+                # Meta label: trade profitable after cost
+                ROUND_TRIP = 0.0025
+                y2_tr = (nr_tr > ROUND_TRIP).astype(int)
+                y2_va = (nr_va > ROUND_TRIP).astype(int)
+
+                # Only train on rows where primary says UP (>= 0.5)
+                up_tr = (p_tr_primary >= 0.5)
+                up_va = (p_va_primary >= 0.5)
+
+                if up_tr.sum() >= 100 and up_va.sum() >= 30 \
+                        and len(np.unique(y2_tr[up_tr])) >= 2 and len(np.unique(y2_va[up_va])) >= 2:
+                    X2_tr = np.column_stack([X_train[up_tr], p_tr_primary[up_tr]])
+                    X2_va = np.column_stack([X_val[up_va],   p_va_primary[up_va]])
+                    # For test we feed the ensemble avg_prob (already calibrated, trained on all)
+                    X2_te = np.column_stack([X_test, avg_prob])
+
+                    from lightgbm import LGBMClassifier, early_stopping as _lgb_es, log_evaluation as _lgb_log
+                    import contextlib, io as _io
+                    m2 = LGBMClassifier(
+                        n_estimators=400, max_depth=5, learning_rate=0.03,
+                        num_leaves=31, subsample=0.8, colsample_bytree=0.8,
+                        reg_alpha=0.3, reg_lambda=1.5, min_child_samples=20,
+                        is_unbalance=True, random_state=RANDOM_SEED,
+                        n_jobs=_N_JOBS, verbosity=-1,
+                    )
+                    with contextlib.redirect_stdout(_io.StringIO()), contextlib.redirect_stderr(_io.StringIO()):
+                        m2.fit(X2_tr, y2_tr[up_tr], eval_set=[(X2_va, y2_va[up_va])],
+                               callbacks=[_lgb_es(50, verbose=False), _lgb_log(period=-1)])
+                    meta_prob_test = m2.predict_proba(X2_te)[:, 1]
+
+                    # Val AUC for diagnostics
+                    from sklearn.metrics import roc_auc_score as _auc
+                    try:
+                        p2_va = m2.predict_proba(X2_va)[:, 1]
+                        val_auc = float(_auc(y2_va[up_va], p2_va))
+                    except Exception:
+                        val_auc = 0.0
+
+                    secondary_model = m2
+                    meta_info = {"trained": True, "n_train_pos": int(up_tr.sum()), "val_auc": round(val_auc, 3)}
+                    print(f"      [meta]   trained on {up_tr.sum()} primary-UP rows  val_AUC={val_auc:.3f}")
+                else:
+                    print(f"      [meta]   skipped (primary-UP rows: tr={up_tr.sum()}, va={up_va.sum()})")
+        except Exception as _me:
+            print(f"      [meta]   error: {_me}")
 
     ens_pred = (avg_prob > 0.5).astype(int)
 
@@ -470,9 +552,12 @@ def train_window(
     with open(win_path / "winsor_bounds.pkl", "wb") as f: pickle.dump((p01, p99), f)
     if meta_model is not None:
         with open(win_path / "meta_model.pkl", "wb") as f: pickle.dump(meta_model, f)
+    # NEW — trade-selection secondary (López de Prado meta-labeling)
+    if secondary_model is not None:
+        with open(win_path / "secondary.pkl", "wb") as f: pickle.dump(secondary_model, f)
 
     with open(win_path / "calibration.json", "w") as f:
-        json.dump({"temperature": temperature}, f)
+        json.dump({"temperature": temperature, "meta_info": meta_info}, f)
 
     _meta_col_order = list(trained_models.keys())
     with open(win_path / "dl_meta.json", "w") as f:
@@ -510,6 +595,7 @@ def train_window(
     return {
         "window": window, "models": trained_models,
         "meta_model": meta_model, "regime_lgb_models": regime_lgb_models,
+        "secondary_model": secondary_model,                    # NEW — meta-labeling M2
         "scaler": scaler, "pca": pca, "winsor_bounds": (p01, p99),
         "temperature": temperature,
         "win_path": win_path,
@@ -520,6 +606,8 @@ def train_window(
             "meta_columns": _meta_col_order,
         },
         "y_test": y_test, "ens_pred": ens_pred, "avg_prob": avg_prob,
+        "meta_prob": meta_prob_test,                            # NEW — per-test meta filter prob
+        "meta_info": meta_info,                                 # NEW — diagnostics
         "accuracy": acc, "f1": f1, "precision": prec, "recall": rec, "auc": auc,
         "per_model": per_model, "test_preds": test_preds,
         "tn": tn, "fp": fp, "fn": fn, "tp": tp,

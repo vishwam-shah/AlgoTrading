@@ -16,11 +16,13 @@ import SignalsTable from '@/components/SignalsTable';
 import AccuracyHeatmap from '@/components/AccuracyHeatmap';
 import StockSearch from '@/components/StockSearch';
 import PortfolioPanel from '@/components/PortfolioPanel';
+import ExecutionPanel from '@/components/ExecutionPanel';
 import OrdersPanel from '@/components/OrdersPanel';
 import OOSMetricsPanel from '@/components/OOSMetricsPanel';
 import BacktestPanel from '@/components/BacktestPanel';
 import PaperTradingPanel from '@/components/PaperTradingPanel';
 import ResearchChecklist from '@/components/ResearchChecklist';
+import SentimentPanel from '@/components/SentimentPanel';
 import RunContextBanner from '@/components/RunContextBanner';
 import WalletWidget from '@/components/WalletWidget';
 import PipelineControl from '@/components/PipelineControl';
@@ -556,11 +558,14 @@ export default function TradingDashboard() {
 
         {/* TRADE / PORTFOLIO */}
         {viewMode === 'trade' && tradeTab === 'portfolio' && (
-          <PortfolioPanel
-            holdings={holdings} funds={funds} prices={prices}
-            angelConnected={angelStatus?.credentials_present ?? false}
-            onRefresh={refresh}
-          />
+          <div className="space-y-5">
+            <ExecutionPanel livePrices={prices} />
+            <PortfolioPanel
+              holdings={holdings} funds={funds} prices={prices}
+              angelConnected={angelStatus?.credentials_present ?? false}
+              onRefresh={refresh}
+            />
+          </div>
         )}
 
         {/* TRADE / CHART */}
@@ -636,6 +641,7 @@ export default function TradingDashboard() {
             {selectedRunId && <RunContextBanner runId={selectedRunId} onClear={() => selectRun(null)} />}
             <OOSMetricsPanel summary={summary} capital={config.capital} />
             <BacktestPanel runId={dashboard?.run_id} onLoaded={setSharedBacktest} />
+            <SentimentPanel />
             <PaperTradingPanel onLoaded={setSharedPaperSession} />
             <ResearchChecklist
               stocks={summaryStocks}

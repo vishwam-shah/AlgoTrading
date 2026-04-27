@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime
@@ -43,6 +44,28 @@ from typing import Optional
 
 _LIVE_DIR = Path(__file__).resolve().parent
 _V3_ROOT  = _LIVE_DIR.parent
+
+# Load .env so TRADING_MODE / ANGEL_* are available when cron invokes this script.
+_ENV_PATH = _V3_ROOT.parent / ".env"
+if _ENV_PATH.exists():
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(_ENV_PATH)
+    except Exception:
+        pass
+
+
+def _resolve_paper_mode(cli_paper: bool) -> bool:
+    """
+    Precedence: CLI --paper flag (if set True) > TRADING_MODE env var > default paper.
+
+    TRADING_MODE=live  → real orders on Angel One
+    TRADING_MODE=paper → simulated fills only (DEFAULT for safety)
+    """
+    if cli_paper:
+        return True
+    mode = os.getenv("TRADING_MODE", "paper").strip().lower()
+    return mode != "live"
 _PIPELINE_DIR = _V3_ROOT / "07_pipeline"
 _NEWS_DIR     = _V3_ROOT / "01_data" / "news"
 _ORDERS_DIR   = _LIVE_DIR / "orders"
@@ -123,8 +146,21 @@ def run_evening(capital: float = 500_000) -> None:
 def run_morning(capital: float = 500_000, paper: bool = False) -> None:
     """
     T Morning sequence (run at 9:00 AM IST, 15 min before market open).
+
+    Step 0 (NEW): close any positions whose 10-trading-day hold has elapsed.
+    Step 1+    : place today's BUY orders.
     """
     _log(f"=== MORNING RUN STARTED | {'PAPER MODE' if paper else 'LIVE MODE'} ===")
+
+    # ── Step 0: time-based exits ──────────────────────────────────────────────
+    # Backtest holds positions exactly 10 trading days; live must do the same.
+    # Run exit_runner first so the SELLs go in before we add new BUYs.
+    _log("Step 0/3 — Running exit_runner …")
+    rc = _run([
+        _PYTHON, str(_LIVE_DIR / "exit_runner.py"), "--execute",
+    ], "exit_runner.py --execute")
+    if rc != 0:
+        _log("WARNING: exit_runner returned non-zero — continuing")
 
     # Load today's approved orders
     order_files = sorted(_ORDERS_DIR.glob("orders_*.json"), reverse=True)
@@ -283,6 +319,12 @@ def run_reconcile() -> None:
     _log(f"  Funds: available=₹{funds.get('available', 0):,.0f}  "
          f"net=₹{funds.get('net', 0):,.0f}")
     client.stop_websocket()
+
+    # Paper-trading P&L reconciliation: live-paper round-trips vs backtest predictions.
+    # Always-on (paper or live) — runs on the local execution_log.parquet.
+    _log("Running paper P&L reconciler …")
+    _run([_PYTHON, str(_LIVE_DIR / "paper_pnl_reconciler.py")], "paper_pnl_reconciler.py")
+
     _log("=== RECONCILE COMPLETE ===")
 
 
@@ -304,6 +346,9 @@ if __name__ == "__main__":
     if args.mode == "evening":
         run_evening(capital=args.capital)
     elif args.mode == "morning":
-        run_morning(capital=args.capital, paper=args.paper)
+        paper = _resolve_paper_mode(args.paper)
+        _log(f"Trading mode resolved → {'PAPER' if paper else 'LIVE'} "
+             f"(TRADING_MODE={os.getenv('TRADING_MODE', 'paper')})")
+        run_morning(capital=args.capital, paper=paper)
     elif args.mode == "reconcile":
         run_reconcile()

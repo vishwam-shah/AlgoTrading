@@ -497,3 +497,94 @@ def get_client() -> AngelOneClient:
         _client = AngelOneClient()
         _client.login()
     return _client
+
+
+# ── CLI credential test ───────────────────────────────────────────────────────
+
+def _cli_test() -> int:
+    """
+    Non-destructive credentials check:
+      login → funds → holdings → order_book → logout.
+    Places NO orders. Returns 0 on success, 1 on failure.
+    """
+    print("═" * 60)
+    print("  Angel One SmartAPI — Credentials Test (no orders)")
+    print("═" * 60)
+
+    # 1. Environment check
+    missing = [k for k in ("ANGEL_API_KEY", "ANGEL_CLIENT_ID",
+                            "ANGEL_PASSWORD", "ANGEL_TOTP_SECRET")
+               if not os.getenv(k)]
+    if missing:
+        print(f"  ✗ Missing env vars: {', '.join(missing)}")
+        print(f"    Check {_ENV_PATH}")
+        return 1
+    print("  ✓ All 4 credentials present in .env")
+
+    # 2. SDK check
+    if not _SDK_AVAILABLE:
+        print("  ✗ smartapi-python not installed  →  pip install smartapi-python")
+        return 1
+    print("  ✓ smartapi-python SDK importable")
+
+    # 3. Login
+    try:
+        client = AngelOneClient()
+    except EnvironmentError as e:
+        print(f"  ✗ Init failed: {e}")
+        return 1
+
+    print("\n  Attempting TOTP login …")
+    if not client.login():
+        print("  ✗ Login failed — check client_id/password/TOTP_secret")
+        return 1
+    print("  ✓ Login succeeded")
+
+    # 4. Funds
+    funds = client.get_funds()
+    if funds:
+        print(f"\n  Funds")
+        print(f"    Available cash : ₹{funds.get('available', 0):>14,.2f}")
+        print(f"    Net            : ₹{funds.get('net', 0):>14,.2f}")
+        print(f"    Used margin    : ₹{funds.get('used_margin', 0):>14,.2f}")
+    else:
+        print("  ⚠ get_funds returned empty")
+
+    # 5. Holdings
+    holdings = client.get_holdings()
+    print(f"\n  Holdings: {len(holdings)} positions")
+    for sym, pos in list(holdings.items())[:10]:
+        print(f"    {sym:<12} qty={pos.qty:>5}  avg=₹{pos.avg_price:>9,.2f}  "
+              f"ltp=₹{pos.ltp:>9,.2f}  pnl=₹{pos.pnl:>+10,.2f}")
+    if len(holdings) > 10:
+        print(f"    … and {len(holdings) - 10} more")
+
+    # 6. Order book
+    orders = client.get_order_book()
+    print(f"\n  Order book today: {len(orders)} entries")
+
+    # 7. LTP roundtrip
+    probe = "SBIN"
+    ltp = client.get_ltp(probe)
+    if ltp:
+        print(f"\n  LTP check: {probe} = ₹{ltp:.2f}")
+    else:
+        print(f"\n  ⚠ LTP fetch failed for {probe}")
+
+    client.stop_websocket()
+    print("\n  ✓ Credentials test PASSED")
+    print("═" * 60)
+    return 0
+
+
+if __name__ == "__main__":
+    import argparse as _argparse
+    _p = _argparse.ArgumentParser(description="Angel One SmartAPI client")
+    _p.add_argument("--test", action="store_true",
+                    help="Non-destructive credentials check (no orders)")
+    _args = _p.parse_args()
+
+    if _args.test:
+        sys.exit(_cli_test())
+    else:
+        _p.print_help()

@@ -166,6 +166,7 @@ class OrderManager:
             sym      = o["symbol"]
             qty      = o["qty"]
             exp_px   = o["price"]
+            side     = str(o.get("direction", "BUY")).upper()
 
             # Check live price for slippage guard (live mode only)
             if not self.paper_mode and self.client:
@@ -178,7 +179,7 @@ class OrderManager:
                         continue
                     exp_px = ltp  # use current LTP as limit price
 
-            rec = self.place_order(sym, qty, exp_px)
+            rec = self.place_order(sym, qty, exp_px, side=side)
             results.append(rec)
             time.sleep(0.06)   # ~16 orders/s, safely under rate limit
 

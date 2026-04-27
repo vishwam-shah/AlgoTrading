@@ -541,20 +541,40 @@ def main() -> None:
         from steps.backtest import run_trade_backtest  # type: ignore
         run_trade_backtest(result_run_path, min_confidence=CONFIDENCE_THRESHOLD)
 
-        # Update next_day_predictions.csv tradeable flag from sharpe-based results
+        # Update next_day_predictions.csv tradeable + cross_sectional_top15 flags
         bt_path   = result_run_path / "backtest_results.csv"
         pred_path = result_run_path / "next_day_predictions.csv"
         if bt_path.exists() and pred_path.exists():
-            bt_df   = pd.read_csv(bt_path)[["symbol", "tradeable", "sharpe"]]
-            bt_map  = dict(zip(bt_df["symbol"], bt_df["tradeable"]))
+            bt_df   = pd.read_csv(bt_path)
             pred_df = pd.read_csv(pred_path)
-            pred_df["tradeable"] = pred_df["symbol"].map(bt_map).fillna(False)
+            t_map   = dict(zip(bt_df["symbol"], bt_df["tradeable"]))
+            pred_df["tradeable"] = pred_df["symbol"].map(t_map).fillna(False)
+            if "cross_sectional_top15" in bt_df.columns:
+                c_map = dict(zip(bt_df["symbol"], bt_df["cross_sectional_top15"]))
+                pred_df["cross_sectional_top15"] = pred_df["symbol"].map(c_map).fillna(False)
+            if "sharpe_rank" in bt_df.columns:
+                r_map = dict(zip(bt_df["symbol"], bt_df["sharpe_rank"]))
+                pred_df["sharpe_rank"] = pred_df["symbol"].map(r_map)
             pred_df.to_csv(pred_path, index=False)
-            n_tradeable = pred_df["tradeable"].sum()
-            print(f"  ✓ Updated tradeable flag: {n_tradeable} profitable stocks (sharpe>0 + OOS>50%)")
+            n_tradeable = int(pred_df["tradeable"].sum())
+            n_cs = int(pred_df.get("cross_sectional_top15", pd.Series(dtype=bool)).sum())
+            print(f"  ✓ Updated flags: {n_tradeable} strictly tradeable, "
+                  f"{n_cs} in cross-sectional top15")
     except Exception as bt_exc:
         print(f"  ⚠ Backtest error: {bt_exc}")
         import traceback; traceback.print_exc()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    #  STEP 7 — DIAGNOSTICS  (regime replay + Diebold-Mariano)
+    # ══════════════════════════════════════════════════════════════════════════
+    print(f"\n{'='*70}")
+    print("  STEP 7 — DIAGNOSTICS (regime replay + DM tests)")
+    print(f"{'='*70}")
+    try:
+        from steps.diagnostics import run_diagnostics  # type: ignore
+        run_diagnostics(result_run_path)
+    except Exception as diag_exc:
+        print(f"  ⚠ Diagnostics error: {diag_exc}")
 
     # Run-level journal plots
     try:

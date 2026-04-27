@@ -1677,12 +1677,37 @@ async def list_v3_runs():
 
 @app.get("/api/v3/runs/{run_id}/summary")
 async def get_v3_run_summary(run_id: str):
-    """Per-stock OOS accuracy + backtest metrics merged into one response."""
+    """Per-stock OOS accuracy + per-model accuracy + backtest metrics merged."""
     path = _RUNS_DIR / run_id / "summary.csv"
     if not path.exists():
         raise HTTPException(404, detail=f"Run {run_id} not found or still in progress")
     df = pd.read_csv(path)
-    # Merge backtest metrics (sharpe, binary_dir_acc, tradeable, etc.) if available
+
+    # Merge per-model accuracy from each stock's summary_row.json
+    _MODEL_COLS = [
+        "avg_lgbm_acc", "avg_xgb_acc",
+        "avg_lstm_acc", "avg_bilstm_acc", "avg_gru_acc",
+        "avg_cnn_lstm_acc", "avg_cnn_gru_acc",
+        "avg_tcn_gru_acc", "avg_tcn_transformer_acc", "avg_nbeats_acc",
+        "best_model", "best_model_acc",
+    ]
+    model_rows = []
+    run_dir = _RUNS_DIR / run_id
+    for sym_dir in run_dir.iterdir():
+        json_path = sym_dir / "summary_row.json"
+        if not json_path.exists():
+            continue
+        try:
+            with open(json_path) as _f:
+                row = json.load(_f)
+            model_rows.append({k: row.get(k) for k in ["symbol"] + _MODEL_COLS})
+        except Exception:
+            pass
+    if model_rows:
+        model_df = pd.DataFrame(model_rows)
+        df = df.merge(model_df, on="symbol", how="left")
+
+    # Merge backtest metrics (sharpe, binary_dir_acc, tradeable, etc.)
     bt_path = _RUNS_DIR / run_id / "backtest_results.csv"
     if bt_path.exists():
         bt_df   = pd.read_csv(bt_path)
@@ -1691,6 +1716,7 @@ async def get_v3_run_summary(run_id: str):
                    "max_drawdown", "up_signal_acc", "ann_return"]
         bt_df = bt_df[[c for c in bt_want if c in bt_df.columns]]
         df = df.merge(bt_df, on="symbol", how="left")
+
     return sanitize_dict({
         "run_id": run_id,
         "stocks": df.to_dict(orient="records"),
@@ -2065,6 +2091,92 @@ async def get_v3_sentiment(symbol: str):
     })
 
 
+@app.get("/api/v3/sentiment/overview")
+async def get_v3_sentiment_overview():
+    """
+    Aggregate FinBERT sentiment across all 100 symbols for dashboard display.
+    Returns: latest date, top bullish/bearish, per-stock sentiment, coverage health,
+             and sentiment-tagged tradeable stocks from the latest run.
+    """
+    sent_path = _V3_ROOT / "01_data" / "news" / "sentiment_history.parquet"
+    if not sent_path.exists():
+        raise HTTPException(404, detail="No sentiment history found.")
+    try:
+        df = pd.read_parquet(sent_path)
+    except Exception as e:
+        raise HTTPException(500, detail=f"Sentiment file corrupted: {e}")
+
+    df["date"] = pd.to_datetime(df["date"])
+    latest_date = df["date"].max()
+    latest = df[df["date"] == latest_date].copy()
+
+    n_zero = int((latest["n_articles"] == 0).sum())
+    n_total = int(len(latest))
+
+    top_bull = latest.nlargest(5, "raw_score")[
+        ["symbol", "raw_score", "n_articles", "positive_ratio", "negative_ratio"]
+    ].to_dict(orient="records")
+    top_bear = latest.nsmallest(5, "raw_score")[
+        ["symbol", "raw_score", "n_articles", "positive_ratio", "negative_ratio"]
+    ].to_dict(orient="records")
+
+    avg_score  = float(latest["raw_score"].mean()) if len(latest) else 0.0
+    avg_articles = float(latest["n_articles"].mean()) if len(latest) else 0.0
+    model_used = str(latest["model_used"].mode()[0]) if "model_used" in latest.columns and len(latest) else "unknown"
+
+    # Merge with latest run's tradeable universe
+    runs = sorted([d for d in _RUNS_DIR.iterdir() if d.is_dir()])
+    tradeable_rows = []
+    if runs:
+        latest_run = runs[-1]
+        pred_path = latest_run / "next_day_predictions.csv"
+        if pred_path.exists():
+            try:
+                pdf = pd.read_csv(pred_path)
+                if "tradeable" in pdf.columns:
+                    pdf = pdf[pdf["tradeable"] == True]
+                merged = pdf.merge(
+                    latest[["symbol", "raw_score", "n_articles", "positive_ratio", "negative_ratio"]],
+                    on="symbol", how="left"
+                )
+                for _, r in merged.iterrows():
+                    score = r.get("raw_score")
+                    if pd.isna(score):
+                        score = 0.0
+                    # sentiment_prob mirrors predict.py:649
+                    import numpy as _np
+                    sent_prob = 0.5 + float(_np.clip(score, -1, 1)) * 0.25
+                    tradeable_rows.append({
+                        "symbol": str(r["symbol"]),
+                        "direction": str(r.get("direction", "—")),
+                        "confidence": float(r.get("confidence", 0)) if not pd.isna(r.get("confidence", 0)) else 0.0,
+                        "sentiment_score": float(score),
+                        "sentiment_prob": round(sent_prob, 4),
+                        "n_articles": int(r["n_articles"]) if not pd.isna(r.get("n_articles")) else 0,
+                        "positive_ratio": float(r["positive_ratio"]) if not pd.isna(r.get("positive_ratio")) else 0.0,
+                        "negative_ratio": float(r["negative_ratio"]) if not pd.isna(r.get("negative_ratio")) else 0.0,
+                    })
+            except Exception:
+                pass
+
+    all_scores = latest[["symbol", "raw_score", "n_articles", "positive_ratio", "negative_ratio"]] \
+        .sort_values("raw_score", ascending=False).to_dict(orient="records")
+
+    return sanitize_dict({
+        "latest_date": str(latest_date.date()),
+        "n_symbols": n_total,
+        "n_zero_coverage": n_zero,
+        "avg_score": round(avg_score, 4),
+        "avg_articles": round(avg_articles, 1),
+        "model_used": model_used,
+        "top_bullish": top_bull,
+        "top_bearish": top_bear,
+        "tradeable": tradeable_rows,
+        "all_scores": all_scores,
+        "blend_weight": 0.15,  # from predict.py:650 — 80% ensemble + 15% sentiment
+    })
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  ANGEL ONE LIVE TRADING ENDPOINTS
 #  Thin wrappers over angel_one_client + order_manager + daily_runner.
@@ -2078,8 +2190,15 @@ sys.path.insert(0, str(_LIVE_DIR))
 
 
 _angel_session_lock  = threading.Lock()
-_angel_session_cache: dict = {"client": None, "expires_at": 0.0}
-_ANGEL_SESSION_TTL = 270  # 4.5 minutes — well under Angel One's token expiry
+# "fail_until" blocks re-login attempts after a failure; Angel One's TOTP
+# code is valid for 30 s and cannot be reused — so on any failure we back
+# off for 45 s to let both the rate-limit window and TOTP window reset.
+_angel_session_cache: dict = {
+    "client": None, "expires_at": 0.0,
+    "fail_reason": None, "fail_until": 0.0,
+}
+_ANGEL_SESSION_TTL     = 270  # 4.5 min — well under Angel One's token expiry
+_ANGEL_FAIL_BACKOFF_S  = 45   # must exceed TOTP window (30 s)
 
 
 def _angel_client():
@@ -2089,39 +2208,50 @@ def _angel_client():
     # Fast path — no lock needed when cache is warm
     if _angel_session_cache["client"] is not None and now < _angel_session_cache["expires_at"]:
         return _angel_session_cache["client"]
+    # Failure backoff — don't hammer Angel One after a failed login
+    if _angel_session_cache["fail_reason"] and now < _angel_session_cache["fail_until"]:
+        raise HTTPException(503, detail=f"Angel One unavailable: {_angel_session_cache['fail_reason']} (retrying in {int(_angel_session_cache['fail_until'] - now)}s)")
 
     with _angel_session_lock:
         # Re-check inside lock to prevent double login under concurrent requests
         now = _t.time()
         if _angel_session_cache["client"] is not None and now < _angel_session_cache["expires_at"]:
             return _angel_session_cache["client"]
+        if _angel_session_cache["fail_reason"] and now < _angel_session_cache["fail_until"]:
+            raise HTTPException(503, detail=f"Angel One unavailable: {_angel_session_cache['fail_reason']}")
         try:
             from angel_one_client import AngelOneClient  # type: ignore
             c = AngelOneClient()
             if not c.login():
                 raise RuntimeError("Login failed")
-            _angel_session_cache["client"]     = c
-            _angel_session_cache["expires_at"] = now + _ANGEL_SESSION_TTL
+            _angel_session_cache["client"]      = c
+            _angel_session_cache["expires_at"]  = now + _ANGEL_SESSION_TTL
+            _angel_session_cache["fail_reason"] = None
+            _angel_session_cache["fail_until"]  = 0.0
             return c
         except EnvironmentError as e:
-            _angel_session_cache["client"] = None
+            _angel_session_cache["client"]      = None
+            _angel_session_cache["fail_reason"] = f"credentials missing: {e}"
+            _angel_session_cache["fail_until"]  = now + _ANGEL_FAIL_BACKOFF_S
             raise HTTPException(503, detail=f"Angel One credentials missing: {e}")
         except Exception as e:
-            _angel_session_cache["client"] = None
+            _angel_session_cache["client"]      = None
+            _angel_session_cache["fail_reason"] = str(e)
+            _angel_session_cache["fail_until"]  = now + _ANGEL_FAIL_BACKOFF_S
             raise HTTPException(503, detail=f"Angel One unavailable: {e}")
 
 
 # ── Account & Portfolio ──────────────────────────────────────────────────────
 
-# Cache angel status — only re-test every 5 minutes to avoid login spam
-_angel_status_cache: dict = {"result": None, "checked_at": 0.0}
-_ANGEL_CACHE_TTL = 300  # 5 minutes
-
 
 @app.get("/api/v3/angel/status")
 async def angel_status():
-    """Check Angel One connectivity. Result cached for 5 min to avoid login spam."""
-    import os, time, logging
+    """
+    Check Angel One connectivity. Shares the main _angel_client() cache so
+    that a single login serves both the status badge and data endpoints —
+    avoids triple-login on dashboard load (status + funds + holdings).
+    """
+    import os, logging
     from dotenv import load_dotenv
 
     # Silence SmartAPI's internal loggers
@@ -2139,38 +2269,18 @@ async def angel_status():
         return {"credentials_present": False, "login_ok": False,
                 "message": "Missing credentials in .env", "env_path": str(env_path)}
 
-    # Return cached result if still fresh
-    now = time.time()
-    cached = _angel_status_cache
-    if cached["result"] and (now - cached["checked_at"]) < _ANGEL_CACHE_TTL:
-        return cached["result"]
-
-    # Try actual login
+    sys.path.insert(0, str(_LIVE_DIR))
     try:
-        sys.path.insert(0, str(_LIVE_DIR))
-
-        # Suppress SmartAPI stdout/stderr during init
-        import io, contextlib
-        buf = io.StringIO()
-        with contextlib.redirect_stderr(buf), contextlib.redirect_stdout(buf):
-            from angel_one_client import AngelOneClient  # type: ignore
-            c = AngelOneClient()
-            login_ok = c.login()
-
-        result = {
-            "credentials_present": True,
-            "login_ok": login_ok,
-            "message": "Connected" if login_ok else "Login failed — check TOTP secret",
-            "env_path": str(env_path),
-        }
+        _angel_client()                      # populates or reuses shared cache
+        return {"credentials_present": True, "login_ok": True,
+                "message": "Connected", "env_path": str(env_path)}
+    except HTTPException as e:
+        # Surface the same rate-limit / backoff message back to UI
+        return {"credentials_present": True, "login_ok": False,
+                "message": str(e.detail), "env_path": str(env_path)}
     except Exception as e:
-        result = {"credentials_present": True, "login_ok": False,
-                  "message": str(e), "env_path": str(env_path)}
-
-    # Cache result
-    _angel_status_cache["result"] = result
-    _angel_status_cache["checked_at"] = now
-    return result
+        return {"credentials_present": True, "login_ok": False,
+                "message": str(e), "env_path": str(env_path)}
 
 
 @app.get("/api/v3/angel/funds")
@@ -2354,6 +2464,196 @@ async def get_trade_history(limit: int = 200):
         return sanitize_dict({"trades": trades[:limit], "count": len(trades), "file": files[0].name})
     except Exception:
         return {"trades": [], "count": 0}
+
+
+@app.get("/api/v3/execution/overview")
+async def get_execution_overview(scope: str = "latest"):
+    """
+    Execution overview for the dashboard's paper/live panel.
+
+    Query:
+      scope = "latest"  → positions reflect only the most recent session (default)
+      scope = "all"     → positions aggregated across every saved session
+
+    Returns:
+      mode           : "paper" | "live"   (from TRADING_MODE env)
+      scope          : what `positions` represents ("latest" | "all")
+      latest_session : summary + fills of most recent file
+      positions      : open positions under the chosen scope
+      totals         : all-time fills, deployed, charges (for context)
+    """
+    _EXEC_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    mode = os.getenv("TRADING_MODE", "paper").strip().lower()
+    if mode not in ("paper", "live"):
+        mode = "paper"
+
+    files = sorted(_EXEC_LOG_DIR.glob("execution_*.json"), reverse=True)
+    if not files:
+        return {
+            "mode": mode,
+            "scope": scope,
+            "latest_session": None,
+            "positions": [],
+            "totals": {"fills": 0, "deployed": 0.0, "charges": 0.0, "sessions": 0},
+        }
+
+    # Totals are always all-time (even if positions are scoped to latest)
+    pos: dict = {}
+    total_fills     = 0
+    total_deployed  = 0.0
+    total_charges   = 0.0
+    sessions_seen   = 0
+
+    # For scope=latest, only aggregate the first file; for scope=all, every file.
+    files_for_positions = [files[0]] if scope == "latest" else files
+
+    for fp in files:
+        try:
+            with open(fp) as fh:
+                rows = json.load(fh)
+        except Exception:
+            continue
+        sessions_seen += 1
+        build_positions = fp in files_for_positions
+        for r in rows:
+            if r.get("status") != "FILLED":
+                continue
+            sym   = r.get("symbol") or ""
+            side  = (r.get("side") or "BUY").upper()
+            qty   = int(r.get("filled_qty") or 0)
+            price = float(r.get("avg_price") or 0.0)
+            value = float(r.get("order_value") or qty * price)
+            chg   = (float(r.get("brokerage") or 0.0)
+                     + float(r.get("stt") or 0.0)
+                     + float(r.get("other_charges") or 0.0))
+            is_paper = str(r.get("order_id", "")).startswith("PAPER_")
+
+            total_fills    += 1
+            total_deployed += value
+            total_charges  += chg
+
+            if not build_positions:
+                continue
+
+            entry = pos.setdefault(sym, {
+                "symbol":         sym,
+                "buy_qty":        0,
+                "sell_qty":       0,
+                "buy_cost":       0.0,   # sum(qty * price) on buys
+                "sell_proceeds":  0.0,
+                "last_price":     0.0,
+                "last_trade_at":  "",
+                "is_paper":       is_paper,
+                "n_trades":       0,
+            })
+            entry["n_trades"]     += 1
+            entry["last_price"]    = price
+            t = r.get("filled_at") or r.get("placed_at") or ""
+            if t > entry["last_trade_at"]:
+                entry["last_trade_at"] = t
+            if side == "BUY":
+                entry["buy_qty"]   += qty
+                entry["buy_cost"]  += qty * price
+            elif side == "SELL":
+                entry["sell_qty"]      += qty
+                entry["sell_proceeds"] += qty * price
+            entry["is_paper"] = entry["is_paper"] or is_paper
+
+    # Build positions list — only keep symbols with open net_qty > 0
+    positions = []
+    for p in pos.values():
+        net_qty = p["buy_qty"] - p["sell_qty"]
+        if net_qty <= 0:
+            continue
+        avg_buy_price = p["buy_cost"] / p["buy_qty"] if p["buy_qty"] > 0 else 0.0
+        positions.append({
+            "symbol":        p["symbol"],
+            "net_qty":       net_qty,
+            "avg_price":     round(avg_buy_price, 2),
+            "invested":      round(net_qty * avg_buy_price, 0),
+            "last_price":    round(p["last_price"], 2),
+            "last_trade_at": p["last_trade_at"],
+            "is_paper":      p["is_paper"],
+            "n_trades":      p["n_trades"],
+        })
+    positions.sort(key=lambda x: x["invested"], reverse=True)
+
+    # ── Latest session detail ─────────────────────────────────────────────
+    latest = None
+    try:
+        with open(files[0]) as fh:
+            latest_rows = json.load(fh)
+        filled_rows = [r for r in latest_rows if r.get("status") == "FILLED"]
+        sess_value   = sum(float(r.get("order_value", 0))   for r in filled_rows)
+        sess_charges = sum(float(r.get("brokerage", 0))
+                           + float(r.get("stt", 0))
+                           + float(r.get("other_charges", 0)) for r in filled_rows)
+        is_paper_sess = any(str(r.get("order_id", "")).startswith("PAPER_")
+                            for r in latest_rows)
+        latest = {
+            "file":          files[0].name,
+            "timestamp":     files[0].name.replace("execution_", "").replace(".json", ""),
+            "mode":          "paper" if is_paper_sess else "live",
+            "n_fills":       len(filled_rows),
+            "n_total":       len(latest_rows),
+            "total_value":   round(sess_value, 0),
+            "total_charges": round(sess_charges, 2),
+            "fills":         latest_rows,
+        }
+    except Exception:
+        latest = None
+
+    return sanitize_dict({
+        "mode":           mode,
+        "scope":          scope,
+        "latest_session": latest,
+        "positions":      positions,
+        "totals": {
+            "fills":    total_fills,
+            "deployed": round(total_deployed, 0),
+            "charges":  round(total_charges, 2),
+            "sessions": sessions_seen,
+        },
+    })
+
+
+@app.post("/api/v3/execution/reset")
+async def reset_execution_logs(keep_latest: bool = False):
+    """
+    Archive all execution logs so the paper portfolio resets to zero.
+    Files are moved to execution_logs/archive/<timestamp>/ rather than deleted,
+    so nothing is lost — you can recover by moving them back.
+
+    Query:
+      keep_latest=true → keep the most recent session, archive the rest.
+    """
+    import shutil
+    _EXEC_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    files = sorted(_EXEC_LOG_DIR.glob("execution_*.json"), reverse=True)
+    if not files:
+        return {"archived": 0, "kept": 0, "archive_dir": None}
+
+    to_archive = files[1:] if keep_latest else files
+    if not to_archive:
+        return {"archived": 0, "kept": len(files), "archive_dir": None}
+
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    archive_dir = _EXEC_LOG_DIR / "archive" / stamp
+    archive_dir.mkdir(parents=True, exist_ok=True)
+
+    moved = 0
+    for fp in to_archive:
+        try:
+            shutil.move(str(fp), str(archive_dir / fp.name))
+            moved += 1
+        except Exception:
+            pass
+
+    return {
+        "archived":    moved,
+        "kept":        1 if keep_latest else 0,
+        "archive_dir": str(archive_dir),
+    }
 
 
 # ── Dashboard summary endpoint ────────────────────────────────────────────────

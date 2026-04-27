@@ -257,15 +257,20 @@ def _add_sentiment_features(
     def _safe(col, fill=0.0):
         return merged[col].fillna(fill).values if col in merged.columns else np.full(len(d), fill)
 
-    d["sentiment_score"]      = _safe("raw_score")
-    d["sentiment_ma_7d"]      = _safe("sc_ma7")
-    d["sentiment_ma_30d"]     = _safe("sc_ma30")
-    d["sentiment_trend"]      = _safe("sc_trend")
+    raw_score = _safe("raw_score")
+    n_art     = _safe("n_articles", 0.0)
+    # Attenuate by article count — single-article FinBERT scores can hit ±0.97
+    # and dominate noise. Full weight at 5+ articles, 0 weight at 0 articles.
+    weight    = np.clip(n_art / 5.0, 0.0, 1.0)
+    d["sentiment_score"]      = raw_score * weight
+    d["sentiment_ma_7d"]      = _safe("sc_ma7")   * weight
+    d["sentiment_ma_30d"]     = _safe("sc_ma30")  * weight
+    d["sentiment_trend"]      = _safe("sc_trend") * weight
     d["sentiment_zscore"]     = _safe("sc_zscore")
     d["sentiment_vol_7d"]     = _safe("sc_vol7")
-    d["sentiment_n_articles"] = _safe("n_articles", 0.0)
-    d["sentiment_positive"]   = _safe("positive_ratio")
-    d["sentiment_negative"]   = _safe("negative_ratio")
+    d["sentiment_n_articles"] = n_art
+    d["sentiment_positive"]   = _safe("positive_ratio") * weight
+    d["sentiment_negative"]   = _safe("negative_ratio") * weight
 
     return d
 
@@ -533,20 +538,51 @@ def compute_features(
 #  UTILITIES
 # ══════════════════════════════════════════════════════════════════════════════
 
+# ── Target schema version: bump when add_target() changes to invalidate cache ──
+TARGET_SCHEMA_V = 2   # v2 = horizon-5 sign target (was v1 = binary 1-day >0.4%)
+HORIZON_DAYS    = 5
+HORIZON_THR     = 0.01   # 1% cumulative over 5d counts as a positive move
+
+
 def feature_cols(df: pd.DataFrame) -> List[str]:
-    """Return names of feature columns (excludes OHLCV, date, symbol, target)."""
-    exclude = {"date", "timestamp", "symbol", "open", "high", "low", "close", "volume", "target"}
+    """Return names of feature columns (excludes OHLCV, date, symbol, targets, helper columns)."""
+    exclude = {
+        "date", "timestamp", "symbol",
+        "open", "high", "low", "close", "volume",
+        "target", "next_ret",                     # target + P&L helper
+        "_schema_v",                               # version marker
+    }
+    def _is_leaky(name: str) -> bool:
+        n = name.lower()
+        return (n.startswith("next_") or n.startswith("future_") or n.startswith("tmrw_")
+                or n.endswith("_target") or n.endswith("_tgt") or n.startswith("y_"))
     return [c for c in df.columns
-            if c not in exclude
+            if c not in exclude and not _is_leaky(c)
             and df[c].dtype in ("float64", "float32", "int64", "int32", "int8", "uint8")]
 
 
 def add_target(df: pd.DataFrame) -> pd.DataFrame:
-    """Binary target: 1=up>MIN_MOVE, 0=down<-MIN_MOVE, NaN=neutral (dropped)."""
+    """
+    Target v2 (horizon-5 sign): 1 if 5-day cumulative return > +1%, 0 if < -1%, NaN else.
+
+    Rationale:
+      The old 1-day >0.4% binary sits at the daily noise floor on NSE large-caps,
+      giving ~50.7% OOS accuracy. The 5-day horizon is less noisy (published gain
+      ~+2 pp in Exp1) and matches the intended trading horizon, which lets meta-
+      labeling + fixed 10-day holds amortise the 0.25% round-trip cost.
+
+    Also preserves `next_ret` (tomorrow's return) as a separate column so the
+    training step can build meta-labels (profitable_after_cost) without re-
+    deriving it. `next_ret` is excluded from feature_cols() to avoid leakage.
+    """
     df = df.copy()
-    next_ret = (df["close"].shift(-1) - df["close"]) / (df["close"] + 1e-10)
-    df["target"] = np.where(next_ret >  MIN_MOVE, 1.0,
-                   np.where(next_ret < -MIN_MOVE, 0.0, np.nan))
+    # Next-day return — kept for P&L / meta-label use (excluded from features)
+    df["next_ret"] = (df["close"].shift(-1) - df["close"]) / (df["close"] + 1e-10)
+    # Primary target: sign of 5-day cumulative return with ±1% deadband
+    future_h = df["close"].shift(-HORIZON_DAYS) / df["close"] - 1.0
+    df["target"] = np.where(future_h >  HORIZON_THR, 1.0,
+                   np.where(future_h < -HORIZON_THR, 0.0, np.nan))
+    df["_schema_v"] = TARGET_SCHEMA_V
     return df
 
 
@@ -580,8 +616,13 @@ def get_or_compute_features(
                 and feat_mtime >= sent_mtime):
             cached = load_parquet(feat_path)
             if cached is not None and not cached.empty:
-                print(f"  {symbol:<12} ✓ features cached  ({len(cached)} rows × {len(feature_cols(cached))} feat)")
-                return cached
+                # Schema check: auto-recompute v1 caches when the code is v2
+                cached_v = int(cached["_schema_v"].iloc[0]) if "_schema_v" in cached.columns else 1
+                if cached_v == TARGET_SCHEMA_V:
+                    print(f"  {symbol:<12} ✓ features cached  ({len(cached)} rows × {len(feature_cols(cached))} feat, v{cached_v})")
+                    return cached
+                else:
+                    print(f"  {symbol:<12} ↻ schema bump v{cached_v}→v{TARGET_SCHEMA_V} — recomputing")
 
     print(f"  {symbol:<12} ↻ computing features ...", end=" ", flush=True)
     df    = compute_features(raw_df, symbol=symbol, peer_returns=peer_returns,
