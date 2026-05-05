@@ -1,0 +1,126 @@
+{
+  "session_id": "20260421_124941",
+  "run_id": "20260420_164402",
+  "created_at": "2026-04-21T12:49:41.867481",
+  "initial_cash": 500000,
+  "cash": 500000,
+  "qualified_stocks": [
+    {
+      "symbol": "RBLBANK",
+      "sharpe": 3.843,
+      "win_rate": 0.5833,
+      "oos_accuracy": 0.5246
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "sharpe": 1.867,
+      "win_rate": 0.5263,
+      "oos_accuracy": 0.5396
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "sharpe": 1.738,
+      "win_rate": 0.5833,
+      "oos_accuracy": 0.5459
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "sharpe": 1.248,
+      "win_rate": 0.5696,
+      "oos_accuracy": 0.5146
+    },
+    {
+      "symbol": "LTIM",
+      "sharpe": 1.054,
+      "win_rate": 0.5385,
+      "oos_accuracy": 0.5065
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "sharpe": 0.826,
+      "win_rate": 0.5625,
+      "oos_accuracy": 0.551
+    }
+  ],
+  "todays_signals": [
+    {
+      "symbol": "KOTAKBANK",
+      "last_date": "2026-04-17",
+      "last_close": 383.6000061035156,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5663,
+      "avg_prob": 0.5663,
+      "signal_active": false,
+      "regime": 0,
+      "regime_label": "bear",
+      "temperature": 0.378,
+      "oos_accuracy": 0.5510204081632653,
+      "tradeable": true
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "last_date": "2026-04-17",
+      "last_close": 3571.300048828125,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5476,
+      "avg_prob": 0.5476,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 0.312,
+      "oos_accuracy": 0.5458937198067633,
+      "tradeable": true
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "last_date": "2026-04-17",
+      "last_close": 1573.4000244140625,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5408,
+      "avg_prob": 0.5408,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 0.251,
+      "oos_accuracy": 0.5395799676898223,
+      "tradeable": true
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "last_date": "2026-04-17",
+      "last_close": 37505.0,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5225,
+      "avg_prob": 0.5225,
+      "signal_active": false,
+      "regime": 0,
+      "regime_label": "bear",
+      "temperature": 0.295,
+      "oos_accuracy": 0.5146198830409356,
+      "tradeable": true
+    },
+    {
+      "symbol": "RBLBANK",
+      "last_date": "2026-04-17",
+      "last_close": 315.54998779296875,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5114,
+      "avg_prob": 0.5114,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 0.26,
+      "oos_accuracy": 0.5245901639344263,
+      "tradeable": true
+    }
+  ],
+  "holdings": {},
+  "trades": [],
+  "status": "active",
+  "note": "Paper trading 6 stocks with Sharpe>=0.5 from run 20260420_164402. Buy signals at tomorrow open, exit at next close."
+}

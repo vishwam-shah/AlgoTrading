@@ -7,7 +7,7 @@ import {
   BarChart2, Activity, RefreshCw, CheckCircle2,
   LineChart, ShoppingCart, PieChart, Award,
   ChevronDown, History, Zap, FlaskConical,
-  Download,
+  Download, FileLock2, LogOut, Shield, Clock,
 } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,11 @@ import SentimentPanel from '@/components/SentimentPanel';
 import RunContextBanner from '@/components/RunContextBanner';
 import WalletWidget from '@/components/WalletWidget';
 import PipelineControl from '@/components/PipelineControl';
+import PortfolioLedgerCard from '@/components/PortfolioLedgerCard';
+import ExitsTodayTable from '@/components/ExitsTodayTable';
+import PromotionGatePanel from '@/components/PromotionGatePanel';
+import RobustnessTab from '@/components/RobustnessTab';
+import BacktestTimingToggle from '@/components/BacktestTimingToggle';
 import type { BacktestResults } from '@/components/BacktestPanel';
 
 const CandlestickChart = dynamic(() => import('@/components/CandlestickChart'), { ssr: false });
@@ -77,20 +82,23 @@ interface Holdings { holdings: any[]; total_pnl: number; count: number }
 // ── Nav structure ────────────────────────────────────────────────────────────
 
 type ViewMode  = 'trade' | 'research';
-type TradeTab  = 'overview' | 'signals' | 'orders' | 'portfolio' | 'chart';
-type ResearchTab = 'accuracy' | 'analysis' | 'runs';
+type TradeTab  = 'overview' | 'signals' | 'orders' | 'portfolio' | 'chart' | 'live';
+type ResearchTab = 'accuracy' | 'analysis' | 'runs' | 'robustness' | 'timing';
 
 const TRADE_TABS: { id: TradeTab; label: string; icon: any }[] = [
   { id: 'overview',  label: 'Overview',  icon: Zap         },
   { id: 'signals',   label: 'Signals',   icon: TrendingUp  },
   { id: 'orders',    label: 'Orders',    icon: ShoppingCart },
   { id: 'portfolio', label: 'Portfolio', icon: PieChart    },
+  { id: 'live',      label: 'Live Ops',  icon: FileLock2   },
   { id: 'chart',     label: 'Chart',     icon: LineChart   },
 ];
 const RESEARCH_TABS: { id: ResearchTab; label: string; icon: any }[] = [
-  { id: 'accuracy', label: 'Accuracy', icon: BarChart2   },
-  { id: 'analysis', label: 'Analysis', icon: Award       },
-  { id: 'runs',     label: 'Runs',     icon: History     },
+  { id: 'accuracy',   label: 'Accuracy',   icon: BarChart2     },
+  { id: 'analysis',   label: 'Analysis',   icon: Award         },
+  { id: 'robustness', label: 'Robustness', icon: FlaskConical  },
+  { id: 'timing',     label: 'Timing A/B', icon: Clock         },
+  { id: 'runs',       label: 'Runs',       icon: History       },
 ];
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -658,6 +666,17 @@ export default function TradingDashboard() {
           </div>
         )}
 
+        {/* TRADE / LIVE OPS — canonical ledger + multi-rule exits + promotion gate */}
+        {viewMode === 'trade' && tradeTab === 'live' && (
+          <div className="space-y-5">
+            <PortfolioLedgerCard />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <ExitsTodayTable />
+              <PromotionGatePanel />
+            </div>
+          </div>
+        )}
+
         {/* TRADE / CHART */}
         {viewMode === 'trade' && tradeTab === 'chart' && (
           <div className="space-y-4">
@@ -741,6 +760,22 @@ export default function TradingDashboard() {
               backtest={sharedBacktest}
               paperSession={sharedPaperSession}
             />
+          </div>
+        )}
+
+        {/* RESEARCH / ROBUSTNESS — exp9 cost / turnover / horizon / regime */}
+        {viewMode === 'research' && researchTab === 'robustness' && (
+          <div className="space-y-4">
+            {selectedRunId && <RunContextBanner runId={selectedRunId} onClear={() => selectRun(null)} />}
+            <RobustnessTab runId={selectedRunId ?? dashboard?.run_id ?? null} />
+          </div>
+        )}
+
+        {/* RESEARCH / TIMING A/B — same_close vs next_close vs next_open */}
+        {viewMode === 'research' && researchTab === 'timing' && (
+          <div className="space-y-4">
+            {selectedRunId && <RunContextBanner runId={selectedRunId} onClear={() => selectRun(null)} />}
+            <BacktestTimingToggle runId={selectedRunId ?? dashboard?.run_id ?? null} />
           </div>
         )}
 

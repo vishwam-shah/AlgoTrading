@@ -1,0 +1,2 @@
+symbol,last_date,last_close,direction,action,confidence,avg_prob,signal_active,regime,regime_label,temperature
+SBIN,2026-04-10,1066.699951171875,UP,HOLD,0.504,0.504,False,1,sideways,8.0

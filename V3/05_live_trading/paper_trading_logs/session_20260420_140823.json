@@ -1,0 +1,156 @@
+{
+  "session_id": "20260420_140823",
+  "run_id": "20260420_135814",
+  "created_at": "2026-04-20T14:08:23.610013",
+  "initial_cash": 500000,
+  "cash": 500000,
+  "qualified_stocks": [
+    {
+      "symbol": "ASIANPAINT",
+      "sharpe": 2.782,
+      "win_rate": 0.5909,
+      "oos_accuracy": 0.5008
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "sharpe": 2.196,
+      "win_rate": 0.6071,
+      "oos_accuracy": 0.533
+    },
+    {
+      "symbol": "INDUSTOWER",
+      "sharpe": 2.172,
+      "win_rate": 0.4,
+      "oos_accuracy": 0.5032
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "sharpe": 2.049,
+      "win_rate": 0.6353,
+      "oos_accuracy": 0.5453
+    },
+    {
+      "symbol": "LTIM",
+      "sharpe": 1.992,
+      "win_rate": 0.5208,
+      "oos_accuracy": 0.5049
+    },
+    {
+      "symbol": "TATAELXSI",
+      "sharpe": 1.686,
+      "win_rate": 0.6111,
+      "oos_accuracy": 0.5103
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "sharpe": 0.714,
+      "win_rate": 0.5,
+      "oos_accuracy": 0.5186
+    },
+    {
+      "symbol": "GAIL",
+      "sharpe": 0.663,
+      "win_rate": 0.561,
+      "oos_accuracy": 0.5109
+    },
+    {
+      "symbol": "AUBANK",
+      "sharpe": 0.604,
+      "win_rate": 0.6,
+      "oos_accuracy": 0.5131
+    },
+    {
+      "symbol": "TECHM",
+      "sharpe": 0.581,
+      "win_rate": 0.52,
+      "oos_accuracy": 0.5131
+    },
+    {
+      "symbol": "ULTRACEMCO",
+      "sharpe": 0.524,
+      "win_rate": 0.6429,
+      "oos_accuracy": 0.5306
+    }
+  ],
+  "todays_signals": [
+    {
+      "symbol": "ADANIPORTS",
+      "last_date": "2026-04-17",
+      "last_close": 1573.4000244140625,
+      "direction": "UP",
+      "action": "BUY",
+      "confidence": 0.6229,
+      "avg_prob": 0.6229,
+      "signal_active": true,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 0.1,
+      "oos_accuracy": 0.518578352180937,
+      "tradeable": false
+    },
+    {
+      "symbol": "GAIL",
+      "last_date": "2026-04-17",
+      "last_close": 157.82000732421875,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5571,
+      "avg_prob": 0.5571,
+      "signal_active": false,
+      "regime": 0,
+      "regime_label": "bear",
+      "temperature": 0.453,
+      "oos_accuracy": 0.5109289617486339,
+      "tradeable": false
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "last_date": "2026-04-17",
+      "last_close": 3571.300048828125,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5331,
+      "avg_prob": 0.5331,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 0.643,
+      "oos_accuracy": 0.533011272141707,
+      "tradeable": true
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "last_date": "2026-04-17",
+      "last_close": 37505.0,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5111,
+      "avg_prob": 0.5111,
+      "signal_active": false,
+      "regime": 0,
+      "regime_label": "bear",
+      "temperature": 0.387,
+      "oos_accuracy": 0.5453216374269005,
+      "tradeable": true
+    },
+    {
+      "symbol": "INDUSTOWER",
+      "last_date": "2026-04-17",
+      "last_close": 5431.60009765625,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5048,
+      "avg_prob": 0.5048,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 1.547,
+      "oos_accuracy": 0.5031545741324921,
+      "tradeable": false
+    }
+  ],
+  "holdings": {},
+  "trades": [],
+  "status": "active",
+  "note": "Paper trading 11 stocks with Sharpe>=0.5 from run 20260420_135814. Buy signals at tomorrow open, exit at next close."
+}

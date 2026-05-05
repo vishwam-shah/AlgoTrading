@@ -1,0 +1,83 @@
+# Unified strategy + risk + execution configuration
+# Single source of truth — read by:
+#   - V3/07_pipeline/steps/backtest.py
+#   - V3/05_live_trading/signal_publisher.py
+#   - V3/05_live_trading/order_manager.py
+#   - V3/05_live_trading/risk_guard.py
+#   - V3/05_live_trading/exit_runner.py
+#   - V3/05_live_trading/portfolio_optimizer.py
+#   - V3/05_live_trading/promotion_gate.py
+#
+# When you change a number here, every component picks it up on next run.
+# Do NOT replicate any of these constants inside .py files.
+
+# ── Strategy core ────────────────────────────────────────────────────────────
+strategy:
+  hold_days: 10                 # backtest + exit_runner + signal_publisher
+  min_confidence: 0.58          # primary prob_up gate
+  meta_threshold: 0.60          # López de Prado secondary meta-prob gate
+  entry_timing: "next_open"     # backtest: next_open | next_vwap | same_close (legacy)
+  cost_round_trip: 0.0025       # 0.25% (STT 0.20% + brokerage 0.05% delivery)
+  slippage_one_way_bps: 5       # 5 bps each side, applied as single-side execution slippage
+
+# ── Position sizing ─────────────────────────────────────────────────────────
+sizing:
+  capital_default_inr: 500000
+  max_position_pct: 0.34        # 34% per stock when 3 slots equal-weighted
+  kelly_cap_full: 0.25          # cap full-Kelly at 25% before half-Kelly haircut
+  kelly_haircut: 0.5            # half-Kelly
+  vol_target_daily: 0.015       # 1.5% daily ATR target for vol-adjusted sizing
+  min_lot: 1                    # NSE CNC: 1-share lots allowed
+  weighting: "inv_vol"          # inv_vol | equal | mcr_optimised
+
+# ── Hard risk limits (enforced by risk_guard + portfolio_optimizer) ─────────
+limits:
+  max_stock_exposure_pct: 0.34
+  max_sector_exposure_pct: 0.40
+  max_holdings: 3               # matches Top-3 cross-sectional rank
+  max_daily_loss_pct: 0.02      # 2% halt for the day
+  max_drawdown_pct: 0.20        # circuit breaker — pause new entries
+  max_slippage_pct: 0.003       # skip order if LTP drift > 0.3% from signal price
+  min_prob_up_floor: 0.52       # absolute floor — even if gate passed, reject below this
+
+# ── Exit logic (consumed by exit_runner + backtest exit branch) ─────────────
+exits:
+  time_stop_days: 10            # default time stop = hold_days
+  vol_stop_atr_mult: 2.5        # exit if drawdown > 2.5 × ATR(14)
+  trailing_stop_pct: 0.04       # 4% trail once position is +3% in profit
+  trailing_arm_pct: 0.03        # arm trailing stop once trade is +3%
+  signal_decay_threshold: 0.50  # exit early if next-day prob_up < 0.50 for 2 consecutive days
+  signal_decay_lookback: 2
+  partial_take_profit_pct: 0.06 # take 50% off at +6%
+  partial_take_profit_size: 0.5
+
+# ── Universe filtering ──────────────────────────────────────────────────────
+universe:
+  min_oos_accuracy: 0.50
+  min_sharpe_for_tradeable: 0.0
+  cross_sectional_top_k: 15
+  expand_when_strict_below: 3   # widen to top-15 if strict pool < this
+
+# ── Live execution ──────────────────────────────────────────────────────────
+execution:
+  market_open: "09:15"
+  market_close: "15:25"
+  default_order_type: "LIMIT"
+  default_product: "CNC"
+  default_validity: "DAY"
+  default_exchange: "NSE"
+  rate_limit_per_sec: 16
+
+# ── Promotion gate (paper → live) ────────────────────────────────────────────
+promotion:
+  min_paper_trades: 40
+  min_paper_days: 20
+  min_rolling_sharpe: 1.0
+  max_rolling_drawdown: 0.10
+  max_slippage_drift_bps: 25    # average slippage drift vs signal price
+  max_calibration_brier_drift: 0.05
+  min_fill_rate: 0.90
+  cooldown_after_breach_days: 5
+
+# ── Trading mode (paper | live) ──────────────────────────────────────────────
+mode: "paper"                   # overridden by env var TRADING_MODE if set

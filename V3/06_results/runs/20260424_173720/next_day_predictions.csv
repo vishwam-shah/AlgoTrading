@@ -1,0 +1,6 @@
+symbol,last_date,last_close,direction,action,confidence,avg_prob,meta_prob,signal_active,regime,regime_label,temperature,oos_accuracy,tradeable,cross_sectional_top15,sharpe_rank
+ICICIBANK,2026-04-23,1348.0,UP,HOLD,0.6748,0.6748,0.5414,False,0,bear,0.479,0.5950266429840142,False,False,
+HDFCBANK,2026-04-23,784.3499755859375,UP,HOLD,0.5469,0.5469,0.5502,False,0,bear,0.589,0.5177570093457944,False,False,
+KOTAKBANK,2026-04-23,370.3999938964844,UP,HOLD,0.5416,0.5416,0.4883,False,0,bear,0.78,0.5060240963855421,False,False,
+WIPRO,2026-04-23,202.7599945068359,UP,HOLD,0.5266,0.5266,0.5638,False,0,bear,1.0,0.4991708126036484,False,False,
+AXISBANK,2026-04-23,1369.5999755859375,DOWN,HOLD,0.5006,0.4994,0.5344,False,1,sideways,0.246,0.545144804088586,True,True,1.0

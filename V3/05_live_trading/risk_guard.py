@@ -15,8 +15,13 @@ Checks:
 
 from __future__ import annotations
 
+import sys
 from datetime import datetime, time as dtime
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "00_config"))
+from risk_config import HOT as _RC, get as _rcget  # type: ignore  # noqa: E402
 
 # ── NSE sector map for concentration check ────────────────────────────────────
 SECTOR_MAP: Dict[str, str] = {
@@ -29,7 +34,7 @@ SECTOR_MAP: Dict[str, str] = {
     "BAJFINANCE": "Finance", "BAJAJFINSV": "Finance", "HDFCLIFE": "Finance",
     "SBILIFE": "Finance", "ICICIGI": "Finance", "MUTHOOTFIN": "Finance",
     "CHOLAFIN": "Finance", "SHRIRAMFIN": "Finance", "MANAPPURAM": "Finance",
-    "BAJAJHFL": "Finance",
+    "LICHSGFIN": "Finance",
     # IT
     "TCS": "IT", "INFY": "IT", "HCLTECH": "IT", "WIPRO": "IT",
     "TECHM": "IT", "LTIM": "IT", "MPHASIS": "IT", "PERSISTENT": "IT",
@@ -71,16 +76,21 @@ SECTOR_MAP: Dict[str, str] = {
     "ETERNAL": "Startup", "NAUKRI": "IT",
 }
 
-# ── Config ────────────────────────────────────────────────────────────────────
-MAX_POSITION_PCT  = 0.12   # 12% max per stock
-MAX_SECTOR_PCT    = 0.30   # 30% max per sector
-MAX_HOLDINGS      = 15     # max simultaneous CNC positions
-MAX_DAILY_LOSS    = 0.02   # halt trading if daily loss > 2%
-MIN_PROB_UP       = 0.52   # must have at least 52% probability
+# ── Config (single source: V3/00_config/risk_config.yaml) ────────────────────
+MAX_POSITION_PCT  = _RC["MAX_POSITION_PCT"]
+MAX_SECTOR_PCT    = _RC["MAX_SECTOR_PCT"]
+MAX_HOLDINGS      = _RC["MAX_HOLDINGS"]
+MAX_DAILY_LOSS    = _RC["MAX_DAILY_LOSS_PCT"]
+MIN_PROB_UP       = _RC["MIN_PROB_FLOOR"]
 
-# NSE trading hours IST
-_MARKET_OPEN  = dtime(9, 15)
-_MARKET_CLOSE = dtime(15, 25)   # stop 5 min before close
+# NSE trading hours IST — parsed from yaml ("HH:MM") with safe fallback
+def _parse_hhmm(s: str, default: tuple[int, int]) -> dtime:
+    try:
+        h, m = s.split(":"); return dtime(int(h), int(m))
+    except Exception:
+        return dtime(*default)
+_MARKET_OPEN  = _parse_hhmm(str(_rcget("execution", "market_open",  default="09:15")), (9, 15))
+_MARKET_CLOSE = _parse_hhmm(str(_rcget("execution", "market_close", default="15:25")), (15, 25))
 
 
 class RiskGuard:

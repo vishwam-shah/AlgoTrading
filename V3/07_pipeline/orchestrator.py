@@ -431,11 +431,34 @@ def main() -> None:
     # ══════════════════════════════════════════════════════════════════════════
     #  FINAL SUMMARY
     # ══════════════════════════════════════════════════════════════════════════
-    elapsed  = time.time() - t0
-    ok_rows  = [r for r in summary_rows if r.get("status") == "ok"]
+    elapsed       = time.time() - t0
+    ok_rows       = [r for r in summary_rows if r.get("status") == "ok"]
+    skipped_rows  = [r for r in summary_rows if str(r.get("status", "")).startswith("skipped")]
+    error_rows    = [r for r in summary_rows if r.get("status") == "error"]
+
+    # Persist skipped/error stocks so the dashboard can show "100/100 — N skipped (reason)"
+    # instead of silently dropping them and reporting a misleading "99/100".
+    try:
+        with open(result_run_path / "skipped_symbols.json", "w") as _sf:
+            json.dump({
+                "universe_size":   len(symbols_to_run),
+                "trained":         len(ok_rows),
+                "skipped":         [{"symbol": r.get("symbol"), "reason": r.get("reason", "unknown"),
+                                     "status": r.get("status")} for r in skipped_rows],
+                "errors":          [{"symbol": r.get("symbol"), "reason": r.get("reason", "unknown")}
+                                    for r in error_rows],
+            }, _sf, indent=2, default=str)
+    except Exception:
+        pass
 
     print(f"\n{'='*70}")
     print(f"  FINAL SUMMARY  [MIN_MOVE={MIN_MOVE*100:.1f}%, CONF≥{CONFIDENCE_THRESHOLD*100:.0f}%]")
+    print(f"  Universe: {len(symbols_to_run)}  |  trained: {len(ok_rows)}  "
+          f"|  skipped: {len(skipped_rows)}  |  errors: {len(error_rows)}")
+    for r in skipped_rows:
+        print(f"   ↪ skipped {r.get('symbol','?'):<12} ({r.get('reason','no_reason')})")
+    for r in error_rows:
+        print(f"   ↪ error   {r.get('symbol','?'):<12} ({r.get('reason','no_reason')})")
     print(f"{'='*70}")
 
     if ok_rows:
@@ -504,17 +527,32 @@ def main() -> None:
                       f"(avg={best_m['avg_accuracy']:.2%}, std={best_m['std_accuracy']:.3f})")
             aw_df.to_csv(result_run_path / "all_windows_detail.csv", index=False)
 
-        # Full summary CSV
+        # Full summary CSV — include trained, skipped, and error rows with a
+        # `status` column so the dashboard can render "100/100 (N skipped)" instead
+        # of silently dropping incomplete stocks.
+        summary_df["status"] = "ok"
+        skip_err = []
+        for r in (skipped_rows + error_rows):
+            skip_err.append({
+                "symbol":        r.get("symbol", ""),
+                "oos_accuracy":  None, "oos_f1": None,
+                "n_windows":     0, "n_predictions": 0,
+                "n_features":    0, "n_rows": int(r.get("n_rows", 0) or 0),
+                "status":        r.get("status", "skipped"),
+            })
         avg_row = pd.DataFrame([{
             "symbol": "AVERAGE", "oos_accuracy": avg_acc, "oos_f1": avg_f1,
             "n_windows": summary_df["n_windows"].mean(),
             "n_predictions": summary_df["n_predictions"].sum(),
             "n_features": summary_df["n_features"].mean(),
             "n_rows": summary_df["n_rows"].mean(),
+            "status": "ok",
         }])
-        pd.concat([summary_df, avg_row], ignore_index=True).to_csv(
-            result_run_path / "summary.csv", index=False
+        full_df = pd.concat(
+            [summary_df, pd.DataFrame(skip_err), avg_row],
+            ignore_index=True
         )
+        full_df.to_csv(result_run_path / "summary.csv", index=False)
         try:
             plot_cross_stock_comparison(
                 pd.concat([summary_df, avg_row], ignore_index=True), run_plot_path

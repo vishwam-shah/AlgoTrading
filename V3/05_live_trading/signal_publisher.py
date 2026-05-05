@@ -30,20 +30,21 @@ _LIVE_DIR = Path(__file__).resolve().parent
 _V3_ROOT  = _LIVE_DIR.parent
 sys.path.insert(0, str(_V3_ROOT))
 sys.path.insert(0, str(_V3_ROOT / "07_pipeline"))
+sys.path.insert(0, str(_V3_ROOT / "00_config"))
 
-# ── Constants ────────────────────────────────────────────────────────────────
+from risk_config import HOT as _RC, get as _rcget  # type: ignore  # noqa: E402
 
-MAX_POSITION_PCT   = 0.34   # 34% max per stock (3-slot equal-weight = 33.3% each)
-MIN_CONFIDENCE     = 0.58   # primary gate — matches pipeline's CONFIDENCE_THRESHOLD
-META_THRESHOLD     = 0.60   # NEW — López de Prado meta-labeling secondary gate
-MIN_PROB_REQUIRED  = True   # skip order if prob_up missing in csv
-MAX_STOCKS         = 3      # n_max from Exp5 winner (concentration beats diversification here)
-MIN_TRADEABLE_UNIV = 3      # expand to cross-sectional top15 if fewer than this
-TARGET_HOLD_DAYS   = 10     # fixed holding period — matches backtest.HOLD_DAYS_V2
-ROUND_LOT          = 1      # NSE CNC: 1-share lots allowed
+# ── Constants (single source: V3/00_config/risk_config.yaml) ────────────────
 
-# NSE round-trip cost estimate: STT 0.1% sell + ~0.09% other ≈ 0.19% one-way
-ROUND_TRIP_COST_PCT = 0.0038  # ~0.38% full round-trip for 10-day hold sizing
+MAX_POSITION_PCT   = _RC["MAX_POSITION_PCT"]
+MIN_CONFIDENCE     = _RC["MIN_CONFIDENCE"]
+META_THRESHOLD     = _RC["META_THRESHOLD"]
+MIN_PROB_REQUIRED  = True
+MAX_STOCKS         = _RC["MAX_HOLDINGS"]
+MIN_TRADEABLE_UNIV = _RC["EXPAND_BELOW"]
+TARGET_HOLD_DAYS   = _RC["HOLD_DAYS"]
+ROUND_LOT          = int(_rcget("sizing", "min_lot", default=1))
+ROUND_TRIP_COST_PCT = _RC["COST_RT"] + 2 * (_rcget("strategy", "slippage_one_way_bps", default=5) / 10000.0)
 
 RESULTS_DIR = _V3_ROOT / "06_results" / "runs"
 ORDERS_DIR  = _V3_ROOT / "05_live_trading" / "orders"
@@ -51,23 +52,29 @@ ORDERS_DIR  = _V3_ROOT / "05_live_trading" / "orders"
 
 # ── Kelly / volatility-adjusted sizing ──────────────────────────────────────
 
+_KELLY_CAP     = float(_rcget("sizing", "kelly_cap_full", default=0.25))
+_KELLY_HAIRCUT = float(_rcget("sizing", "kelly_haircut", default=0.5))
+_VOL_TARGET    = float(_rcget("sizing", "vol_target_daily", default=0.015))
+
+
 def kelly_fraction(prob_up: float, win_loss_ratio: float = 1.5) -> float:
     """
-    Full Kelly: f* = (bp - q) / b  where b = win/loss ratio, p = prob up, q = 1 - p.
-    Capped at 0.25 full Kelly then halved (half-Kelly) for safety.
+    Full Kelly: f* = (bp - q) / b. Cap full-Kelly, then haircut by configured factor,
+    then enforce per-stock exposure cap.
     """
     q = 1.0 - prob_up
     b = win_loss_ratio
     f = (b * prob_up - q) / b
-    return max(0.0, min(f * 0.5, MAX_POSITION_PCT))  # half-Kelly, hard cap
+    f = max(0.0, min(f, _KELLY_CAP))
+    return min(f * _KELLY_HAIRCUT, MAX_POSITION_PCT)
 
 
 def vol_adjusted_size(base_frac: float, atr_pct: float,
-                      target_vol: float = 0.015) -> float:
-    """Scale down if stock is more volatile than target (1.5% daily ATR)."""
+                      target_vol: float | None = None) -> float:
+    """Scale down if stock is more volatile than the configured daily-ATR target."""
     if atr_pct <= 0:
         return base_frac
-    return base_frac * (target_vol / atr_pct)
+    return base_frac * ((target_vol if target_vol is not None else _VOL_TARGET) / atr_pct)
 
 
 # ── Load predictions ─────────────────────────────────────────────────────────
@@ -220,66 +227,86 @@ def build_orders(
     if price_map is None:
         price_map = _fetch_prices(df["symbol"].tolist())
 
-    # ── 5. Compute position sizes ─────────────────────────────────────────
-    orders = []
+    # ── 5. Resolve prices and build raw candidate list ─────────────────────
+    candidates: list[dict] = []
     for _, row in df.iterrows():
         sym      = row["symbol"]
         prob_up  = float(row.get("prob_up", row.get("confidence", 0.55)))
-        atr_pct  = float(row.get("atr_pct", 0.015))   # default 1.5% if missing
+        atr_pct  = float(row.get("atr_pct", 0.015))
         price = price_map.get(sym)
         if (price is None or price <= 0) and "price_hint" in row and row["price_hint"] > 0:
-            price = float(row["price_hint"])   # fallback to last_close from predictions
+            price = float(row["price_hint"])
             print(f"  ℹ  {sym}: using last_close ₹{price:.2f} (live price unavailable)")
         if price is None or price <= 0:
             print(f"  ⚠  {sym}: no price available, skipping")
             continue
+        candidates.append({
+            "symbol":     sym,
+            "price":      round(price, 2),
+            "prob_up":    round(prob_up, 4),
+            "meta_prob":  round(float(row.get("meta_prob", 0.5)), 4),
+            "score":      round(float(row.get("_score", prob_up)), 4),
+            "atr_pct":    atr_pct,
+        })
 
-        kf         = kelly_fraction(prob_up)
-        target_pct = vol_adjusted_size(kf, atr_pct)
-        target_pct = min(target_pct, MAX_POSITION_PCT)
-        target_inr = capital * target_pct
-        qty        = max(1, int(target_inr / price))   # floor shares, min 1
+    # ── 6. Risk-aware allocation (correlation, MCR, sector cap, vol budget) ──
+    try:
+        from portfolio_optimizer import allocate as _alloc
+        allocated = _alloc(candidates, capital=capital)
+    except Exception as e:
+        print(f"  ⚠  optimizer unavailable ({e}); falling back to half-Kelly equal weight")
+        allocated = []
+        for c in candidates[:MAX_STOCKS]:
+            kf = kelly_fraction(c["prob_up"])
+            tgt_pct = min(vol_adjusted_size(kf, c["atr_pct"]), MAX_POSITION_PCT)
+            target_inr = capital * tgt_pct
+            qty = max(1, int(target_inr / c["price"]))
+            allocated.append({**c, "weight": tgt_pct,
+                              "target_inr": round(target_inr, 0),
+                              "qty": qty,
+                              "target_pct": round(tgt_pct * 100, 2),
+                              "order_value": round(qty * c["price"], 0)})
 
-        # Planned exit date = TARGET_HOLD_DAYS trading days from today
-        # (calendar-approximate; the exit runner should close on the actual
-        # 10th trading day after entry regardless of the stored string).
-        from datetime import timedelta as _td
-        planned_exit = (datetime.now() + _td(days=int(TARGET_HOLD_DAYS * 1.45))).date().isoformat()
+    from datetime import timedelta as _td
+    planned_exit = (datetime.now() + _td(days=int(TARGET_HOLD_DAYS * 1.45))).date().isoformat()
 
+    orders: list[dict] = []
+    for a in allocated:
+        kf = kelly_fraction(a["prob_up"])
         orders.append({
-            "symbol":         sym,
+            "symbol":         a["symbol"],
             "exchange":       "NSE",
             "direction":      "BUY",
-            "prob_up":        round(prob_up, 4),
-            "meta_prob":      round(float(row.get("meta_prob", 0.5)), 4),
-            "score":          round(float(row.get("_score", prob_up)), 4),
+            "prob_up":        a["prob_up"],
+            "meta_prob":      a["meta_prob"],
+            "score":          a["score"],
             "kelly_frac":     round(kf, 4),
-            "target_pct":     round(target_pct * 100, 2),       # as %
-            "target_inr":     round(target_inr, 0),
-            "qty":            qty,
-            "price":          round(price, 2),
-            "order_value":    round(qty * price, 0),
+            "weight":         a.get("weight", a.get("target_pct", 0)),
+            "weight_components": a.get("weight_components", {}),
+            "sector":         a.get("sector", ""),
+            "target_pct":     a["target_pct"],
+            "target_inr":     a["target_inr"],
+            "qty":            a["qty"],
+            "price":          a["price"],
+            "order_value":    a["order_value"],
             "order_type":     "LIMIT",
-            "product":        "CNC",                             # delivery, not intraday MIS
+            "product":        "CNC",
             "validity":       "DAY",
-            "hold_days":      TARGET_HOLD_DAYS,                  # v2 — consumed by exit runner
+            "hold_days":      TARGET_HOLD_DAYS,
             "planned_exit":   planned_exit,
             "generated_at":   datetime.now().isoformat(),
         })
 
-    # Sort by target_inr desc
     orders.sort(key=lambda o: o["target_inr"], reverse=True)
 
-    # ── 6. Portfolio-level capital check ──────────────────────────────────
+    # ── 7. Final capital check (defensive — optimizer should already respect this)
     total_deployed = sum(o["order_value"] for o in orders)
     if total_deployed > capital:
-        # Scale all down proportionally
         scale = capital / total_deployed
         for o in orders:
             o["qty"]         = max(1, int(o["qty"] * scale))
             o["order_value"] = round(o["qty"] * o["price"], 0)
             o["target_pct"]  = round(o["order_value"] / capital * 100, 2)
-        total_deployed = sum(o["order_value"] for o in orders)
 
     return orders
 

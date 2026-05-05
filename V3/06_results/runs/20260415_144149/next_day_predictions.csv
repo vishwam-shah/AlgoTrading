@@ -1,0 +1,2 @@
+symbol,last_date,last_close,direction,action,confidence,avg_prob,signal_active,regime,regime_label,temperature
+HDFCBANK,2026-04-13,794.7000122070312,UP,BUY,0.822,0.822,True,0,bear,0.1

@@ -48,10 +48,30 @@ except ImportError:
 import pyotp
 
 
-# ── NSE token map — top-100 symbols ───────────────────────────────────────────
-# Exchange token IDs from NSE (used for WebSocket subscription).
-# Full list maintained at: https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json
-NSE_TOKEN_MAP: Dict[str, str] = {
+# ── NSE token map — daily-refreshed from Angel instrument master ─────────────
+# Live lookup happens in instrument_master.py; the dict below is a *fallback*
+# used only when both the network fetch AND the local parquet cache fail.
+# Real production calls hit `_token(symbol)` which prefers the fresh master.
+try:
+    from instrument_master import get_token as _live_token, load_token_map as _live_map  # type: ignore
+except Exception:  # noqa
+    _live_token = None
+    _live_map = None
+
+
+def _token(symbol: str) -> str:
+    """Resolve a symbol to its NSE token, preferring the fresh master."""
+    if _live_token is not None:
+        try:
+            t = _live_token(symbol)
+            if t:
+                return str(t)
+        except Exception:
+            pass
+    return NSE_TOKEN_MAP.get(symbol, "")
+
+
+_FALLBACK_TOKEN_MAP: Dict[str, str] = {
     "SBIN": "3045", "HDFCBANK": "1333", "ICICIBANK": "4963", "AXISBANK": "5900",
     "KOTAKBANK": "1922", "INDUSINDBK": "5258", "BANDHANBNK": "2263",
     "IDFCFIRSTB": "11184", "FEDERALBNK": "1023", "AUBANK": "11223",
@@ -83,6 +103,15 @@ NSE_TOKEN_MAP: Dict[str, str] = {
     "HAL": "2303", "OFSS": "10738", "IRFC": "14977",
     "NMDC": "15332", "BOSCHLTD": "2181",
 }
+
+# Backwards-compat alias kept in case anything imports `NSE_TOKEN_MAP`.
+# Always start with the fallback then attempt to populate from the live cache.
+NSE_TOKEN_MAP: Dict[str, str] = dict(_FALLBACK_TOKEN_MAP)
+if _live_map is not None:
+    try:
+        NSE_TOKEN_MAP.update(_live_map())
+    except Exception:
+        pass
 
 
 @dataclass
@@ -230,7 +259,7 @@ class AngelOneClient:
         order_params = {
             "variety":         variety,
             "tradingsymbol":   symbol,
-            "symboltoken":     NSE_TOKEN_MAP.get(symbol, ""),
+            "symboltoken":     _token(symbol),
             "transactiontype": side,
             "exchange":        exchange,
             "ordertype":       order_type,
@@ -361,7 +390,7 @@ class AngelOneClient:
 
         self._ensure_session()
         self._rate_limit()
-        token = NSE_TOKEN_MAP.get(symbol)
+        token = _token(symbol)
         if not token:
             return None
         try:
@@ -409,9 +438,9 @@ class AngelOneClient:
         self._on_tick_cb = on_tick
 
         token_list = [
-            {"exchangeType": 1, "tokens": [NSE_TOKEN_MAP[s]]}
+            {"exchangeType": 1, "tokens": [_token(s)]}
             for s in symbols
-            if s in NSE_TOKEN_MAP
+            if _token(s)
         ]
         if not token_list:
             return False
@@ -421,8 +450,18 @@ class AngelOneClient:
                 d = json.loads(message) if isinstance(message, str) else message
                 tok = str(d.get("token", ""))
                 ltp = float(d.get("last_traded_price", 0)) / 100  # SmartAPI returns paise
-                # Reverse-lookup symbol from token
-                sym = next((s for s, t in NSE_TOKEN_MAP.items() if t == tok), None)
+                # Reverse-lookup symbol from token. Search the live map first
+                # (more complete), then the static fallback.
+                sym = None
+                if _live_map is not None:
+                    try:
+                        for s, t in _live_map().items():
+                            if str(t) == tok:
+                                sym = s; break
+                    except Exception:
+                        pass
+                if sym is None:
+                    sym = next((s for s, t in _FALLBACK_TOKEN_MAP.items() if t == tok), None)
                 if sym and ltp > 0:
                     with self._ltp_lock:
                         self._ltp[sym] = ltp

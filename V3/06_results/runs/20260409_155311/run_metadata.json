@@ -1,0 +1,21 @@
+{
+  "run_id": "20260409_155311",
+  "symbols": [
+    "SBIN"
+  ],
+  "data_start": "2018-01-01",
+  "min_move": 0.004,
+  "confidence_threshold": 0.58,
+  "initial_train": 0.7,
+  "expansion_step": 0.05,
+  "max_train": 0.95,
+  "n_top_features": 50,
+  "global_cues_enabled": true,
+  "nse_calendar_enabled": true,
+  "calibration": "temperature_scaling",
+  "n_workers": 1,
+  "n_jobs_per_worker": -1,
+  "elapsed_sec": 9.9,
+  "n_symbols_ok": 0,
+  "trained_at": "2026-04-09T15:53:21.578032"
+}

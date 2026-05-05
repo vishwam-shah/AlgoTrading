@@ -1,0 +1,4 @@
+regime,n_days,active_days,total_ret,ann_ret,sharpe,max_dd
+bear,95,91,0.7976,3.7378,2.257,0.1104
+bull,152,142,0.2296,0.4087,2.649,0.0418
+sideways,278,263,0.4728,0.4204,1.927,0.155

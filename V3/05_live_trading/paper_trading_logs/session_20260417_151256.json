@@ -1,0 +1,71 @@
+{
+  "session_id": "20260417_151256",
+  "run_id": "20260417_131359",
+  "created_at": "2026-04-17T15:12:56.494447",
+  "initial_cash": 500000,
+  "cash": 500000,
+  "qualified_stocks": [
+    {
+      "symbol": "VOLTAS",
+      "sharpe": 1.821,
+      "win_rate": 0.6286,
+      "oos_accuracy": 0.5193
+    },
+    {
+      "symbol": "TECHM",
+      "sharpe": 1.403,
+      "win_rate": 0.5849,
+      "oos_accuracy": 0.5163
+    },
+    {
+      "symbol": "VEDL",
+      "sharpe": 0.686,
+      "win_rate": 0.5793,
+      "oos_accuracy": 0.5445
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "sharpe": 0.638,
+      "win_rate": 0.5417,
+      "oos_accuracy": 0.5146
+    },
+    {
+      "symbol": "ADANIENT",
+      "sharpe": 0.618,
+      "win_rate": 0.5034,
+      "oos_accuracy": 0.5189
+    }
+  ],
+  "todays_signals": [
+    {
+      "symbol": "VEDL",
+      "last_date": "2026-04-16",
+      "last_close": 331.3999938964844,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5266,
+      "avg_prob": 0.5266,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 0.405
+    },
+    {
+      "symbol": "VOLTAS",
+      "last_date": "2026-04-16",
+      "last_close": 7903.5,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5126,
+      "avg_prob": 0.5126,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 0.428
+    }
+  ],
+  "holdings": {},
+  "trades": [],
+  "status": "active",
+  "note": "Paper trading 5 stocks with Sharpe>=0.5 from run 20260417_131359. Buy signals at tomorrow open, exit at next close."
+}

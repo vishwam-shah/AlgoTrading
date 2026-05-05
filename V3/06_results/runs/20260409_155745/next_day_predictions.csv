@@ -1,0 +1,2 @@
+symbol,last_date,last_close,direction,action,confidence,avg_prob,signal_active,regime,regime_label,temperature
+SBIN,2026-04-08,1061.449951171875,UP,BUY,0.644,0.644,True,1,sideways,0.182

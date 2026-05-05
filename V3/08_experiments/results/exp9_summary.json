@@ -1,0 +1,28 @@
+{
+  "run_id": "20260430_131250",
+  "n_symbols": 97,
+  "baseline": {
+    "hold": 10,
+    "min_conf": 0.58,
+    "meta": 0.6,
+    "cost": 0.0025
+  },
+  "cost_slippage_breakeven_cost": 0.001,
+  "best_turnover": {
+    "min_conf": 0.65,
+    "meta_thr": 0.6,
+    "n_stocks": 13,
+    "n_trades_mean": 7,
+    "sharpe_mean": 1.8144,
+    "sharpe_med": 2.4471,
+    "ret_mean": 0.251,
+    "pct_pos": 0.6923
+  },
+  "horizon_robust": 0.3333333333333333,
+  "regime_summary": [
+    {
+      "regime": "unavailable",
+      "n_trades": 0
+    }
+  ]
+}

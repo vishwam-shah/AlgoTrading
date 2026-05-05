@@ -1,0 +1,12 @@
+{
+  "universe_size": 100,
+  "trained": 99,
+  "skipped": [
+    {
+      "symbol": "BAJAJHFL",
+      "reason": "too_few_rows_after_features",
+      "status": "skipped:too_few_rows_after_features"
+    }
+  ],
+  "errors": []
+}

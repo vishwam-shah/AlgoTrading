@@ -1,0 +1,2 @@
+model,avg_accuracy,median_accuracy,max_accuracy,min_accuracy,std_accuracy,n_datapoints
+LightGBM,0.5153576720411724,0.5238380809595202,0.5701754385964912,0.4608695652173913,0.042694544222691304,6

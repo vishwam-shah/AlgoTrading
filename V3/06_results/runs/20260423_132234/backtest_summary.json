@@ -1,0 +1,11 @@
+{
+  "bootstrap_acc_mean": 0.6006,
+  "bootstrap_ci_lower": 0.5616,
+  "bootstrap_ci_upper": 0.6381,
+  "bootstrap_significant": true,
+  "bootstrap_n_signals": 641,
+  "nifty_return": 0.1579,
+  "nifty_start_date": "2023-12-13",
+  "nifty_end_date": "2026-04-16",
+  "portfolio_return": 0.0966
+}

@@ -1,0 +1,48 @@
+{
+  "regime": [
+    {
+      "regime": "bear",
+      "n_days": 95,
+      "active_days": 91,
+      "total_ret": 0.7976,
+      "ann_ret": 3.7378,
+      "sharpe": 2.257,
+      "max_dd": 0.1104
+    },
+    {
+      "regime": "bull",
+      "n_days": 152,
+      "active_days": 142,
+      "total_ret": 0.2296,
+      "ann_ret": 0.4087,
+      "sharpe": 2.649,
+      "max_dd": 0.0418
+    },
+    {
+      "regime": "sideways",
+      "n_days": 278,
+      "active_days": 263,
+      "total_ret": 0.4728,
+      "ann_ret": 0.4204,
+      "sharpe": 1.927,
+      "max_dd": 0.155
+    }
+  ],
+  "dm_pooled": {
+    "always_up": {
+      "dm": 0.224,
+      "p": 0.5885,
+      "model_better_than_baseline": false
+    },
+    "mom5": {
+      "dm": -6.817,
+      "p": 0.0,
+      "model_better_than_baseline": true
+    },
+    "ar1": {
+      "dm": -4.24,
+      "p": 0.0,
+      "model_better_than_baseline": true
+    }
+  }
+}

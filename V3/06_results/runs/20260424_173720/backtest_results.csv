@@ -1,0 +1,2 @@
+symbol,oos_accuracy,tradeable,cross_sectional_top15,sharpe_rank,n_trades,total_return,ann_return,win_rate,avg_win_pct,avg_loss_pct,profit_factor,sharpe,max_drawdown,calmar,binary_dir_acc,up_signal_acc,date_range
+AXISBANK,0.5451,True,True,1,8,0.0788,9.9205,0.5,5.767,-3.573,1.614,3.16,0.1173,0.672,0.6097,0.5,2024-03-13 → 2026-04-16

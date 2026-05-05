@@ -1,0 +1,132 @@
+{
+  "session_id": "20260420_144705",
+  "run_id": "20260420_142632",
+  "created_at": "2026-04-20T14:47:05.251934",
+  "initial_cash": 500000,
+  "cash": 500000,
+  "qualified_stocks": [
+    {
+      "symbol": "GRASIM",
+      "sharpe": 4.449,
+      "win_rate": 0.6818,
+      "oos_accuracy": 0.5131
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "sharpe": 2.955,
+      "win_rate": 0.6429,
+      "oos_accuracy": 0.5378
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "sharpe": 2.816,
+      "win_rate": 0.5517,
+      "oos_accuracy": 0.5136
+    },
+    {
+      "symbol": "POLYCAB",
+      "sharpe": 1.067,
+      "win_rate": 0.58,
+      "oos_accuracy": 0.505
+    },
+    {
+      "symbol": "AUBANK",
+      "sharpe": 0.692,
+      "win_rate": 0.5909,
+      "oos_accuracy": 0.5208
+    },
+    {
+      "symbol": "EICHERMOT",
+      "sharpe": 0.662,
+      "win_rate": 0.64,
+      "oos_accuracy": 0.5072
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "sharpe": 0.629,
+      "win_rate": 0.5333,
+      "oos_accuracy": 0.5132
+    }
+  ],
+  "todays_signals": [
+    {
+      "symbol": "MUTHOOTFIN",
+      "last_date": "2026-04-17",
+      "last_close": 3571.300048828125,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5451,
+      "avg_prob": 0.5451,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 0.47,
+      "oos_accuracy": 0.537842190016103,
+      "tradeable": true
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "last_date": "2026-04-17",
+      "last_close": 383.6000061035156,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5415,
+      "avg_prob": 0.5415,
+      "signal_active": false,
+      "regime": 0,
+      "regime_label": "bear",
+      "temperature": 0.781,
+      "oos_accuracy": 0.5136054421768708,
+      "tradeable": false
+    },
+    {
+      "symbol": "POLYCAB",
+      "last_date": "2026-04-17",
+      "last_close": 8182.5,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5142,
+      "avg_prob": 0.5142,
+      "signal_active": false,
+      "regime": 1,
+      "regime_label": "sideways",
+      "temperature": 1.0,
+      "oos_accuracy": 0.5050167224080268,
+      "tradeable": false
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "last_date": "2026-04-17",
+      "last_close": 37505.0,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5086,
+      "avg_prob": 0.5086,
+      "signal_active": false,
+      "regime": 0,
+      "regime_label": "bear",
+      "temperature": 0.502,
+      "oos_accuracy": 0.5131578947368421,
+      "tradeable": false
+    },
+    {
+      "symbol": "GRASIM",
+      "last_date": "2026-04-17",
+      "last_close": 2720.5,
+      "direction": "UP",
+      "action": "HOLD",
+      "confidence": 0.5004,
+      "avg_prob": 0.5004,
+      "signal_active": false,
+      "regime": 0,
+      "regime_label": "bear",
+      "temperature": 0.716,
+      "oos_accuracy": 0.5131147540983606,
+      "tradeable": false
+    }
+  ],
+  "holdings": {},
+  "trades": [],
+  "status": "active",
+  "note": "Paper trading 7 stocks with Sharpe>=0.5 from run 20260420_142632. Buy signals at tomorrow open, exit at next close."
+}

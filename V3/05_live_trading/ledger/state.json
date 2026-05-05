@@ -1,0 +1,3060 @@
+{
+  "starting_capital": 500000.0,
+  "cash": -12200395.550000018,
+  "realized_pnl": 0.0,
+  "nav_yesterday": 500000.0,
+  "open_lots": [
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_CUMMINSIND_1776680009",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836468",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836469",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836470",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836471",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836472",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836473",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836474",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836475",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836476",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836477",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776836478",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CUMMINSIND_1776840610",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930653",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930675",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930676",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930677",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930678",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930680",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930681",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930682",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930683",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930684",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776930685",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CUMMINSIND_1776931433",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_CUMMINSIND_1777017476",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_CUMMINSIND_1777275297",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "qty": 6,
+      "entry_price": 5134.94,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_CUMMINSIND_1777535516",
+      "cost_at_entry": 26.3035
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_CIPLA_1776680009",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836468",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836469",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836470",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836471",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836472",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836473",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836474",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836476",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836477",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776836478",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_CIPLA_1776840610",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930653",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930675",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930676",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930677",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930678",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930681",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930682",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930683",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930684",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776930685",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_CIPLA_1776931433",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_CIPLA_1777017476",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_CIPLA_1777275297",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "CIPLA",
+      "qty": 28,
+      "entry_price": 1238.57,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_CIPLA_1777535516",
+      "cost_at_entry": 29.6078
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_DRREDDY_1776680009",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836469",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836470",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836471",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836472",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836473",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836474",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836476",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836477",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776836478",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DRREDDY_1776840611",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930653",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930675",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930676",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930677",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930678",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930679",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930681",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930682",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930683",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930684",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776930685",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DRREDDY_1776931433",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_DRREDDY_1777017476",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_DRREDDY_1777275297",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "DRREDDY",
+      "qty": 28,
+      "entry_price": 1227.47,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_DRREDDY_1777535516",
+      "cost_at_entry": 29.3424
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_COFORGE_1776680009",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836469",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836470",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836471",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836472",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836473",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836474",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836476",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836477",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776836478",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_COFORGE_1776840611",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930653",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930675",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930676",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930677",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930678",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930679",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930681",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930682",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930683",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930684",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776930685",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_COFORGE_1776931433",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_COFORGE_1777017476",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_COFORGE_1777275297",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "COFORGE",
+      "qty": 26,
+      "entry_price": 1310.99,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_COFORGE_1777535516",
+      "cost_at_entry": 29.1006
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_LTIM_1776680009",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776836469",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776836470",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776836471",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776836472",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776836473",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776836474",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776836476",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776836478",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LTIM_1776840611",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930653",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930675",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930676",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930677",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930678",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930679",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930681",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930682",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930683",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930684",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776930685",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LTIM_1776931433",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_LTIM_1777017477",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_LTIM_1777275297",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "LTIM",
+      "qty": 7,
+      "entry_price": 4761.53,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_LTIM_1777535516",
+      "cost_at_entry": 28.4559
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_BRITANNIA_1776680009",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776836469",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776836470",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776836471",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776836472",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776836473",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776836474",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776836476",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776836478",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BRITANNIA_1776840611",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930653",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930676",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930677",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930678",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930679",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930681",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930682",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930683",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930684",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776930685",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BRITANNIA_1776931433",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_BRITANNIA_1777017477",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_BRITANNIA_1777275297",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "BRITANNIA",
+      "qty": 5,
+      "entry_price": 5737.72,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_BRITANNIA_1777535516",
+      "cost_at_entry": 24.4927
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_EICHERMOT_1776680010",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776836469",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776836470",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776836471",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776836472",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776836473",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776836474",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776836476",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776836478",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_EICHERMOT_1776840611",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930653",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930676",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930677",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930678",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930679",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930681",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930682",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930683",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930684",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776930685",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_EICHERMOT_1776931433",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_EICHERMOT_1777017477",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_EICHERMOT_1777275297",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "EICHERMOT",
+      "qty": 4,
+      "entry_price": 7150.14,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_EICHERMOT_1777535516",
+      "cost_at_entry": 24.4176
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_FEDERALBNK_1776680010",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776836469",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776836470",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776836471",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776836472",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776836473",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776836474",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776836476",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776836478",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_FEDERALBNK_1776840611",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930653",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930676",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930677",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930678",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930679",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930681",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930682",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930683",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930684",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776930685",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_FEDERALBNK_1776931433",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_FEDERALBNK_1777017477",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_FEDERALBNK_1777275297",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "qty": 120,
+      "entry_price": 289.99,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_FEDERALBNK_1777535516",
+      "cost_at_entry": 29.708999999999996
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_DIVISLAB_1776680010",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776836469",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776836470",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776836471",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776836472",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776836473",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776836474",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776836476",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776836478",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_DIVISLAB_1776840611",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930653",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930676",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930677",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930678",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930679",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930681",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930682",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930683",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930684",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776930685",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_DIVISLAB_1776931433",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_DIVISLAB_1777017477",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_DIVISLAB_1777275297",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "DIVISLAB",
+      "qty": 5,
+      "entry_price": 6257.38,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_DIVISLAB_1777535516",
+      "cost_at_entry": 26.710900000000002
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_HINDALCO_1776680010",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836469",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836470",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836471",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836472",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836473",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836475",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836476",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836477",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776836478",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_HINDALCO_1776840611",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930653",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930676",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930677",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930678",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930679",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930681",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930682",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930683",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930684",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776930685",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_HINDALCO_1776931433",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_HINDALCO_1777017477",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_HINDALCO_1777275297",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "HINDALCO",
+      "qty": 33,
+      "entry_price": 1033.21,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_HINDALCO_1777535516",
+      "cost_at_entry": 29.1092
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_BPCL_1776680010",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836469",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836470",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836471",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836472",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836473",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836475",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836476",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836477",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776836478",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BPCL_1776840611",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930654",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930676",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930677",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930678",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930679",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930681",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930682",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930683",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930684",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776930685",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BPCL_1776931433",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_BPCL_1777017477",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_BPCL_1777275297",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "BPCL",
+      "qty": 112,
+      "entry_price": 311.29,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_BPCL_1777535516",
+      "cost_at_entry": 29.7657
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_LT_1776680010",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836469",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836470",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836471",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836472",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836473",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836475",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836476",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836477",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776836478",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_LT_1776840611",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930654",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930676",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930677",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930678",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930679",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930681",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930682",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930683",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930684",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776930685",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_LT_1776931433",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_LT_1777017477",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_LT_1777275297",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "LT",
+      "qty": 8,
+      "entry_price": 4096.33,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_LT_1777535516",
+      "cost_at_entry": 27.977700000000002
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_BOSCHLTD_1776680010",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836469",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836470",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836471",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836472",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836473",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836475",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836476",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836477",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776836478",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_BOSCHLTD_1776840611",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930654",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930676",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930677",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930678",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930679",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930681",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930682",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930683",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930684",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776930685",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_BOSCHLTD_1776931433",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_BOSCHLTD_1777017477",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_BOSCHLTD_1777275297",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "qty": 1,
+      "entry_price": 37611.28,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_BOSCHLTD_1777535516",
+      "cost_at_entry": 32.1104
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_MPHASIS_1776680010",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836469",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836470",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836471",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836472",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836473",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836475",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836476",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836477",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836478",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776836479",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_MPHASIS_1776840611",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930654",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930676",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930677",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930678",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930679",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930681",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930682",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930683",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930684",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776930685",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_MPHASIS_1776931433",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_MPHASIS_1777017477",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_MPHASIS_1777275297",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "MPHASIS",
+      "qty": 14,
+      "entry_price": 2455.84,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_MPHASIS_1777535516",
+      "cost_at_entry": 29.3532
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-20",
+      "order_id": "PAPER_GAIL_1776680010",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836469",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836470",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836471",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836472",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836473",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836474",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836475",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836476",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836477",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836478",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776836479",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-22",
+      "order_id": "PAPER_GAIL_1776840611",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930654",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930676",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930677",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930678",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930679",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930681",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930682",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930683",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930684",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930685",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776930686",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-23",
+      "order_id": "PAPER_GAIL_1776931434",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-24",
+      "order_id": "PAPER_GAIL_1777017477",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-27",
+      "order_id": "PAPER_GAIL_1777275298",
+      "cost_at_entry": 29.803
+    },
+    {
+      "symbol": "GAIL",
+      "qty": 221,
+      "entry_price": 157.96,
+      "entry_date": "2026-04-30",
+      "order_id": "PAPER_GAIL_1777535517",
+      "cost_at_entry": 29.803
+    }
+  ],
+  "closed_trades": [],
+  "pending_orders": [],
+  "last_rebuilt_at": "2026-05-05T13:57:03.346610",
+  "last_event_id": 381
+}

@@ -1,0 +1,4 @@
+symbol,last_date,last_close,direction,action,confidence,avg_prob,meta_prob,signal_active,regime,regime_label,temperature,oos_accuracy,tradeable
+HDFCBANK,2026-04-23,784.3499755859375,UP,BUY,0.6116,0.6116,0.5,True,0,bear,0.392,0.5420560747663551,True
+TCS,2026-04-23,2521.800048828125,DOWN,HOLD,0.5683,0.4317,0.5,False,0,bear,0.112,0.5391304347826087,True
+SBIN,2026-04-23,1094.25,UP,HOLD,0.5105,0.5105,0.5,False,1,sideways,1.0,0.5277777777777778,True

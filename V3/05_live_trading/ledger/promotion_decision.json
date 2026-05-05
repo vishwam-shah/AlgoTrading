@@ -1,0 +1,74 @@
+{
+  "evaluated_at": "2026-05-05T13:57:03.349715",
+  "decision": "no-go",
+  "checks": [
+    {
+      "name": "min_paper_trades",
+      "passed": false,
+      "value": 0,
+      "target": 40,
+      "detail": ""
+    },
+    {
+      "name": "min_paper_days",
+      "passed": false,
+      "value": 0,
+      "target": 20,
+      "detail": ""
+    },
+    {
+      "name": "min_rolling_sharpe",
+      "passed": false,
+      "value": 0.0,
+      "target": 1.0,
+      "detail": ""
+    },
+    {
+      "name": "max_rolling_dd",
+      "passed": true,
+      "value": 0.0,
+      "target": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "max_slip_bps",
+      "passed": true,
+      "value": 0.0,
+      "target": 25.0,
+      "detail": ""
+    },
+    {
+      "name": "min_fill_rate",
+      "passed": true,
+      "value": 1.0,
+      "target": 0.9,
+      "detail": ""
+    },
+    {
+      "name": "max_brier_drift",
+      "passed": "True",
+      "value": -1,
+      "target": 0.05,
+      "detail": ""
+    }
+  ],
+  "summary": {
+    "n_closed_trades": 0,
+    "paper_days": 0,
+    "rolling_sharpe": 0.0,
+    "rolling_max_dd": 0.0,
+    "fill_rate": 1.0,
+    "slippage_bps": 0.0,
+    "brier_drift": null
+  },
+  "thresholds": {
+    "min_paper_trades": 40,
+    "min_paper_days": 20,
+    "min_rolling_sharpe": 1.0,
+    "max_rolling_dd": 0.1,
+    "max_slip_bps": 25.0,
+    "max_brier_drift": 0.05,
+    "min_fill_rate": 0.9,
+    "cooldown_days": 5
+  }
+}

@@ -31,7 +31,7 @@ YFINANCE_TICKERS: dict[str, str] = {
     "CHOLAFIN":   "CHOLAFIN.NS",
     "SHRIRAMFIN": "SHRIRAMFIN.NS",
     "MANAPPURAM": "MANAPPURAM.NS",
-    "BAJAJHFL":   "BAJAJHFL.NS",
+    "LICHSGFIN":  "LICHSGFIN.NS",   # swapped 2026-05-05 from BAJAJHFL (IPO 2024-09; insufficient history)
     # IT
     "TCS":        "TCS.NS",
     "INFY":       "INFY.NS",
