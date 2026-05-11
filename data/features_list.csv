@@ -1,0 +1,385 @@
+S.No,Category,Feature_Name,Description
+1,Base OHLCV,timestamp,Raw price/volume data
+2,Base OHLCV,open,Raw price/volume data
+3,Base OHLCV,high,Raw price/volume data
+4,Base OHLCV,low,Raw price/volume data
+5,Base OHLCV,close,Raw price/volume data
+6,Base OHLCV,volume,Raw price/volume data
+7,Returns,return_1d,1-day return
+8,Returns,return_2d,2-day return
+9,Returns,return_3d,3-day return
+10,Returns,return_5d,5-day return
+11,Returns,return_10d,10-day return
+12,Returns,return_20d,20-day return
+13,Price Features,gap,Gap from prev close
+14,Price Features,intraday_range,Intraday high-low range
+15,Price Features,intraday_return,Intraday return
+16,Price Features,upper_shadow,Upper shadow %
+17,Price Features,lower_shadow,Lower shadow %
+18,Price Features,price_to_sma5,Price/SMA5
+19,Price Features,price_to_sma20,Price/SMA20
+20,Price Features,price_to_sma50,Price/SMA50
+21,Price Features,rsi_14,14-day RSI
+22,Price Features,macd,MACD
+23,Volatility,macd_hist,MACD histogram
+24,Volatility,volatility_5,5-day volatility
+25,Volatility,volatility_20,20-day volatility
+26,Volatility,atr_pct,ATR percentage
+27,Volatility,bb_position,Bollinger Band position
+28,Volume,volume_ratio,Volume ratio
+29,Volume,volume_change,Volume change
+30,Volume,obv_slope_5,OBV 5-day slope
+31,Volume,trend_5_20,5-20 day trend
+32,Trend,trend_strength,Trend strength
+33,Trend,higher_high,Higher high flag
+34,Trend,lower_low,Lower low flag
+35,Trend,return_skew_20,20-day return skewness
+36,Trend,dist_from_high_20,Dist from 20-day high
+37,Trend,dist_from_low_20,Dist from 20-day low
+38,Lag Features,return_lag_1,Return lag 1
+39,Lag Features,return_lag_2,Return lag 2
+40,Lag Features,return_lag_3,Return lag 3
+41,Lag Features,return_lag_5,Return lag 5
+42,Lag Features,cum_return_3d,3-day cumulative return
+43,Lag Features,up_streak,Up streak days
+44,Lag Features,down_streak,Down streak days
+45,Lag Features,return_vs_mean_5,Return vs 5-day mean
+46,Lag Features,gap_lag_1,Gap lag 1
+47,Lag Features,volume_surge_lag_1,Volume surge lag 1
+48,Lag Features,rsi_oversold,RSI oversold flag
+49,Lag Features,rsi_overbought,RSI overbought flag
+50,Market,nifty_return_1d,NIFTY 1-day return
+51,Market,nifty_return_5d,NIFTY 5-day return
+52,Market,nifty_trend,NIFTY trend
+53,Market,vix,India VIX
+54,Market,vix_change,VIX change
+55,Market,vix_high,VIX high flag
+56,Market,usdinr_change,USD/INR change
+57,Temporal,day_of_week,Day of week
+58,Temporal,month,Month
+59,Lagged Prices,close_lag_1,Close price lag 1
+60,Lagged Prices,high_lag_1,High price lag 1
+61,Lagged Prices,low_lag_1,Low price lag 1
+62,Lagged Prices,close_lag_2,Close price lag 2
+63,Lagged Prices,high_lag_2,High price lag 2
+64,Lagged Prices,low_lag_2,Low price lag 2
+65,Lagged Prices,close_lag_3,Close price lag 3
+66,Lagged Prices,high_lag_3,High price lag 3
+67,Lagged Prices,low_lag_3,Low price lag 3
+68,Lagged Prices,close_lag_4,Close price lag 4
+69,Lagged Prices,high_lag_4,High price lag 4
+70,Lagged Prices,low_lag_4,Low price lag 4
+71,Lagged Prices,close_lag_5,Close price lag 5
+72,Lagged Prices,high_lag_5,High price lag 5
+73,Lagged Prices,low_lag_5,Low price lag 5
+74,Lagged Prices,close_lag_6,Close price lag 6
+75,Lagged Prices,high_lag_6,High price lag 6
+76,Lagged Prices,low_lag_6,Low price lag 6
+77,Lagged Prices,close_lag_7,Close price lag 7
+78,Lagged Prices,high_lag_7,High price lag 7
+79,Lagged Prices,low_lag_7,Low price lag 7
+80,Lagged Prices,close_lag_8,Close price lag 8
+81,Lagged Prices,high_lag_8,High price lag 8
+82,Lagged Prices,low_lag_8,Low price lag 8
+83,Lagged Prices,close_lag_9,Close price lag 9
+84,Lagged Prices,high_lag_9,High price lag 9
+85,Lagged Prices,low_lag_9,Low price lag 9
+86,Lagged Prices,close_lag_10,Close price lag 10
+87,Lagged Prices,high_lag_10,High price lag 10
+88,Lagged Prices,low_lag_10,Low price lag 10
+89,Moving Averages,sma_5,5-day SMA
+90,Moving Averages,ema_5,5-day EMA
+91,Moving Averages,sma_10,10-day SMA
+92,Moving Averages,ema_10,10-day EMA
+93,Moving Averages,sma_20,20-day SMA
+94,Moving Averages,ema_20,20-day EMA
+95,Moving Averages,sma_50,50-day SMA
+96,Moving Averages,ema_50,50-day EMA
+97,Moving Averages,sma_200,200-day SMA
+98,Moving Averages,ema_200,200-day EMA
+99,MA Ratios,price_to_sma_5,Price/SMA5
+100,MA Ratios,price_to_sma_20,Price/SMA20
+101,MA Ratios,price_to_sma_50,Price/SMA50
+102,MA Ratios,sma_5_to_sma_20,SMA5/SMA20 ratio
+103,MA Ratios,sma_20_to_sma_50,SMA20/SMA50 ratio
+104,RSI,rsi_7,7-period RSI
+105,RSI,rsi_14,14-period RSI
+106,RSI,rsi_21,21-period RSI
+107,MACD,macd_signal,MACD signal line
+108,MACD,macd_histogram,MACD histogram
+109,Stochastic,stoch_k,Stochastic %K
+110,Stochastic,stoch_d,Stochastic %D
+111,Stochastic,stoch_rsi,Stochastic RSI
+112,Other Momentum,williams_r,Williams %R
+113,Other Momentum,cci,CCI
+114,Other Momentum,roc_5,5-day ROC
+115,Other Momentum,roc_10,10-day ROC
+116,Other Momentum,roc_20,20-day ROC
+117,Other Momentum,mfi,Money Flow Index
+118,Other Momentum,tsi,True Strength Index
+119,Other Momentum,ultimate_osc,Ultimate Oscillator
+120,Bollinger Bands,atr_14,14-day ATR
+121,Bollinger Bands,bb_middle,BB middle
+122,Bollinger Bands,bb_upper,BB upper
+123,Bollinger Bands,bb_lower,BB lower
+124,Bollinger Bands,bb_width,BB width
+125,Keltner Channels,keltner_upper,Keltner upper
+126,Keltner Channels,keltner_lower,Keltner lower
+127,Keltner Channels,keltner_position,Keltner position
+128,Donchian Channels,donchian_upper,Donchian upper
+129,Donchian Channels,donchian_lower,Donchian lower
+130,Donchian Channels,donchian_middle,Donchian middle
+131,Donchian Channels,donchian_position,Donchian position
+132,Historical Volatility,volatility_5,5-day volatility
+133,Historical Volatility,volatility_10,10-day volatility
+134,Historical Volatility,volatility_20,20-day volatility
+135,Historical Volatility,volatility_60,60-day volatility
+136,Realized Volatility,parkinson_vol,Parkinson volatility
+137,Realized Volatility,garman_klass_vol,Garman-Klass volatility
+138,Volatility Ratios,vol_ratio_5_20,Vol ratio 5/20
+139,Volatility Ratios,vol_ratio_10_60,Vol ratio 10/60
+140,Volume MA,volume_ma_5,5-day volume MA
+141,Volume MA,volume_ma_10,10-day volume MA
+142,Volume MA,volume_ma_20,20-day volume MA
+143,Volume Ratios,volume_ratio_5,Volume/MA5
+144,Volume Ratios,volume_ratio_20,Volume/MA20
+145,Volume Ratios,volume_osc,Volume oscillator
+146,OBV,obv,On-Balance Volume
+147,OBV,obv_ema,OBV EMA
+148,OBV,obv_slope,OBV slope
+149,VPT,vpt,Volume Price Trend
+150,VPT,vpt_slope,VPT slope
+151,A/D Line,ad_line,A/D Line
+152,A/D Line,ad_line_ema,A/D EMA
+153,A/D Line,cmf,Chaikin Money Flow
+154,Other Volume,force_index,Force Index
+155,Other Volume,force_index_ema,Force EMA
+156,Other Volume,emv,EMV
+157,Other Volume,emv_ema,EMV EMA
+158,Other Volume,vwap,VWAP
+159,Other Volume,price_to_vwap,Price/VWAP
+160,Other Volume,vwma_10,10-day VWMA
+161,Other Volume,vwma_20,20-day VWMA
+162,ADX,adx,ADX
+163,ADX,plus_di,+DI
+164,ADX,minus_di,-DI
+165,ADX,sar,Parabolic SAR
+166,ADX,sar_signal,SAR signal
+167,Aroon,aroon_up,Aroon Up
+168,Aroon,aroon_down,Aroon Down
+169,Aroon,aroon_osc,Aroon Oscillator
+170,Supertrend,supertrend,Supertrend signal
+171,Ichimoku,tenkan_sen,Tenkan-sen
+172,Ichimoku,kijun_sen,Kijun-sen
+173,Ichimoku,senkou_span_a,Senkou Span A
+174,Ichimoku,senkou_span_b,Senkou Span B
+175,Ichimoku,chikou_span,Chikou Span
+176,Ichimoku,ichimoku_signal,Ichimoku signal
+177,Price Patterns,daily_range,Daily range
+178,Price Patterns,close_to_high,Close to high
+179,Price Patterns,close_to_low,Close to low
+180,Price Patterns,high_low_ratio,H/L ratio
+181,Price Patterns,gap_up,Gap up flag
+182,Price Patterns,gap_down,Gap down flag
+183,Price Patterns,candle_body,Candle body
+184,Price Patterns,body_to_range,Body/range ratio
+185,Candlestick,is_doji,Doji
+186,Candlestick,is_hammer,Hammer
+187,Candlestick,is_shooting_star,Shooting star
+188,Candlestick,bullish_engulfing,Bullish engulfing
+189,Candlestick,bearish_engulfing,Bearish engulfing
+190,Candlestick,higher_close,Higher close
+191,Support/Resistance,resistance_20,20-day resistance
+192,Support/Resistance,support_20,20-day support
+193,Support/Resistance,near_resistance,Near resistance
+194,Support/Resistance,near_support,Near support
+195,Microstructure,price_efficiency_10,Price efficiency 10d
+196,Microstructure,realized_vol_20,Realized vol 20d
+197,Microstructure,vol_to_atr,Vol/ATR
+198,Microstructure,spread_proxy,Spread proxy
+199,Microstructure,spread_ma,Spread MA
+200,Microstructure,spread_ratio,Spread ratio
+201,Microstructure,price_impact,Price impact
+202,Microstructure,price_impact_ma,Price impact MA
+203,Microstructure,roll_spread,Roll spread
+204,Microstructure,amihud_illiq,Amihud illiquidity
+205,Microstructure,amihud_ma,Amihud MA
+206,Market Indices,NIFTY50_close,NIFTY50 close
+207,Market Indices,NIFTY50_return_1d,NIFTY50 1-day return
+208,Market Indices,NIFTY50_return_5d,NIFTY50 5-day return
+209,Market Indices,corr_NIFTY50_20d,20-day correlation with NIFTY50
+210,Market Indices,BANKNIFTY_close,BANKNIFTY close
+211,Market Indices,BANKNIFTY_return_1d,BANKNIFTY 1-day return
+212,Market Indices,BANKNIFTY_return_5d,BANKNIFTY 5-day return
+213,Market Indices,corr_BANKNIFTY_20d,20-day correlation with BANKNIFTY
+214,Market Indices,INDIA_VIX_close,INDIA_VIX close
+215,Market Indices,INDIA_VIX_return_1d,INDIA_VIX 1-day return
+216,Market Indices,INDIA_VIX_return_5d,INDIA_VIX 5-day return
+217,Market Indices,corr_INDIA_VIX_20d,20-day correlation with INDIA_VIX
+218,Relative Strength,relative_strength_nifty,RS vs NIFTY
+219,Relative Strength,rs_nifty_sma,RS NIFTY SMA
+220,Relative Strength,rs_nifty_normalized,RS normalized
+221,Relative Strength,beta_nifty,Beta to NIFTY
+222,Relative Strength,volume_percentile,Volume percentile
+223,Relative Strength,vol_percentile,Volatility percentile
+224,Relative Strength,price_52w_percentile,52-week price percentile
+225,52-Week,price_52w_high,52-week high
+226,52-Week,price_52w_low,52-week low
+227,52-Week,dist_from_52w_high,Dist from 52w high
+228,52-Week,dist_from_52w_low,Dist from 52w low
+229,Temporal,day_of_month,Day of month
+230,Temporal,quarter,Quarter
+231,Temporal,week_of_year,Week of year
+232,Temporal,day_of_week_sin,DOW sine
+233,Temporal,day_of_week_cos,DOW cosine
+234,Temporal,month_sin,Month sine
+235,Temporal,month_cos,Month cosine
+236,Temporal,day_of_month_sin,DOM sine
+237,Temporal,day_of_month_cos,DOM cosine
+238,Temporal,is_month_start,Month start
+239,Temporal,is_month_end,Month end
+240,Temporal,is_quarter_end,Quarter end
+241,Temporal,is_year_end,Year end
+242,Temporal,is_monday,Monday flag
+243,Temporal,is_friday,Friday flag
+244,Temporal,is_expiry_week,Expiry week
+245,Temporal,days_since_month_start,Days since month start
+246,Temporal,days_to_month_end,Days to month end
+247,Sentiment,news_sentiment,News sentiment
+248,Sentiment,sentiment_ma_7d,Sentiment 7-day MA
+249,Sentiment,sentiment_std_7d,Sentiment std
+250,Sentiment,sentiment_positive_count,Positive count
+251,Sentiment,sentiment_negative_count,Negative count
+252,Market Regime,regime_bull,Bull regime
+253,Market Regime,regime_bear,Bear regime
+254,Market Regime,strong_trend,Strong trend
+255,Market Regime,weak_trend,Weak trend
+256,Market Regime,trending,Trending
+257,Market Regime,ranging,Ranging
+258,Market Regime,high_vol_regime,High vol regime
+259,Market Regime,low_vol_regime,Low vol regime
+260,Market Regime,vol_expanding,Vol expanding
+261,Market Regime,vol_contracting,Vol contracting
+262,Market Regime,high_volume_regime,High volume regime
+263,Market Regime,low_volume_regime,Low volume regime
+264,Market Regime,volume_increasing,Volume increasing
+265,Market Regime,volume_decreasing,Volume decreasing
+266,Market Regime,overbought,Overbought
+267,Market Regime,oversold,Oversold
+268,Momentum Flags,neutral_rsi,Neutral RSI
+269,Momentum Flags,positive_momentum,Positive momentum
+270,Momentum Flags,negative_momentum,Negative momentum
+271,Momentum Flags,high_correlation,High correlation
+272,Correlation Flags,low_correlation,Low correlation
+273,Correlation Flags,decoupled,Decoupled
+274,BB Signals,near_bb_upper,Near BB upper
+275,BB Signals,near_bb_lower,Near BB lower
+276,BB Signals,bb_middle_zone,BB middle zone
+277,BB Signals,far_above_sma,Far above SMA
+278,BB Signals,far_below_sma,Far below SMA
+279,BB Signals,near_sma,Near SMA
+280,Interaction Features,return_x_volume,Return x Volume
+281,Interaction Features,abs_return_x_volume,|Return| x Volume
+282,Interaction Features,momentum_x_volume,Momentum x Volume
+283,Interaction Features,trend_strength_x_volume,Trend x Volume
+284,Interaction Features,vol_x_volume,Vol x Volume
+285,Interaction Features,atr_x_volume,ATR x Volume
+286,Interaction Features,rsi_x_vol,RSI x Vol
+287,Interaction Features,return_to_vol_5d,Return/Vol 5d
+288,Interaction Features,macd_x_vol,MACD x Vol
+289,Interaction Features,ma_trend_x_volume,MA trend x Volume
+290,Interaction Features,price_sma_x_volume,Price SMA x Volume
+291,Interaction Features,bb_squeeze,BB squeeze
+292,Interaction Features,bb_squeeze_low,BB squeeze low
+293,Interaction Features,bb_rsi_signal,BB RSI signal
+294,Market Interaction,return_when_market_up,Return when mkt up
+295,Market Interaction,return_when_market_down,Return when mkt down
+296,Market Interaction,expected_return,Expected return
+297,Market Interaction,return_surprise,Return surprise
+298,Confluence Signals,rsi_macd_confluence,RSI MACD confluence
+299,Confluence Signals,rsi_macd_divergence,RSI MACD divergence
+300,Confluence Signals,stoch_rsi_avg,Stoch RSI average
+301,Confluence Signals,stoch_rsi_spread,Stoch RSI spread
+302,Confluence Signals,trend_consensus,Trend consensus
+303,Confluence Signals,momentum_ewm,Momentum EWM
+304,Momentum Acceleration,momentum_accel,Momentum acceleration
+305,Momentum Acceleration,momentum_decel,Momentum deceleration
+306,Statistical,autocorr_1,Autocorr lag 1
+307,Statistical,autocorr_5,Autocorr lag 5
+308,Statistical,hurst_60,Hurst exponent 60d
+309,Statistical,skew_20,Skewness 20d
+310,Statistical,kurt_20,Kurtosis 20d
+311,Pressure Features,buy_pressure,Buy pressure
+312,Pressure Features,sell_pressure,Sell pressure
+313,Pressure Features,net_pressure,Net pressure
+314,Pressure Features,pressure_ma,Pressure MA
+315,Pressure Features,volume_imbalance,Volume imbalance
+316,Pressure Features,volume_imbalance_ma,Volume imbalance MA
+317,Range Features,tr_percentile,True range percentile
+318,Range Features,range_expansion,Range expansion
+319,Range Features,consecutive_up,Consecutive up
+320,Range Features,consecutive_down,Consecutive down
+321,Range Features,max_consecutive_up,Max consecutive up
+322,Range Features,max_consecutive_down,Max consecutive down
+323,Range Features,vol_squared,Volatility squared
+324,Vol Persistence,vol_squared_ma,Vol squared MA
+325,Vol Persistence,vol_persistence,Vol persistence
+326,Turnover,efficiency_ratio,Efficiency ratio
+327,Turnover,turnover,Turnover
+328,Turnover,turnover_ma_20,Turnover MA
+329,Turnover,turnover_ratio,Turnover ratio
+330,Turnover,relative_turnover,Relative turnover
+331,Liquidity,volume_concentration,Volume concentration
+332,Liquidity,kyle_lambda,Kyle lambda
+333,Liquidity,price_resilience,Price resilience
+334,Liquidity,low_liquidity,Low liquidity
+335,Liquidity,high_liquidity,High liquidity
+336,Gap Analysis,gap_size,Gap size
+337,Gap Analysis,gap_up_large,Large gap up
+338,Gap Analysis,gap_down_large,Large gap down
+339,Gap Analysis,gap_filled,Gap filled
+340,Gap Analysis,gap_fill_ratio,Gap fill ratio
+341,Gap Analysis,overnight_return,Overnight return
+342,Overnight/Intraday,overnight_vol,Overnight volatility
+343,Overnight/Intraday,intraday_vol,Intraday volatility
+344,Overnight/Intraday,overnight_intraday_ratio,Overnight/intraday ratio
+345,Price Levels,dist_to_100,Dist to round 100
+346,Price Levels,dist_to_500,Dist to round 500
+347,Price Levels,near_round_100,Near round 100
+348,Price Levels,pivot_high,Pivot high
+349,Price Levels,pivot_low,Pivot low
+350,Price Levels,at_pivot_high,At pivot high
+351,Price Levels,at_pivot_low,At pivot low
+352,Price Levels,price_zone,Price zone
+353,Volume Analysis,time_at_level,Time at level
+354,Volume Analysis,volume_zscore,Volume Z-score
+355,Volume Analysis,climax_volume,Climax volume
+356,Volume Analysis,volume_efficiency,Volume efficiency
+357,Volume Analysis,exhaustion,Exhaustion
+358,Volume Analysis,accumulation_phase,Accumulation
+359,Volume Analysis,distribution_phase,Distribution
+360,Smart Money,volume_price_divergence,Volume price divergence
+361,Smart Money,smart_money_divergence,Smart money divergence
+362,Relative Performance,outperformance,Outperformance
+363,Relative Performance,outperformance_ma,Outperformance MA
+364,Relative Performance,outperform_streak,Outperform streak
+365,Relative Performance,relative_momentum,Relative momentum
+366,Relative Performance,beta_change,Beta change
+367,Beta,beta_stable,Beta stable
+368,Cycles,dominant_cycle,Dominant cycle
+369,Cycles,cycle_phase,Cycle phase
+370,Cycles,detrended,Detrended
+371,Cycles,detrended_norm,Detrended normalized
+372,Swing Analysis,swing_high,Swing high
+373,Swing Analysis,swing_low,Swing low
+374,Swing Analysis,is_swing_high,Is swing high
+375,Swing Analysis,is_swing_low,Is swing low
+376,Swing Analysis,wave_count,Wave count
+377,Targets,target_close_return,Target close return
+378,Targets,target_close,Target close
+379,Targets,target_high_return,Target high return
+380,Targets,target_high,Target high
+381,Targets,target_low_return,Target low return
+382,Targets,target_low,Target low
+383,Targets,target_direction,Target direction
+384,Targets,target_range,Target range

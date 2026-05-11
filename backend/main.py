@@ -1114,7 +1114,7 @@ async def get_models_comparison():
 # ==================== V3 PIPELINE ENDPOINTS ====================
 
 _WORKSPACE    = FilePath(__file__).resolve().parent.parent
-_PYTHON_BIN   = str(_WORKSPACE / "venv" / "bin" / "python")
+_PYTHON_BIN   = sys.executable
 _ORCHESTRATOR = str(_WORKSPACE / "V3" / "07_pipeline" / "orchestrator.py")
 
 class V3RunRequest(BaseModel):
@@ -1637,6 +1637,36 @@ def _read_summary(run_id: str) -> dict:
         return {}
     df = pd.read_csv(path)
     return sanitize_dict(df.to_dict(orient="records"))
+
+
+# ── Symbol universe (dynamic — frontend reads this) ─────────────────────────
+
+@app.get("/api/v3/symbols")
+async def get_v3_symbols():
+    """
+    Returns the full V3 stock universe + sector map.
+    Frontend uses this to render the stock picker dynamically — never hardcode.
+    Source of truth: V3/00_config/config.py (SYMBOLS_100, SECTOR_MAP).
+    """
+    import sys as _sys
+    cfg_path = str(_V3_ROOT / "00_config")
+    if cfg_path not in _sys.path:
+        _sys.path.insert(0, cfg_path)
+    try:
+        from config import SYMBOLS_100, SECTOR_MAP  # type: ignore
+    except Exception as e:
+        raise HTTPException(500, detail=f"Failed to load V3 config: {e}")
+
+    by_sector: dict = {}
+    for sym in SYMBOLS_100:
+        sec = SECTOR_MAP.get(sym, "other")
+        by_sector.setdefault(sec, []).append(sym)
+
+    return {
+        "symbols": list(SYMBOLS_100),
+        "count":   len(SYMBOLS_100),
+        "sectors": by_sector,
+    }
 
 
 # ── Latest run id (polling endpoint) ─────────────────────────────────────────

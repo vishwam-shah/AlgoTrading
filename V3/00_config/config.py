@@ -90,6 +90,8 @@ SYMBOLS_100: list = [
     "ADANIENT",   "ADANIPORTS", "BEL",        "HAL",        "IRFC",
     "OFSS",       "ETERNAL",    "NAUKRI",     "NMDC",       "BOSCHLTD",
     "BAJAJHFL",   "MANAPPURAM", "RBLBANK",    "EXIDEIND",
+    # ── Nifty-100 additions (3) ──────────────────────────────────────────────
+    "DABUR",      "TRENT",      "ICICIPRULI",
 ]
 
 IT_SYMBOLS: set = {
@@ -103,7 +105,7 @@ BANKING_SYMBOLS: set = {
     "INDUSINDBK", "BANDHANBNK", "IDFCFIRSTB", "FEDERALBNK", "AUBANK",
     "BAJFINANCE", "BAJAJFINSV", "HDFCLIFE", "SBILIFE", "ICICIGI",
     "MUTHOOTFIN", "CHOLAFIN", "SHRIRAMFIN", "MANAPPURAM", "RBLBANK",
-    "BAJAJHFL",
+    "BAJAJHFL", "ICICIPRULI",
 }
 
 SECTOR_MAP: dict = {
@@ -157,6 +159,8 @@ SECTOR_MAP: dict = {
     # Conglomerate / Infra / Other
     "ADANIENT":   "infra",     "ADANIPORTS": "infra",     "BEL":        "defense",
     "HAL":        "defense",   "IRFC":       "infra",     "ETERNAL":    "consumer",
+    # Nifty-100 additions
+    "DABUR":      "fmcg",      "TRENT":      "consumer",  "ICICIPRULI": "banking",
 }
 
 SYMBOLS = SYMBOLS_100  # Run full 100-stock universe

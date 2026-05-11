@@ -1,40 +1,8 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Play, Square, RefreshCw, ChevronDown, ChevronUp, Settings2, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-
-const ALL_100 = [
-  'SBIN','HDFCBANK','ICICIBANK','AXISBANK','KOTAKBANK','INDUSINDBK','BANDHANBNK','IDFCFIRSTB','FEDERALBNK','AUBANK',
-  'BAJFINANCE','BAJAJFINSV','HDFCLIFE','SBILIFE','ICICIGI','MUTHOOTFIN','CHOLAFIN','MANAPPURAM',
-  'TCS','INFY','HCLTECH','WIPRO','TECHM','LTIM','MPHASIS','PERSISTENT','COFORGE','TATAELXSI','OFSS','NAUKRI',
-  'MARUTI','BAJAJ-AUTO','HEROMOTOCO','EICHERMOT','TVSMOTOR','M&M','MOTHERSON','BOSCHLTD','EXIDEIND',
-  'SUNPHARMA','DRREDDY','CIPLA','DIVISLAB','LUPIN','TORNTPHARM','AUROPHARMA','ALKEM',
-  'HINDUNILVR','ITC','NESTLEIND','BRITANNIA','TATACONSUM','MARICO','COLPAL','GODREJCP',
-  'RELIANCE','ONGC','BPCL','NTPC','POWERGRID','COALINDIA','GAIL','TATAPOWER',
-  'TATASTEEL','HINDALCO','JSWSTEEL','VEDL','SAIL','NMDC',
-  'LT','BHEL','SIEMENS','ABB','HAVELLS','POLYCAB','CUMMINSIND','BHARTIARTL','INDUSTOWER',
-  'ULTRACEMCO','GRASIM','AMBUJACEM','SHREECEM',
-  'TITAN','ASIANPAINT','PIDILITIND','BERGEPAINT','VOLTAS','PAGEIND',
-  'DLF','DMART','GODREJPROP','ADANIENT','ADANIPORTS',
-  'BEL','HAL','IRFC','ETERNAL',
-];
-
-const SECTORS: Record<string, string[]> = {
-  Banking:  ['SBIN','HDFCBANK','ICICIBANK','AXISBANK','KOTAKBANK','INDUSINDBK','BANDHANBNK','IDFCFIRSTB','FEDERALBNK','AUBANK'],
-  Finance:  ['BAJFINANCE','BAJAJFINSV','HDFCLIFE','SBILIFE','ICICIGI','MUTHOOTFIN','CHOLAFIN','MANAPPURAM'],
-  IT:       ['TCS','INFY','HCLTECH','WIPRO','TECHM','LTIM','MPHASIS','PERSISTENT','COFORGE','TATAELXSI','OFSS','NAUKRI'],
-  Auto:     ['MARUTI','BAJAJ-AUTO','HEROMOTOCO','EICHERMOT','TVSMOTOR','M&M','MOTHERSON','BOSCHLTD','EXIDEIND'],
-  Pharma:   ['SUNPHARMA','DRREDDY','CIPLA','DIVISLAB','LUPIN','TORNTPHARM','AUROPHARMA','ALKEM'],
-  FMCG:     ['HINDUNILVR','ITC','NESTLEIND','BRITANNIA','TATACONSUM','MARICO','COLPAL','GODREJCP'],
-  Energy:   ['RELIANCE','ONGC','BPCL','NTPC','POWERGRID','COALINDIA','GAIL','TATAPOWER'],
-  Metals:   ['TATASTEEL','HINDALCO','JSWSTEEL','VEDL','SAIL','NMDC'],
-  Infra:    ['LT','BHEL','SIEMENS','ABB','HAVELLS','POLYCAB','CUMMINSIND','BHARTIARTL','INDUSTOWER'],
-  Cement:   ['ULTRACEMCO','GRASIM','AMBUJACEM','SHREECEM'],
-  Consumer: ['TITAN','ASIANPAINT','PIDILITIND','BERGEPAINT','VOLTAS','PAGEIND'],
-  Realty:   ['DLF','DMART','GODREJPROP','ADANIENT','ADANIPORTS'],
-  Defence:  ['BEL','HAL','IRFC','ETERNAL'],
-};
 
 interface Config {
   fastMode: boolean;
@@ -57,7 +25,10 @@ interface PipelineControlProps {
 
 export default function PipelineControl({ onComplete }: PipelineControlProps) {
   const [open,         setOpen]         = useState(false);
-  const [selected,     setSelected]     = useState<Set<string>>(new Set(ALL_100));
+  const [allSymbols,   setAllSymbols]   = useState<string[]>([]);
+  const [sectors,      setSectors]      = useState<Record<string, string[]>>({});
+  const [universeLoaded, setUniverseLoaded] = useState(false);
+  const [selected,     setSelected]     = useState<Set<string>>(new Set());
   const [config,       setConfig]       = useState<Config>(DEFAULT_CONFIG);
   const [running,      setRunning]       = useState(false);
   const [jobId,        setJobId]        = useState<string | null>(null);
@@ -67,8 +38,31 @@ export default function PipelineControl({ onComplete }: PipelineControlProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [searchSym,    setSearchSym]    = useState('');
 
+  // Fetch the symbol universe + sector map from the backend on mount.
+  // Source of truth: V3/00_config/config.py — never hardcode here.
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/v3/symbols')
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(data => {
+        if (cancelled) return;
+        const syms: string[]                  = data.symbols ?? [];
+        const secs: Record<string, string[]>  = data.sectors ?? {};
+        setAllSymbols(syms);
+        setSectors(secs);
+        setSelected(new Set(syms));   // default: all selected
+        setUniverseLoaded(true);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        toast.error(`Failed to load stock universe: ${err.message}`);
+        setUniverseLoaded(true);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   const toggleSym   = (s: string) => setSelected(prev => { const n = new Set(prev); n.has(s) ? n.delete(s) : n.add(s); return n; });
-  const selectAll   = () => setSelected(new Set(ALL_100));
+  const selectAll   = () => setSelected(new Set(allSymbols));
   const selectNone  = () => setSelected(new Set());
   const selectSector = (syms: string[]) => setSelected(prev => {
     const n = new Set(prev);
@@ -78,8 +72,8 @@ export default function PipelineControl({ onComplete }: PipelineControlProps) {
   });
 
   const filtered = searchSym
-    ? ALL_100.filter(s => s.toLowerCase().includes(searchSym.toLowerCase()))
-    : ALL_100;
+    ? allSymbols.filter(s => s.toLowerCase().includes(searchSym.toLowerCase()))
+    : allSymbols;
 
   async function startPipeline() {
     if (selected.size === 0) { toast.error('Select at least one stock'); return; }
@@ -141,7 +135,7 @@ export default function PipelineControl({ onComplete }: PipelineControlProps) {
           <div className="text-left">
             <div className="text-sm font-semibold">Pipeline Control</div>
             <div className="text-xs text-muted-foreground">
-              {selected.size} stocks selected · {config.fastMode ? 'Fast (LGB+XGB)' : 'Full (5 models)'} · ₹{(config.capital/100000).toFixed(1)}L capital
+              {selected.size} of {allSymbols.length} stocks selected · {config.fastMode ? 'Fast (LGB+XGB)' : 'Full (5 models)'} · ₹{(config.capital/100000).toFixed(1)}L capital
             </div>
           </div>
         </div>
@@ -180,7 +174,7 @@ export default function PipelineControl({ onComplete }: PipelineControlProps) {
 
             {/* Sector chips */}
             <div className="flex flex-wrap gap-2 mb-3">
-              {Object.entries(SECTORS).map(([sector, syms]) => {
+              {Object.entries(sectors).map(([sector, syms]) => {
                 const allIn = syms.every(s => selected.has(s));
                 return (
                   <button key={sector} onClick={() => selectSector(syms)}
@@ -213,7 +207,9 @@ export default function PipelineControl({ onComplete }: PipelineControlProps) {
                 </button>
               ))}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">{selected.size} selected</div>
+            <div className="text-[10px] text-muted-foreground mt-1">
+              {universeLoaded ? `${selected.size} / ${allSymbols.length} selected` : 'Loading universe…'}
+            </div>
           </div>
 
           {/* Config */}
