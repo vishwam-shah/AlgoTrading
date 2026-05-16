@@ -4,6 +4,7 @@ import { Play, Square, RefreshCw, ChevronDown, ChevronUp, Settings2, Loader2, Ch
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
+
 interface Config {
   fastMode: boolean;
   forceFeatures: boolean;

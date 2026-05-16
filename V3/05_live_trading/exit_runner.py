@@ -33,7 +33,7 @@ import json
 import os
 import sys
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -45,7 +45,10 @@ _EXEC_DIR     = _LIVE_DIR / "execution_logs"
 _ORDERS_DIR   = _LIVE_DIR / "orders"
 _PARQUET_PATH = _EXEC_DIR / "execution_log.parquet"
 
-HOLD_DAYS_V2 = 10   # must match backtest.HOLD_DAYS_V2 and signal_publisher.TARGET_HOLD_DAYS
+sys.path.insert(0, str(_LIVE_DIR.parent / "00_config"))
+from risk_config import HOT as _RC  # type: ignore  # noqa: E402
+
+HOLD_DAYS_V2 = _RC["HOLD_DAYS"]   # canonical: V3/00_config/risk_config.yaml
 
 
 def _load_fills() -> pd.DataFrame:
@@ -117,41 +120,123 @@ def _is_due_for_exit(entry_date, today: datetime.date, hold_days: int = HOLD_DAY
     return elapsed >= hold_days
 
 
-def _build_sell_order(lot: Dict, ltp_lookup: Optional[Dict[str, float]] = None) -> Dict:
+def _build_sell_order(lot: Dict,
+                       ltp_lookup: Optional[Dict[str, float]] = None,
+                       qty: Optional[int] = None,
+                       reason: str = "time_exit_v2",
+                       price_override: Optional[float] = None) -> Dict:
     """Build a SELL order dict shaped like signal_publisher's BUY orders."""
-    px = (ltp_lookup or {}).get(lot["symbol"], lot["avg_price"])
+    px = price_override if price_override is not None else (ltp_lookup or {}).get(lot["symbol"], lot["avg_price"])
+    sell_qty = int(qty if qty is not None else lot["qty"])
     return {
         "symbol":         lot["symbol"],
         "exchange":       "NSE",
         "direction":      "SELL",
-        "qty":            int(lot["qty"]),
+        "qty":            sell_qty,
         "price":          round(float(px), 2),
-        "order_value":    round(float(px) * int(lot["qty"]), 2),
+        "order_value":    round(float(px) * sell_qty, 2),
         "order_type":     "LIMIT",
         "product":        "CNC",
         "validity":       "DAY",
         "entry_date":     str(lot["entry_date"]),
         "entry_price":    lot["avg_price"],
         "hold_days":      HOLD_DAYS_V2,
-        "reason":         "time_exit_v2",
+        "reason":         reason,
         "generated_at":   datetime.now().isoformat(),
     }
 
 
+_RAW_DIR = _LIVE_DIR.parent / "01_data" / "raw"
+
+
+def _load_bars_since(symbol: str, since: date) -> pd.DataFrame:
+    p = _RAW_DIR / f"{symbol}.parquet"
+    if not p.exists():
+        return pd.DataFrame()
+    df = pd.read_parquet(p)
+    if "date" not in df.columns:
+        return pd.DataFrame()
+    df["date"] = pd.to_datetime(df["date"]).dt.date
+    return df[df["date"] >= since].reset_index(drop=True)
+
+
 def find_due_exits() -> List[Dict]:
-    """Scan execution log, return SELL orders for any open lot past hold horizon."""
-    fills = _load_fills()
-    if fills.empty:
-        print("  [exit] no execution log yet — nothing to exit")
-        return []
-    open_lots = _open_positions_fifo(fills)
+    """
+    Return SELL orders for open lots past the hold horizon.
+
+    Source of truth: portfolio_ledger.py (rebuilt from execution_log.parquet).
+    Falls back to a direct fills scan if the ledger is unavailable.
+    """
     today = datetime.now().date()
-    due = [lot for lot in open_lots if _is_due_for_exit(lot["entry_date"], today)]
+    try:
+        from portfolio_ledger import get_state, rebuild_from_executions  # noqa
+        state = get_state()
+        # Always rebuild before reading — keeps lot bookkeeping in lockstep
+        # with whatever fills landed since the last invocation.
+        state = rebuild_from_executions(starting_capital=state.starting_capital)
+        open_lots = [
+            {"symbol": l.symbol, "qty": l.qty,
+             "entry_date": date.fromisoformat(l.entry_date),
+             "avg_price": l.entry_price}
+            for l in state.open_lots
+        ]
+    except Exception as e:
+        print(f"  [exit] WARN — ledger unavailable ({e}); falling back to fills scan")
+        fills = _load_fills()
+        if fills.empty:
+            print("  [exit] no execution log yet — nothing to exit")
+            return []
+        open_lots = _open_positions_fifo(fills)
+
     if not open_lots:
         print("  [exit] no open positions")
         return []
-    print(f"  [exit] open lots: {len(open_lots)}  due today: {len(due)}")
-    return [_build_sell_order(lot) for lot in due]
+
+    # Multi-rule policy (vol stop / trailing / signal decay / time stop / partial PT)
+    try:
+        from exit_policy import evaluate as _eval
+    except Exception as e:
+        print(f"  [exit] WARN — exit_policy unavailable ({e}); using time-stop only")
+        _eval = None
+
+    sells: List[Dict] = []
+    counts: Dict[str, int] = defaultdict(int)
+    for lot in open_lots:
+        if _eval is None:
+            if _is_due_for_exit(lot["entry_date"], today):
+                sells.append(_build_sell_order(lot))
+                counts["time_stop"] += 1
+            continue
+        bars = _load_bars_since(lot["symbol"], lot["entry_date"])
+        # Pull recent prob_up forecasts if available (best-effort)
+        prob_series = None
+        try:
+            run_dir = sorted((_LIVE_DIR.parent / "06_results" / "runs").glob("*"))[-1]
+            preds_path = run_dir / lot["symbol"] / "predictions.csv"
+            if preds_path.exists():
+                pf = pd.read_csv(preds_path)
+                pf["date"] = pd.to_datetime(pf["date"])
+                prob_series = pf.set_index("date")["prob_up"].sort_index()
+        except Exception:
+            pass
+
+        decision = _eval(
+            lot={"symbol": lot["symbol"], "qty": int(lot["qty"]),
+                 "entry_price": float(lot["avg_price"]),
+                 "entry_date": str(lot["entry_date"])},
+            bars=bars,
+            prob_series=prob_series,
+            today=today,
+        )
+        counts[decision.reason] += 1
+        if decision.action in ("exit", "partial"):
+            sells.append(_build_sell_order(lot, qty=decision.qty_to_sell,
+                                           reason=decision.reason,
+                                           price_override=decision.exit_price))
+
+    print(f"  [exit] open lots: {len(open_lots)}  exits: {len(sells)}  "
+          f"reasons: {dict(counts)}")
+    return sells
 
 
 def _save_orders(orders: List[Dict]) -> Optional[Path]:

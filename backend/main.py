@@ -153,14 +153,22 @@ def sanitize_dict(obj):
     return obj
 
 
-# Available stocks
-AVAILABLE_STOCKS = [
-    "SBIN", "HDFCBANK", "ICICIBANK", "AXISBANK", "KOTAKBANK",
-    "TCS", "INFY", "WIPRO", "HCLTECH", "TECHM",
-    "RELIANCE", "TATAMOTORS", "TATASTEEL", "ITC", "LT",
-    "BHARTIARTL", "HINDUNILVR", "MARUTI", "BAJFINANCE",
-    "ADANIENT", "ADANIPORTS", "ASIANPAINT", "SUNPHARMA"
-]
+# Available stocks — canonical 100-symbol NSE universe.
+# Pulled from V3/00_config/tickers.py so backend, pipeline, and frontend
+# never drift apart. Falls back to the v1 short-list if the import fails.
+try:
+    sys.path.insert(0, str(FilePath(__file__).resolve().parent.parent / "V3" / "00_config"))
+    from tickers import YFINANCE_TICKERS as _CANONICAL_TICKERS  # type: ignore
+    AVAILABLE_STOCKS = sorted(_CANONICAL_TICKERS.keys())
+except Exception:
+    _CANONICAL_TICKERS = {}
+    AVAILABLE_STOCKS = [
+        "SBIN", "HDFCBANK", "ICICIBANK", "AXISBANK", "KOTAKBANK",
+        "TCS", "INFY", "WIPRO", "HCLTECH", "TECHM",
+        "RELIANCE", "TATAMOTORS", "TATASTEEL", "ITC", "LT",
+        "BHARTIARTL", "HINDUNILVR", "MARUTI", "BAJFINANCE",
+        "ADANIENT", "ADANIPORTS", "ASIANPAINT", "SUNPHARMA"
+    ]
 
 
 class BacktestRequest(BaseModel):
@@ -2650,42 +2658,84 @@ async def get_execution_overview(scope: str = "latest"):
 
 
 @app.post("/api/v3/execution/reset")
-async def reset_execution_logs(keep_latest: bool = False):
+async def reset_execution_logs(keep_latest: bool = False, full: bool = False,
+                                starting_capital: float = 500_000):
     """
-    Archive all execution logs so the paper portfolio resets to zero.
-    Files are moved to execution_logs/archive/<timestamp>/ rather than deleted,
-    so nothing is lost — you can recover by moving them back.
+    Archive paper-trading state so the dashboard recalculates from scratch.
 
-    Query:
-      keep_latest=true → keep the most recent session, archive the rest.
+    Modes:
+      - default          : archive per-session JSONs only (legacy behaviour)
+      - keep_latest=true : archive everything except the most recent JSON
+      - full=true        : also archive execution_log.parquet, orders/*.json,
+                           and rebuild the ledger to start from `starting_capital`.
+                           Use this when you want the dashboard tiles to reflect
+                           a clean paper run going forward — nothing is deleted,
+                           every old file is moved into archive/<timestamp>/.
+
+    Returns counts of files archived.
     """
     import shutil
     _EXEC_LOG_DIR.mkdir(parents=True, exist_ok=True)
-    files = sorted(_EXEC_LOG_DIR.glob("execution_*.json"), reverse=True)
-    if not files:
-        return {"archived": 0, "kept": 0, "archive_dir": None}
-
-    to_archive = files[1:] if keep_latest else files
-    if not to_archive:
-        return {"archived": 0, "kept": len(files), "archive_dir": None}
-
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    archive_dir = _EXEC_LOG_DIR / "archive" / stamp
-    archive_dir.mkdir(parents=True, exist_ok=True)
+    archive_root = _EXEC_LOG_DIR / "archive" / stamp
+    archive_root.mkdir(parents=True, exist_ok=True)
 
-    moved = 0
-    for fp in to_archive:
+    out = {"archive_dir": str(archive_root), "archived_json": 0,
+           "archived_parquet": 0, "archived_orders": 0, "ledger_reset": False,
+           "starting_capital": starting_capital}
+
+    json_files = sorted(_EXEC_LOG_DIR.glob("execution_*.json"), reverse=True)
+    to_move = json_files[1:] if keep_latest else json_files
+    for fp in to_move:
         try:
-            shutil.move(str(fp), str(archive_dir / fp.name))
-            moved += 1
+            shutil.move(str(fp), str(archive_root / fp.name))
+            out["archived_json"] += 1
         except Exception:
             pass
 
-    return {
-        "archived":    moved,
-        "kept":        1 if keep_latest else 0,
-        "archive_dir": str(archive_dir),
-    }
+    if full:
+        # Move the rolling consolidated parquet
+        pq = _EXEC_LOG_DIR / "execution_log.parquet"
+        if pq.exists():
+            shutil.move(str(pq), str(archive_root / pq.name))
+            out["archived_parquet"] = 1
+
+        # Move all proposed-order JSONs in V3/05_live_trading/orders/
+        orders_dir = _V3_ROOT / "05_live_trading" / "orders"
+        if orders_dir.exists():
+            (archive_root / "orders").mkdir(exist_ok=True)
+            for fp in orders_dir.glob("orders_*.json"):
+                try:
+                    shutil.move(str(fp), str(archive_root / "orders" / fp.name))
+                    out["archived_orders"] += 1
+                except Exception:
+                    pass
+            for fp in orders_dir.glob("exits_*.json"):
+                try:
+                    shutil.move(str(fp), str(archive_root / "orders" / fp.name))
+                    out["archived_orders"] += 1
+                except Exception:
+                    pass
+
+        # Snapshot + rebuild the canonical ledger
+        ledger_dir = _V3_ROOT / "05_live_trading" / "ledger"
+        if ledger_dir.exists():
+            (archive_root / "ledger").mkdir(exist_ok=True)
+            for fp in ledger_dir.iterdir():
+                if fp.is_file():
+                    try:
+                        shutil.move(str(fp), str(archive_root / "ledger" / fp.name))
+                    except Exception:
+                        pass
+        try:
+            from portfolio_ledger import rebuild_from_executions  # type: ignore
+            rebuild_from_executions(starting_capital=starting_capital)
+            out["ledger_reset"] = True
+        except Exception as e:
+            out["ledger_reset"] = False
+            out["ledger_error"] = str(e)
+
+    return _safe_json(out)
 
 
 # ── Dashboard summary endpoint ────────────────────────────────────────────────
@@ -2909,6 +2959,399 @@ async def get_webhook_events(limit: int = 50):
     events = [json.loads(l) for l in lines[-limit:]][::-1]
     return {"events": events, "count": len(lines)}
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# v3.1 ENDPOINTS — surfaces the new ledger / exit policy / robustness / promotion
+# infrastructure to the frontend. All endpoints are read-only and degrade
+# gracefully when the underlying artefacts are absent.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_V3_ROOT = FilePath(__file__).resolve().parent.parent / "V3"
+sys.path.insert(0, str(_V3_ROOT / "00_config"))
+sys.path.insert(0, str(_V3_ROOT / "05_live_trading"))
+sys.path.insert(0, str(_V3_ROOT / "07_pipeline"))
+
+
+def _safe_json(obj):
+    """Recursively coerce to JSON-serialisable primitives.
+    Handles NaN/Inf, numpy scalars, numpy booleans, dataclasses, ndarrays."""
+    if isinstance(obj, dict):
+        return {k: _safe_json(v) for k, v in obj.items()}
+    if isinstance(obj, list) or isinstance(obj, tuple):
+        return [_safe_json(v) for v in obj]
+    if isinstance(obj, bool) or isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, float):
+        return None if (math.isnan(obj) or math.isinf(obj)) else obj
+    if isinstance(obj, (np.floating, np.integer)):
+        v = float(obj)
+        return None if (math.isnan(v) or math.isinf(v)) else v
+    if isinstance(obj, np.ndarray):
+        return [_safe_json(x) for x in obj.tolist()]
+    if hasattr(obj, "__dict__"):
+        return _safe_json(vars(obj))
+    return obj
+
+
+@app.get("/api/v3/universe")
+async def universe():
+    """
+    Canonical 100-symbol NSE universe (single source of truth for backend +
+    frontend). Includes yfinance ticker mapping and sector classification so
+    no UI component needs to maintain its own list.
+    """
+    sector_map: Dict[str, str] = {}
+    try:
+        from risk_guard import SECTOR_MAP  # type: ignore
+        sector_map = dict(SECTOR_MAP)
+    except Exception:
+        pass
+
+    syms = sorted(_CANONICAL_TICKERS.keys()) if _CANONICAL_TICKERS else AVAILABLE_STOCKS
+    rows = [{
+        "symbol":   s,
+        "yfinance": _CANONICAL_TICKERS.get(s, f"{s}.NS"),
+        "sector":   sector_map.get(s, "Other"),
+    } for s in syms]
+
+    sectors: Dict[str, list] = {}
+    for r in rows:
+        sectors.setdefault(r["sector"], []).append(r["symbol"])
+    return {
+        "count":   len(rows),
+        "symbols": rows,
+        "sectors": sectors,
+    }
+
+
+@app.get("/api/v3/universe/audit")
+async def universe_audit(run_id: Optional[str] = None):
+    """
+    Audit the chosen run's universe vs the canonical tickers.py.
+
+    Differentiates three states per symbol:
+      • trained        — produced summary_row.json with status="ok"
+      • skipped        — present in run dir but skipped (too few rows / IPO too recent)
+      • missing        — never attempted (orchestrator was launched without this symbol)
+
+    "fully_aligned" is True when every canonical symbol is at least attempted.
+    A run with skipped symbols can still be "fully attempted" — that is the
+    correct outcome when a stock has insufficient history.
+    """
+    canonical = set(_CANONICAL_TICKERS.keys()) if _CANONICAL_TICKERS else set(AVAILABLE_STOCKS)
+    if run_id is None:
+        latest = sorted(
+            (_V3_ROOT / "06_results" / "runs").glob("[0-9]*"),
+            key=lambda p: p.name, reverse=True,
+        )
+        if not latest:
+            return {"error": "no runs"}
+        run_id = latest[0].name
+
+    run_dir = _V3_ROOT / "06_results" / "runs" / run_id
+    if not run_dir.exists():
+        raise HTTPException(404, f"run not found: {run_id}")
+
+    artefacts = {p.name for p in run_dir.iterdir()
+                 if p.is_dir() and not p.name.startswith(("_", "."))
+                 and p.name != "plots"}
+
+    meta_path = run_dir / "run_metadata.json"
+    metadata_syms: set = set()
+    if meta_path.exists():
+        try:
+            metadata_syms = set(json.load(open(meta_path)).get("symbols", []))
+        except Exception:
+            pass
+
+    # Skipped/error breakdown
+    skipped_path = run_dir / "skipped_symbols.json"
+    skipped_payload: Dict = {}
+    if skipped_path.exists():
+        try:
+            skipped_payload = json.load(open(skipped_path))
+        except Exception:
+            pass
+    skipped_syms = {item["symbol"]: item.get("reason", "unknown")
+                    for item in skipped_payload.get("skipped", [])}
+    error_syms   = {item["symbol"]: item.get("reason", "unknown")
+                    for item in skipped_payload.get("errors", [])}
+
+    # If skipped_symbols.json doesn't exist, derive from summary.csv
+    if not skipped_payload:
+        try:
+            summary_csv = run_dir / "summary.csv"
+            if summary_csv.exists():
+                sdf = pd.read_csv(summary_csv)
+                if "status" in sdf.columns:
+                    for _, r in sdf.iterrows():
+                        st = str(r.get("status", "ok"))
+                        sym = str(r.get("symbol", ""))
+                        if sym in ("", "AVERAGE"):
+                            continue
+                        if st.startswith("skipped"):
+                            skipped_syms[sym] = st.split(":", 1)[1] if ":" in st else "unknown"
+                        elif st == "error":
+                            error_syms[sym] = "unknown"
+        except Exception:
+            pass
+
+    trained_syms = artefacts - set(skipped_syms) - set(error_syms)
+
+    return _safe_json({
+        "run_id":            run_id,
+        "canonical_count":   len(canonical),
+        "metadata_count":    len(metadata_syms),
+        "artefacts_count":   len(artefacts),
+        "trained_count":     len(trained_syms),
+        "skipped_count":     len(skipped_syms),
+        "error_count":       len(error_syms),
+        "skipped":           [{"symbol": s, "reason": r} for s, r in skipped_syms.items()],
+        "errors":            [{"symbol": s, "reason": r} for s, r in error_syms.items()],
+        "missing_from_run":  sorted(canonical - artefacts),
+        "extra_in_run":      sorted(artefacts - canonical),
+        "fully_attempted":   bool(canonical.issubset(artefacts | set(skipped_syms))),
+        "fully_aligned":     bool(canonical == trained_syms),
+    })
+
+
+@app.get("/api/v3/risk-config")
+async def risk_config_view():
+    """Live view of the canonical risk_config.yaml — useful for the dashboard."""
+    try:
+        from risk_config import load as _rc_load  # type: ignore
+        return _safe_json(_rc_load())
+    except Exception as e:
+        raise HTTPException(503, f"risk_config unavailable: {e}")
+
+
+@app.get("/api/v3/portfolio/state")
+async def portfolio_state():
+    """Snapshot of the canonical ledger (NAV, cash, open lots, closed trades)."""
+    try:
+        from portfolio_ledger import summary, get_state  # type: ignore
+        snap = summary()
+        state = get_state()
+        snap["closed_trades_recent"] = [
+            {
+                "symbol":      t.symbol,
+                "qty":         t.qty,
+                "entry_price": t.entry_price,
+                "exit_price":  t.exit_price,
+                "entry_date":  t.entry_date,
+                "exit_date":   t.exit_date,
+                "ret_pct":     round((t.exit_price - t.entry_price) / t.entry_price * 100, 3) if t.entry_price else 0.0,
+                "net_pnl":     t.net_pnl,
+                "hold_days":   t.hold_days,
+            } for t in state.closed_trades[-25:][::-1]
+        ]
+        snap["open_lots"] = [
+            {
+                "symbol":      l.symbol,
+                "qty":         l.qty,
+                "entry_price": l.entry_price,
+                "entry_date":  l.entry_date,
+                "order_id":    l.order_id,
+            } for l in state.open_lots
+        ]
+        return _safe_json(snap)
+    except Exception as e:
+        raise HTTPException(503, f"portfolio_ledger unavailable: {e}")
+
+
+@app.post("/api/v3/portfolio/rebuild")
+async def portfolio_rebuild(starting_capital: float = 500_000):
+    """Force-rebuild the ledger from execution_log.parquet."""
+    try:
+        from portfolio_ledger import rebuild_from_executions, summary  # type: ignore
+        rebuild_from_executions(starting_capital=starting_capital)
+        return _safe_json({"status": "ok", "snapshot": summary()})
+    except Exception as e:
+        raise HTTPException(500, f"rebuild failed: {e}")
+
+
+@app.get("/api/v3/portfolio/nav-history")
+async def nav_history():
+    """Daily NAV history (for the equity curve on the dashboard)."""
+    nav_path = _V3_ROOT / "05_live_trading" / "ledger" / "nav_history.parquet"
+    if not nav_path.exists():
+        return {"history": []}
+    try:
+        df = pd.read_parquet(nav_path)
+        return {"history": _safe_json(df.to_dict(orient="records"))}
+    except Exception as e:
+        raise HTTPException(500, f"nav history read failed: {e}")
+
+
+@app.get("/api/v3/exits/today")
+async def exits_today():
+    """List of due-for-exit lots with reason breakdown (vol/trail/decay/time/partial)."""
+    try:
+        from exit_runner import find_due_exits  # type: ignore
+        exits = find_due_exits()
+        # Group by reason for a quick badge view in the UI
+        from collections import Counter
+        breakdown = Counter(e.get("reason", "?") for e in exits)
+        return _safe_json({
+            "exits":       exits,
+            "count":       len(exits),
+            "by_reason":   dict(breakdown),
+            "evaluated_at": datetime.now().isoformat(),
+        })
+    except Exception as e:
+        raise HTTPException(503, f"exit_runner unavailable: {e}")
+
+
+@app.get("/api/v3/promotion/status")
+async def promotion_status():
+    """Latest paper→live promotion-gate decision."""
+    decision_path = _V3_ROOT / "05_live_trading" / "ledger" / "promotion_decision.json"
+    try:
+        from promotion_gate import evaluate as _eval  # type: ignore
+        return _safe_json(_eval())
+    except Exception:
+        # Fall back to the cached decision file if evaluate() blows up
+        if decision_path.exists():
+            return _safe_json(json.load(open(decision_path)))
+        raise HTTPException(503, "promotion_gate unavailable and no cached decision")
+
+
+@app.get("/api/v3/robustness/{run_id}")
+async def robustness_results(run_id: str):
+    """All exp9 robustness CSVs for a run, plus the summary JSON."""
+    base = _V3_ROOT / "08_experiments" / "results"
+    if not base.exists():
+        raise HTTPException(404, "no robustness results yet — run exp9_robustness_suite.py")
+
+    out = {"run_id": run_id, "tables": {}}
+    for name in ("cost_slippage", "turnover", "hold_horizon", "regime", "calibration_drift"):
+        p = base / f"exp9_{name}.csv"
+        if p.exists():
+            try:
+                df = pd.read_csv(p)
+                out["tables"][name] = _safe_json(df.to_dict(orient="records"))
+            except Exception:
+                pass
+    summary_path = base / "exp9_summary.json"
+    if summary_path.exists():
+        try:
+            out["summary"] = _safe_json(json.load(open(summary_path)))
+        except Exception:
+            pass
+    return out
+
+
+@app.post("/api/v3/robustness/{run_id}/run")
+async def robustness_run(run_id: str, background_tasks: BackgroundTasks):
+    """Kick off the robustness suite for a run (non-blocking)."""
+    import subprocess
+    script = _V3_ROOT / "08_experiments" / "exp9_robustness_suite.py"
+    if not script.exists():
+        raise HTTPException(404, "exp9_robustness_suite.py not found")
+
+    def _run():
+        try:
+            subprocess.run([sys.executable, str(script), "--run-id", run_id],
+                           check=True, capture_output=True, text=True, timeout=900)
+        except Exception as e:
+            print(f"[robustness] run failed: {e}")
+
+    background_tasks.add_task(_run)
+    return {"status": "started", "run_id": run_id}
+
+
+@app.get("/api/v3/backtest/timing/{run_id}")
+async def backtest_with_timing(run_id: str, timing: str = "next_open"):
+    """
+    Re-run the trade backtest for a run with a chosen entry timing
+    (`next_open` | `next_close` | `same_close`) without overwriting the
+    canonical artefacts. Result is computed in-memory.
+    """
+    if timing not in ("next_open", "next_close", "same_close"):
+        raise HTTPException(400, f"timing must be next_open|next_close|same_close, got {timing}")
+
+    run_dir = _V3_ROOT / "06_results" / "runs" / run_id
+    if not run_dir.exists():
+        raise HTTPException(404, f"run not found: {run_id}")
+
+    # Run the backtest into a sandbox directory so the canonical files stay intact.
+    import shutil
+    sandbox = _V3_ROOT / "06_results" / "runs" / f"_timing_{timing}_{run_id}"
+    if sandbox.exists():
+        shutil.rmtree(sandbox)
+    shutil.copytree(run_dir, sandbox)
+
+    try:
+        from steps.backtest import run_trade_backtest  # type: ignore
+        df = run_trade_backtest(sandbox, timing=timing)
+        bt_summary_path = sandbox / "backtest_summary.json"
+        with open(bt_summary_path) as f:
+            bt_summary = json.load(f)
+        return _safe_json({
+            "timing":       timing,
+            "run_id":       run_id,
+            "summary":      bt_summary,
+            "results":      df.to_dict(orient="records") if df is not None and not df.empty else [],
+            "n_tradeable":  int((df.get("tradeable") == True).sum()) if df is not None and not df.empty else 0,
+        })
+    except Exception as e:
+        raise HTTPException(500, f"backtest failed: {e}")
+    finally:
+        if sandbox.exists():
+            shutil.rmtree(sandbox, ignore_errors=True)
+
+
+@app.get("/api/v3/backtest/timing-compare/{run_id}")
+async def backtest_timing_compare(run_id: str):
+    """Convenience: returns side-by-side summary for all three timing modes."""
+    out = {"run_id": run_id, "modes": {}}
+    for t in ("same_close", "next_close", "next_open"):
+        try:
+            r = await backtest_with_timing(run_id, timing=t)
+            out["modes"][t] = r["summary"]
+        except HTTPException as he:
+            out["modes"][t] = {"error": he.detail}
+        except Exception as e:
+            out["modes"][t] = {"error": str(e)}
+    return _safe_json(out)
+
+
+@app.get("/api/v3/instrument-master/status")
+async def instrument_master_status():
+    """Health of the daily Angel instrument-token cache."""
+    parquet_path = _V3_ROOT / "01_data" / "raw" / "angel_instrument_master.parquet"
+    json_path    = _V3_ROOT / "01_data" / "raw" / "angel_token_map_NSE.json"
+    out = {
+        "cache_exists":   parquet_path.exists(),
+        "json_exists":    json_path.exists(),
+        "cached_at":      datetime.fromtimestamp(parquet_path.stat().st_mtime).isoformat() if parquet_path.exists() else None,
+        "is_stale":       True,
+        "n_symbols":      None,
+    }
+    if json_path.exists():
+        try:
+            m = json.load(open(json_path))
+            out["n_symbols"] = len(m)
+            mtime_date = datetime.fromtimestamp(parquet_path.stat().st_mtime).date()
+            out["is_stale"] = mtime_date != datetime.now().date()
+        except Exception:
+            pass
+    return out
+
+
+@app.post("/api/v3/instrument-master/refresh")
+async def instrument_master_refresh(force: bool = False):
+    """Force a daily Angel instrument-master refresh."""
+    try:
+        from instrument_master import refresh, load_token_map  # type: ignore
+        refresh(force=force)
+        m = load_token_map()
+        return {"status": "ok", "n_symbols": len(m), "refreshed_at": datetime.now().isoformat()}
+    except Exception as e:
+        raise HTTPException(500, f"refresh failed: {e}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import uvicorn

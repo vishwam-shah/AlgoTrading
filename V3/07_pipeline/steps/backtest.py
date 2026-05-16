@@ -4,6 +4,14 @@ Step 6 — Trade Simulation Backtest
 Reads per-stock OOS predictions.csv files and simulates a realistic
 long-only strategy. Zero external dependencies beyond numpy/pandas.
 
+Entry timing — fixed in v3 to address research/live mismatch:
+  Predictions are made from data through trading day T (after T's close).
+  In live trading the order can only fill on T+1. Three modes supported via
+  V3/00_config/risk_config.yaml `strategy.entry_timing`:
+    - "next_open"  (default) entry @ T+1 OPEN, exit @ (T+1+H) OPEN — needs raw OHLCV
+    - "next_close"           entry @ T+1 CLOSE (next_close_price column)
+    - "same_close" (legacy)  entry @ T close (kept for A/B comparison only)
+
 Outputs:
   <run_dir>/backtest_results.csv   — per-stock P&L metrics
   <run_dir>/backtest_portfolio.csv — daily equity curve (top tradeable stocks)
@@ -12,25 +20,35 @@ Realistic NSE cost model (delivery trades):
   STT       : 0.1% buy + 0.1% sell = 0.20% round trip
   Brokerage : ~0.05% round trip (flat ₹20 @ avg ₹40K position)
   Exchange  : 0.004% round trip
-  Total     : ~0.25% per round trip
+  Slippage  : 5 bps each side (configurable) = 0.10% RT — applied via cost_round_trip
 """
 
 from __future__ import annotations
 
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-ROUND_TRIP_COST = 0.0025   # 0.25% total (STT 0.20% + brokerage 0.05%)
+# Pull canonical risk/strategy params (single source: V3/00_config/risk_config.yaml).
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "00_config"))
+from risk_config import HOT as _RC, get as _rcget  # type: ignore  # noqa: E402
+
+ROUND_TRIP_COST = float(_RC["COST_RT"]) + 2 * float(
+    _rcget("strategy", "slippage_one_way_bps", default=5)
+) / 10000.0
 ANNUAL_FACTOR   = 252
 
-# v2 strategy parameters (match features.py horizon + Exp5 winner)
-HOLD_DAYS_V2    = 10       # hold for 10 trading days to match the target horizon
-META_THRESHOLD  = 0.60     # trade only when meta_prob >= this      # trading days
+# v2 strategy parameters (single source — risk_config.yaml)
+HOLD_DAYS_V2    = int(_RC["HOLD_DAYS"])
+META_THRESHOLD  = float(_RC["META_THRESHOLD"])
+ENTRY_TIMING    = str(_RC["ENTRY_TIMING"])    # "next_open" | "next_close" | "same_close"
+
+_RAW_DIR = Path(__file__).resolve().parents[2] / "01_data" / "raw"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -78,11 +96,62 @@ def _max_drawdown(equity: np.ndarray) -> float:
     return float(-dd.min()) if dd.min() < 0 else 0.0
 
 
+def _attach_execution_prices(
+    df: pd.DataFrame,
+    symbol: Optional[str],
+    timing: str = ENTRY_TIMING,
+) -> pd.DataFrame:
+    """
+    Attach `entry_price` and `entry_index` aligned to the chosen execution timing.
+    The function returns the same df with two new columns:
+
+      entry_price : price the order actually fills at after a signal on row i
+      entry_date  : ISO date of that fill bar
+
+    timing="next_open"  → align to raw OHLCV open at the next trading bar (T+1).
+                          Falls back to "next_close" if raw cache absent.
+    timing="next_close" → use df['next_close_price'] (close on T+1) as entry.
+    timing="same_close" → legacy: entry at T close (column close_price).
+    """
+    df = df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+
+    raw_path = (_RAW_DIR / f"{symbol}.parquet") if symbol else None
+    if timing == "next_open" and raw_path and raw_path.exists():
+        try:
+            raw = pd.read_parquet(raw_path)[["date", "open", "close"]].copy()
+            raw["date"] = pd.to_datetime(raw["date"]).dt.normalize()
+            raw = raw.sort_values("date").reset_index(drop=True)
+            raw["next_open"] = raw["open"].shift(-1)
+            raw["next_open_date"] = raw["date"].shift(-1)
+            sig_dates = df["date"].dt.normalize()
+            mapped = raw.set_index("date").reindex(sig_dates)
+            df["entry_price"] = mapped["next_open"].values
+            df["entry_date"]  = mapped["next_open_date"].values
+            return df
+        except Exception:
+            pass  # silent fallback to next_close
+
+    if timing in ("next_open", "next_close"):
+        if "next_close_price" in df.columns:
+            df["entry_price"] = df["next_close_price"]
+            df["entry_date"]  = df["date"].shift(-1)
+            return df
+        # fall through to same_close
+
+    # legacy mode (used only for A/B sanity checks)
+    df["entry_price"] = df["close_price"]
+    df["entry_date"]  = df["date"]
+    return df
+
+
 def _simulate_stock(
     preds_df: pd.DataFrame,
     min_confidence: float = 0.58,
     hold_days: int = HOLD_DAYS_V2,
     meta_threshold: float = META_THRESHOLD,
+    timing: str = ENTRY_TIMING,
+    symbol: Optional[str] = None,
 ) -> Optional[Dict]:
     """
     Simulate long-only trading for a single stock with a fixed holding period.
@@ -106,9 +175,12 @@ def _simulate_stock(
 
     df = df.sort_values("date").reset_index(drop=True)
 
-    # Build the price series available for exit. We need close at (D + hold_days)
-    # — take from this df by shifting close_price by -hold_days.
-    df["exit_price"] = df["close_price"].shift(-hold_days)
+    # Resolve realistic execution price (T+1 open by default — see header).
+    df = _attach_execution_prices(df, symbol=symbol, timing=timing)
+
+    # Exit price = entry_price hold_days later. Hold counted in trading bars
+    # of the prediction frame, which is already daily and dedup'd.
+    df["exit_price"] = df["entry_price"].shift(-hold_days)
 
     # Gate: direction == UP, prob_up >= min_confidence, meta_prob >= threshold
     mask = (df["direction"] == "UP") & (df["prob_up"] >= min_confidence)
@@ -116,7 +188,7 @@ def _simulate_stock(
         # If meta column exists and is all 0.5 (legacy neutral), don't filter on it
         if df["meta_prob"].notna().any() and float(df["meta_prob"].std()) > 1e-6:
             mask &= (df["meta_prob"] >= meta_threshold)
-    mask &= df["exit_price"].notna()
+    mask &= df["exit_price"].notna() & df["entry_price"].notna()
 
     candidate_idx = df.index[mask].tolist()
     if len(candidate_idx) < 5:
@@ -135,7 +207,7 @@ def _simulate_stock(
         return None
 
     trades_df = df.loc[chosen_idx].copy()
-    trades_df["raw_return"] = (trades_df["exit_price"] - trades_df["close_price"]) / trades_df["close_price"]
+    trades_df["raw_return"] = (trades_df["exit_price"] - trades_df["entry_price"]) / trades_df["entry_price"]
     trades_df["net_return"] = trades_df["raw_return"] - ROUND_TRIP_COST
 
     returns = trades_df["net_return"].values
@@ -161,14 +233,16 @@ def _simulate_stock(
 
     # Binary direction accuracy (ignoring cost — just directional, hold-horizon)
     ref_exit = df["exit_price"].dropna()
-    ref_entry = df["close_price"].loc[ref_exit.index]
+    ref_entry = df["entry_price"].loc[ref_exit.index]
     binary_acc = float((ref_exit.values >= ref_entry.values).mean()) if len(ref_exit) else 0.0
     # Among only UP-signal (executed) trades
-    up_dir_acc = float((trades_df["exit_price"] >= trades_df["close_price"]).mean())
+    up_dir_acc = float((trades_df["exit_price"] >= trades_df["entry_price"]).mean())
 
     # Hold-out period
     try:
-        date_range = f"{df['date'].iloc[0][:10]} → {df['date'].iloc[-1][:10]}"
+        d0 = pd.to_datetime(df["date"].iloc[0]).date().isoformat()
+        d1 = pd.to_datetime(df["date"].iloc[-1]).date().isoformat()
+        date_range = f"{d0} → {d1}"
     except Exception:
         date_range = ""
 
@@ -241,15 +315,17 @@ def _build_portfolio_curve(
     hold_days: int = HOLD_DAYS_V2,
     meta_threshold: float = META_THRESHOLD,
     n_max: int = 3,
+    timing: str = ENTRY_TIMING,
 ) -> pd.DataFrame:
     """
     Equal-weight Top-N portfolio with fixed holding horizon.
 
-    v2 mechanics (matches Exp5 winner: hold=10, t1=0.58, t2=0.60, n_max=3):
-      - Each trading day, pick top-`n_max` signals by (prob_up * meta_prob)
-        among tradeable symbols that pass both gates, not already held.
-      - Enter at close, hold exactly `hold_days`, exit at close.
-      - Equal weight 1/n_max; idle cash earns 0.
+    v3 mechanics (T+1 entry):
+      - Signal generated from data through close of T → enters at T+1
+        (open by default, see risk_config.yaml strategy.entry_timing).
+      - Holds exactly hold_days then exits at the same execution timing.
+      - n_max concurrent slots (= limits.max_holdings).
+      - Mark-to-market each calendar day.
       - Entry cost applied once on entry day.
     """
     from collections import defaultdict
@@ -264,7 +340,10 @@ def _build_portfolio_curve(
         if "window_id" in df.columns:
             df = df.sort_values("window_id").drop_duplicates("date", keep="last")
         df = df.sort_values("date").reset_index(drop=True)
-        df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
+        df["date"] = pd.to_datetime(df["date"])
+        df = _attach_execution_prices(df, symbol=sym, timing=timing)
+        # Normalise dates to ISO strings for keying
+        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         sym_df[sym] = df
 
     if not sym_df:
@@ -294,7 +373,9 @@ def _build_portfolio_curve(
             per_day[row["date"]].append((sym, score))
 
     for day_idx, d in enumerate(all_dates):
-        # MtM open slots: use that symbol's close on day d vs close on day d-1
+        # MtM open slots — close-to-close P&L on the close_price series.
+        # Entry/exit happen on T+1 execution price, but mark-to-market between
+        # those bookends still uses daily closes for a faithful equity curve.
         for s_i, slot in enumerate(slots):
             if slot is None:
                 continue
@@ -309,7 +390,10 @@ def _build_portfolio_curve(
             if day_idx >= slot["exit_day_idx"]:
                 slots[s_i] = None
 
-        # Consider new entries
+        # Consider new entries — signal is generated from data through `d`,
+        # so the order can only fill on T+1. We log the entry on the next
+        # available bar in this stock's frame and apply the round-trip cost
+        # then (covers slippage + STT + brokerage in a single deduction).
         free = [i for i, s in enumerate(slots) if s is None]
         open_syms = {s["symbol"] for s in slots if s is not None}
         if free:
@@ -320,16 +404,22 @@ def _build_portfolio_curve(
                     break
                 if sym not in stock_idx or d not in stock_idx[sym]:
                     continue
-                s_i = free.pop(0)
                 df = sym_df[sym]
-                entry_idx = stock_idx[sym][d]
-                # Exit = hold_days later in this stock's own calendar (fallback to last row)
-                exit_idx_in_stock = min(entry_idx + hold_days, len(df) - 1)
+                sig_idx = stock_idx[sym][d]
+                entry_idx_in_stock = sig_idx + 1                    # T+1
+                if entry_idx_in_stock >= len(df):
+                    continue
+                entry_d = df["date"].iloc[entry_idx_in_stock]
+                entry_day_idx = date_to_idx.get(entry_d, day_idx + 1)
+                exit_idx_in_stock = min(entry_idx_in_stock + hold_days, len(df) - 1)
                 exit_d = df["date"].iloc[exit_idx_in_stock]
-                exit_day_idx = date_to_idx.get(exit_d, day_idx + hold_days * 2)
-                slots[s_i] = {"symbol": sym, "entry_day_idx": day_idx,
+                exit_day_idx = date_to_idx.get(exit_d, entry_day_idx + hold_days * 2)
+                s_i = free.pop(0)
+                slots[s_i] = {"symbol": sym, "entry_day_idx": entry_day_idx,
                               "exit_day_idx": exit_day_idx}
-                daily_ret[day_idx] -= ROUND_TRIP_COST / n_max
+                # Cost charged on the day the position actually opens (T+1)
+                cost_day = min(entry_day_idx, len(daily_ret) - 1)
+                daily_ret[cost_day] -= ROUND_TRIP_COST / n_max
 
     daily = pd.DataFrame({"date": all_dates, "daily_return": daily_ret})
     daily["equity"] = (1 + daily["daily_return"]).cumprod()
@@ -340,8 +430,9 @@ def _build_portfolio_curve(
 
 def run_trade_backtest(
     run_dir: Path,
-    min_confidence: float = 0.58,
-    min_acc_threshold: float = 0.50,
+    min_confidence: float = float(_RC["MIN_CONFIDENCE"]),
+    min_acc_threshold: float = float(_RC["MIN_OOS_ACC"]),
+    timing: str = ENTRY_TIMING,
 ) -> pd.DataFrame:
     """
     Run backtest for all symbols in run_dir that have predictions.csv.
@@ -366,7 +457,8 @@ def run_trade_backtest(
             df = pd.read_csv(pred_path)
             if len(df) < 10:
                 continue
-            metrics = _simulate_stock(df, min_confidence=min_confidence)
+            metrics = _simulate_stock(df, min_confidence=min_confidence,
+                                      timing=timing, symbol=symbol)
             if metrics is None:
                 continue
             metrics["symbol"]       = symbol
@@ -424,7 +516,8 @@ def run_trade_backtest(
     ]["symbol"].tolist()
     curve = pd.DataFrame()
     if tradeable_syms:
-        curve = _build_portfolio_curve(run_dir, tradeable_syms, min_confidence)
+        curve = _build_portfolio_curve(run_dir, tradeable_syms, min_confidence,
+                                       n_max=int(_RC["MAX_HOLDINGS"]), timing=timing)
         if not curve.empty:
             curve.to_csv(run_dir / "backtest_portfolio.csv", index=False)
 
@@ -438,14 +531,14 @@ def run_trade_backtest(
             pdf = pd.read_csv(p)
             if "window_id" in pdf.columns:
                 pdf = pdf.sort_values("window_id").drop_duplicates("date", keep="last")
-            mask = (pdf["direction"] == "UP") & (pdf["prob_up"] >= min_confidence)
-            pdf  = pdf[mask]
-            # Bootstrap outcomes = "did the trade make money over the hold horizon"
-            if "close_price" in pdf.columns:
-                pdf_sorted = pdf.sort_values("date").reset_index(drop=True)
-                pdf_sorted["exit_px"] = pdf_sorted["close_price"].shift(-HOLD_DAYS_V2)
-                ok = pdf_sorted.dropna(subset=["exit_px"])
-                outcomes = (ok["exit_px"] >= ok["close_price"]).astype(int).tolist()
+            # Apply same T+1 execution-price treatment as the per-stock simulator.
+            pdf_full = _attach_execution_prices(pdf, symbol=sym, timing=timing)
+            mask = (pdf_full["direction"] == "UP") & (pdf_full["prob_up"] >= min_confidence)
+            pdf_sorted = pdf_full[mask].sort_values("date").reset_index(drop=True)
+            if not pdf_sorted.empty:
+                pdf_sorted["exit_px"] = pdf_sorted["entry_price"].shift(-HOLD_DAYS_V2)
+                ok = pdf_sorted.dropna(subset=["exit_px", "entry_price"])
+                outcomes = (ok["exit_px"] >= ok["entry_price"]).astype(int).tolist()
                 all_outcomes.extend(outcomes)
         except Exception:
             pass
