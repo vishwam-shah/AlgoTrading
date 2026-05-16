@@ -37,6 +37,98 @@ sys.path.insert(0, str(_V3_ROOT / "00_config"))
 
 from risk_config import HOT as _RC, get as _rcget  # type: ignore  # noqa: E402
 
+_GLOBAL_CUES_PATH = _V3_ROOT / "01_data" / "raw" / "global_cues.parquet"
+
+# ── Market Regime Filter ──────────────────────────────────────────────────────
+
+class MarketRegimeFilter:
+    """
+    Classifies the current market regime from Nifty50 price and VIX.
+
+    compute_regime() returns one of: "BULL", "SIDEWAYS", "BEAR", "UNKNOWN".
+    "UNKNOWN" is returned when data is unavailable — signals are NOT suppressed.
+    """
+
+    @staticmethod
+    def compute_regime(nifty_df: pd.DataFrame, vix_val: float) -> str:
+        """
+        Parameters
+        ----------
+        nifty_df : DataFrame with columns [date, close] — last ≥20 rows expected.
+        vix_val  : Latest VIX reading (us_vix_close from global_cues).
+
+        Returns
+        -------
+        "BULL"     : Nifty above 20-day SMA AND VIX < 15
+        "SIDEWAYS" : Nifty within ±1% of 20-day SMA OR VIX 15–20
+        "BEAR"     : Nifty below 20-day SMA by >1% OR VIX > 20
+        "UNKNOWN"  : Insufficient data — do NOT suppress signals.
+        """
+        try:
+            if nifty_df is None or nifty_df.empty or vix_val is None or np.isnan(vix_val):
+                return "UNKNOWN"
+
+            closes = nifty_df["close"].dropna()
+            if len(closes) < 20:
+                return "UNKNOWN"
+
+            sma20      = closes.iloc[-20:].mean()
+            last_close = closes.iloc[-1]
+
+            if sma20 <= 0:
+                return "UNKNOWN"
+
+            pct_vs_sma = (last_close - sma20) / sma20   # positive → above SMA
+
+            # BEAR: below SMA by >1% OR VIX > 20
+            if pct_vs_sma < -0.01 or vix_val > 20:
+                return "BEAR"
+
+            # BULL: above SMA (not within ±1% band is captured below) AND VIX < 15
+            if pct_vs_sma > 0.01 and vix_val < 15:
+                return "BULL"
+
+            # SIDEWAYS: within ±1% of SMA OR VIX 15–20
+            return "SIDEWAYS"
+
+        except Exception:
+            return "UNKNOWN"
+
+
+def load_regime_data() -> tuple:
+    """
+    Load Nifty50 last-20-day closes and latest VIX from global_cues.parquet.
+
+    Returns
+    -------
+    (nifty_df, vix_val) where nifty_df has columns [date, close].
+    Returns (None, None) if the file is missing or unreadable.
+    """
+    try:
+        if not _GLOBAL_CUES_PATH.exists():
+            return None, None
+
+        df = pd.read_parquet(_GLOBAL_CUES_PATH, columns=["date", "nifty50_close", "us_vix_close"])
+        df = df.dropna(subset=["nifty50_close"]).sort_values("date").reset_index(drop=True)
+
+        if df.empty:
+            return None, None
+
+        # Last 20 rows for SMA calculation
+        nifty_df = df[["date", "nifty50_close"]].tail(20).rename(
+            columns={"nifty50_close": "close"}
+        ).reset_index(drop=True)
+
+        # Latest non-null VIX
+        vix_series = df["us_vix_close"].dropna()
+        vix_val    = float(vix_series.iloc[-1]) if not vix_series.empty else None
+
+        return nifty_df, vix_val
+
+    except Exception as e:
+        print(f"  [regime] Could not load regime data: {e}")
+        return None, None
+
 # ── Constants (single source: V3/00_config/risk_config.yaml) ────────────────
 
 MAX_POSITION_PCT   = _RC["MAX_POSITION_PCT"]
@@ -126,6 +218,8 @@ def build_orders(
     capital: float,
     price_map: Optional[dict] = None,
     run_id: Optional[str] = None,
+    max_positions_override: Optional[int] = None,
+    min_confidence_override: Optional[float] = None,
 ) -> list[dict]:
     """
     Convert predictions DataFrame to a list of order dicts.
@@ -144,6 +238,10 @@ def build_orders(
         target_inr, qty, price, order_type, product, validity
     """
     df = pred_df.copy()
+
+    # Apply regime-driven overrides (set by run() before calling build_orders)
+    _max_positions  = max_positions_override  if max_positions_override  is not None else MAX_STOCKS
+    _min_confidence = min_confidence_override if min_confidence_override is not None else MIN_CONFIDENCE
 
     # ── 1. Direction filter — UP signals only (NSE CNC: no short selling) ─
     df = df[df["direction"] == "UP"].copy()
@@ -196,12 +294,12 @@ def build_orders(
 
     # ── 3. Primary (prob_up) gate ─────────────────────────────────────────
     if "prob_up" in df.columns and df["prob_up"].notna().any():
-        df = df[df["prob_up"] >= MIN_CONFIDENCE].copy()
-        print(f"  {len(df)} signals above prob_up ≥ {MIN_CONFIDENCE:.0%}")
+        df = df[df["prob_up"] >= _min_confidence].copy()
+        print(f"  {len(df)} signals above prob_up ≥ {_min_confidence:.0%}")
     elif MIN_PROB_REQUIRED:
         if "confidence" in df.columns:
-            df = df[df["confidence"] >= MIN_CONFIDENCE].copy()
-            print(f"  {len(df)} signals above confidence ≥ {MIN_CONFIDENCE:.0%} (no prob_up)")
+            df = df[df["confidence"] >= _min_confidence].copy()
+            print(f"  {len(df)} signals above confidence ≥ {_min_confidence:.0%} (no prob_up)")
         else:
             print("  WARNING: no prob_up or confidence — using all UP signals")
     else:
@@ -224,7 +322,7 @@ def build_orders(
         df["_score"] = df.get("prob_up", 0.55) * df["meta_prob"]
     else:
         df["_score"] = df.get("prob_up", df.get("confidence", 0.55))
-    df = df.sort_values("_score", ascending=False).head(MAX_STOCKS).reset_index(drop=True)
+    df = df.sort_values("_score", ascending=False).head(_max_positions).reset_index(drop=True)
 
     # ── 4. Fetch prices if not provided ───────────────────────────────────
     if price_map is None:
@@ -422,7 +520,36 @@ def run(
     print(f"  Run ID   : {run_id}")
     print(f"  Signals  : {len(pred_df)} total, {(pred_df['direction']=='UP').sum()} UP")
 
-    orders = build_orders(pred_df, capital, price_map=price_map, run_id=run_id)
+    # ── Market Regime Check ───────────────────────────────────────────────────
+    nifty_df, vix_val = load_regime_data()
+    regime = MarketRegimeFilter.compute_regime(nifty_df, vix_val)
+    vix_str = f"{vix_val:.1f}" if vix_val is not None and not np.isnan(vix_val) else "N/A"
+    print(f"  Regime   : {regime}  (VIX={vix_str})")
+
+    _regime_max_positions = MAX_STOCKS   # default: unchanged
+    _regime_min_confidence = MIN_CONFIDENCE  # default from risk_config
+
+    if regime == "BEAR":
+        print("  [regime] BEAR market — suppressing all new entries (max_positions=0)")
+        return []   # no new entries; exits are handled elsewhere
+
+    elif regime == "SIDEWAYS":
+        _regime_max_positions  = max(1, MAX_STOCKS // 2)
+        _regime_min_confidence = 0.65
+        print(f"  [regime] SIDEWAYS — max_positions={_regime_max_positions}, "
+              f"min_confidence={_regime_min_confidence:.0%}")
+
+    else:  # BULL or UNKNOWN — normal behaviour
+        if regime == "UNKNOWN":
+            print("  [regime] Regime data unavailable — proceeding with normal thresholds")
+
+    orders = build_orders(
+        pred_df, capital,
+        price_map=price_map,
+        run_id=run_id,
+        max_positions_override=_regime_max_positions,
+        min_confidence_override=_regime_min_confidence,
+    )
     if not orders:
         print("  No actionable orders.")
         return []

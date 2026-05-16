@@ -1989,6 +1989,16 @@ def run_symbol(
         pass
     gc.collect()
 
+    # ── Delete per-run window checkpoints after production copy ───────────────
+    # Production folder already has the final models; run checkpoints are only
+    # needed during training. Deleting here keeps runs/ folder tiny (~KB vs MB).
+    try:
+        sym_run_dir = Path(MODELS_DIR) / "runs" / run_id / symbol
+        if sym_run_dir.exists():
+            shutil.rmtree(sym_run_dir)
+    except Exception:
+        pass
+
     return {
         "symbol": symbol, "status": "ok",
         "oos_accuracy": oos_acc, "oos_f1": oos_f1,

@@ -3359,6 +3359,194 @@ async def instrument_master_refresh(force: bool = False):
         raise HTTPException(500, f"refresh failed: {e}")
 
 
+# ── Paper Trading Live Dashboard ──────────────────────────────────────────────
+
+@app.post("/api/v3/paper/prices")
+async def bulk_live_prices(symbols: List[str]):
+    """Fetch latest close prices for a list of NSE symbols via yfinance."""
+    if not symbols:
+        return {"prices": {}}
+    try:
+        import yfinance as yf
+        tickers = [f"{s}.NS" for s in symbols]
+        data = yf.download(tickers, period="3d", auto_adjust=True,
+                           progress=False, threads=True)
+        closes = data["Close"] if "Close" in data.columns else data
+        last   = closes.iloc[-1] if len(closes) > 0 else pd.Series(dtype=float)
+        prev   = closes.iloc[-2] if len(closes) > 1 else last
+        prices: Dict[str, Dict] = {}
+        for sym, t in zip(symbols, tickers):
+            ltp  = float(last.get(t, 0) or 0)
+            prev_c = float(prev.get(t, ltp) or ltp)
+            chg  = ltp - prev_c
+            prices[sym] = {
+                "ltp":        round(ltp, 2),
+                "prev_close": round(prev_c, 2),
+                "change":     round(chg, 2),
+                "change_pct": round(chg / prev_c * 100, 2) if prev_c else 0.0,
+            }
+        return {"prices": prices, "fetched_at": datetime.now().isoformat()}
+    except Exception as e:
+        return {"prices": {}, "error": str(e)}
+
+
+@app.get("/api/v3/paper/dashboard")
+async def paper_dashboard():
+    """
+    Unified paper trading dashboard payload:
+      - Latest session summary
+      - Open positions with live LTP / unrealized P&L
+      - Closed trades (all-time)
+      - NAV equity curve
+      - Portfolio stats: total return%, Sharpe, win rate, max drawdown
+    """
+    # 1. Load ledger state (canonical source — portfolio_ledger.py)
+    try:
+        from portfolio_ledger import summary as _ledger_summary, get_state as _get_state  # type: ignore
+        ledger_snap  = _ledger_summary()
+        ledger_state = _get_state()
+        open_lots    = ledger_state.open_lots
+        closed_trades = ledger_state.closed_trades
+        cash         = ledger_snap.get("cash", 500_000)
+        realized_pnl = ledger_snap.get("realized_pnl", 0.0)
+        starting_cap = ledger_snap.get("starting_capital", 500_000)
+    except Exception:
+        open_lots = []; closed_trades = []
+        cash = 500_000; realized_pnl = 0.0; starting_cap = 500_000
+
+    # 2. Live prices for open positions
+    open_symbols = list({lot.symbol for lot in open_lots})
+    ltp_map: Dict[str, float] = {}
+    chg_map: Dict[str, float] = {}
+    if open_symbols:
+        try:
+            import yfinance as yf
+            tickers = [f"{s}.NS" for s in open_symbols]
+            data = yf.download(tickers if len(tickers) > 1 else tickers[0],
+                               period="3d", auto_adjust=True, progress=False, threads=True)
+            closes = data["Close"] if "Close" in data.columns else data
+            last = closes.iloc[-1] if len(closes) else pd.Series(dtype=float)
+            prev = closes.iloc[-2] if len(closes) > 1 else last
+            for sym, t in zip(open_symbols, tickers):
+                ltp  = float(last.get(t if len(tickers) > 1 else tickers[0], 0) or 0)
+                prv  = float(prev.get(t if len(tickers) > 1 else tickers[0], ltp) or ltp)
+                ltp_map[sym] = ltp
+                chg_map[sym] = round((ltp - prv) / prv * 100, 2) if prv else 0.0
+        except Exception:
+            pass
+
+    # 3. Build open positions rows
+    from collections import defaultdict
+    lots_by_sym: Dict[str, list] = defaultdict(list)
+    for lot in open_lots:
+        lots_by_sym[lot.symbol].append(lot)
+
+    positions = []
+    total_unrealized = 0.0
+    for sym, lots in lots_by_sym.items():
+        total_qty   = sum(l.qty for l in lots)
+        avg_entry   = sum(l.qty * l.entry_price for l in lots) / total_qty if total_qty else 0
+        ltp         = ltp_map.get(sym, avg_entry)
+        unreal      = (ltp - avg_entry) * total_qty if ltp else 0.0
+        unreal_pct  = (ltp - avg_entry) / avg_entry * 100 if avg_entry else 0.0
+        total_unrealized += unreal
+        earliest_entry  = min(l.entry_date for l in lots)
+        hold_days = (datetime.now().date() - datetime.fromisoformat(earliest_entry).date()).days
+        positions.append({
+            "symbol":       sym,
+            "qty":          total_qty,
+            "avg_entry":    round(avg_entry, 2),
+            "ltp":          round(ltp, 2),
+            "unrealized":   round(unreal, 2),
+            "unrealized_pct": round(unreal_pct, 2),
+            "change_pct":   chg_map.get(sym, 0.0),
+            "hold_days":    hold_days,
+            "entry_date":   earliest_entry,
+        })
+    positions.sort(key=lambda x: x["unrealized_pct"], reverse=True)
+
+    # 4. Closed trades (last 50)
+    closed = [
+        {
+            "symbol":     t.symbol,
+            "qty":        t.qty,
+            "entry_price": round(t.entry_price, 2),
+            "exit_price":  round(t.exit_price, 2),
+            "entry_date":  t.entry_date,
+            "exit_date":   t.exit_date,
+            "hold_days":   t.hold_days,
+            "net_pnl":     round(t.net_pnl, 2),
+            "ret_pct":     round((t.exit_price - t.entry_price) / t.entry_price * 100, 3)
+                           if t.entry_price else 0.0,
+            "win":         t.net_pnl > 0,
+        }
+        for t in reversed(closed_trades[-50:])
+    ]
+
+    # 5. Portfolio stats
+    total_nav    = cash + sum(ltp_map.get(p["symbol"], 0) * p["qty"] for p in positions)
+    total_return = (total_nav - starting_cap) / starting_cap * 100 if starting_cap else 0.0
+    win_rate     = (sum(1 for t in closed_trades if t.net_pnl > 0) / len(closed_trades) * 100
+                   if closed_trades else 0.0)
+    returns_pct  = [(t.exit_price - t.entry_price) / t.entry_price * 100
+                    for t in closed_trades if t.entry_price]
+    import numpy as _np
+    sharpe = (float(_np.mean(returns_pct) / (_np.std(returns_pct) + 1e-9) * _np.sqrt(252))
+              if len(returns_pct) > 2 else 0.0)
+    peak = starting_cap; max_dd = 0.0
+    running_nav = starting_cap
+    for t in closed_trades:
+        running_nav += t.net_pnl
+        if running_nav > peak:
+            peak = running_nav
+        dd = (peak - running_nav) / peak * 100
+        if dd > max_dd:
+            max_dd = dd
+
+    # 6. NAV equity curve
+    nav_curve = []
+    try:
+        nav_path = _V3_ROOT / "05_live_trading" / "ledger" / "nav_history.parquet"
+        if nav_path.exists():
+            nav_df = pd.read_parquet(nav_path)
+            nav_curve = nav_df.to_dict(orient="records")
+    except Exception:
+        pass
+
+    # 7. Today's signals from latest pipeline run
+    todays_signals = []
+    try:
+        run_id  = _latest_run_id()
+        prd     = _RUNS_DIR / run_id / "next_day_predictions.csv"
+        if prd.exists():
+            prd_df = pd.read_csv(prd)
+            todays_signals = prd_df[prd_df["direction"] == "UP"].to_dict(orient="records")
+    except Exception:
+        pass
+
+    return _safe_json({
+        "summary": {
+            "nav":            round(total_nav, 2),
+            "cash":           round(cash, 2),
+            "holdings_value": round(total_nav - cash, 2),
+            "realized_pnl":   round(realized_pnl, 2),
+            "unrealized_pnl": round(total_unrealized, 2),
+            "total_return_pct": round(total_return, 3),
+            "starting_capital":  round(starting_cap, 2),
+            "win_rate_pct":   round(win_rate, 1),
+            "sharpe":         round(sharpe, 2),
+            "max_drawdown_pct": round(max_dd, 2),
+            "open_positions": len(positions),
+            "closed_trades":  len(closed_trades),
+            "as_of":          datetime.now().isoformat(),
+        },
+        "positions":      positions,
+        "closed_trades":  closed,
+        "nav_curve":      nav_curve,
+        "todays_signals": _safe_json(todays_signals[:20]),
+    })
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
