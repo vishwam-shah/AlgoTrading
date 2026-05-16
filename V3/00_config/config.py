@@ -89,9 +89,7 @@ SYMBOLS_100: list = [
     # ── Conglomerate, Infra & Others (14) ────────────────────────────────────
     "ADANIENT",   "ADANIPORTS", "BEL",        "HAL",        "IRFC",
     "OFSS",       "ETERNAL",    "NAUKRI",     "NMDC",       "BOSCHLTD",
-    "BAJAJHFL",   "LICHSGFIN",  "MANAPPURAM", "RBLBANK",    "EXIDEIND",
-    # ── Nifty-100 additions (3) ──────────────────────────────────────────────
-    "DABUR",      "TRENT",      "ICICIPRULI",
+    "LICHSGFIN",  "MANAPPURAM", "RBLBANK",    "EXIDEIND",
 ]
 
 IT_SYMBOLS: set = {
@@ -105,7 +103,7 @@ BANKING_SYMBOLS: set = {
     "INDUSINDBK", "BANDHANBNK", "IDFCFIRSTB", "FEDERALBNK", "AUBANK",
     "BAJFINANCE", "BAJAJFINSV", "HDFCLIFE", "SBILIFE", "ICICIGI",
     "MUTHOOTFIN", "CHOLAFIN", "SHRIRAMFIN", "MANAPPURAM", "RBLBANK",
-    "BAJAJHFL", "LICHSGFIN", "ICICIPRULI",
+    "LICHSGFIN",
 }
 
 SECTOR_MAP: dict = {
@@ -117,7 +115,6 @@ SECTOR_MAP: dict = {
     "HDFCLIFE":   "banking",   "SBILIFE":    "banking",   "ICICIGI":    "banking",
     "MUTHOOTFIN": "banking",   "CHOLAFIN":   "banking",   "SHRIRAMFIN": "banking",
     "MANAPPURAM": "banking",   "RBLBANK":    "banking",   "LICHSGFIN":  "banking",
-    "BAJAJHFL":   "banking",
     # IT & Technology
     "TCS":        "IT",        "INFY":       "IT",        "WIPRO":      "IT",
     "HCLTECH":    "IT",        "TECHM":      "IT",        "LTIM":       "IT",
@@ -160,8 +157,6 @@ SECTOR_MAP: dict = {
     # Conglomerate / Infra / Other
     "ADANIENT":   "infra",     "ADANIPORTS": "infra",     "BEL":        "defense",
     "HAL":        "defense",   "IRFC":       "infra",     "ETERNAL":    "consumer",
-    # Nifty-100 additions
-    "DABUR":      "fmcg",      "TRENT":      "consumer",  "ICICIPRULI": "banking",
 }
 
 SYMBOLS = SYMBOLS_100  # Run full 100-stock universe

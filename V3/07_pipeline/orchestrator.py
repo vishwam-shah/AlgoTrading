@@ -6,7 +6,7 @@ Entry point for the full pipeline. Coordinates all steps autonomously:
 
   Step 1 — Download      : NSE OHLCV + USD/INR + Global cues (incremental)
   Step 2 — Features      : 260+ features (cached, stale-check)
-  Step 3 — Train         : Walk-forward ensemble (LightGBM + XGBoost + CatBoost + 3 DL)
+  Step 3 — Train         : Walk-forward ensemble (LightGBM + XGBoost + BiLSTM + TCN-T + NBEATS)
   Step 4 — Evaluate      : Per-symbol metrics + plots + production model save
   Step 5 — Predict       : Next-day directional signals for all symbols
   Step 6 — Backtest      : HRP portfolio simulation (optional)
@@ -200,7 +200,7 @@ def main() -> None:
     parser.add_argument("--json",    action="store_true",
                         help="Output JSON instead of display for --predict mode")
     parser.add_argument("--fast",    action="store_true",
-                        help="Fast mode: skip DL models, trees only (LightGBM + XGBoost + CatBoost). "
+                        help="Fast mode: skip DL models, trees only (LightGBM + XGBoost). "
                              "~3× faster per stock. Use for production / quick iteration.")
     args = parser.parse_args()
 
@@ -463,10 +463,31 @@ def main() -> None:
 
     if ok_rows:
         summary_df = pd.DataFrame([{
-            "symbol": r["symbol"], "oos_accuracy": r["oos_accuracy"],
-            "oos_f1": r["oos_f1"], "n_windows": r["n_windows"],
-            "n_predictions": r["n_predictions"],
-            "n_features": r["n_features"], "n_rows": r["n_rows"],
+            "symbol":              r["symbol"],
+            "oos_accuracy":        r["oos_accuracy"],
+            "oos_f1":              r["oos_f1"],
+            "n_windows":           r["n_windows"],
+            "n_predictions":       r["n_predictions"],
+            "n_features":          r.get("n_features", 0),
+            "n_rows":              r["n_rows"],
+            # per-model averages
+            "avg_lgbm_acc":        r.get("avg_lgbm_acc", 0),
+            "avg_xgb_acc":         r.get("avg_xgb_acc", 0),
+            "avg_lstm_acc":        r.get("avg_lstm_acc", 0),
+            "avg_bilstm_acc":      r.get("avg_bilstm_acc", 0),
+            "avg_gru_acc":         r.get("avg_gru_acc", 0),
+            "avg_cnn_lstm_acc":    r.get("avg_cnn_lstm_acc", 0),
+            "avg_cnn_gru_acc":     r.get("avg_cnn_gru_acc", 0),
+            "avg_tcn_gru_acc":     r.get("avg_tcn_gru_acc", 0),
+            "avg_tcn_transformer_acc": r.get("avg_tcn_transformer_acc", 0),
+            "avg_nbeats_acc":      r.get("avg_nbeats_acc", 0),
+            # directional accuracy
+            "avg_dir_acc_up":      r.get("avg_dir_acc_up", 0),
+            "avg_dir_acc_down":    r.get("avg_dir_acc_down", 0),
+            "avg_pct_neutral":     r.get("avg_pct_neutral", 0),
+            # best model
+            "best_model":          r.get("best_model", ""),
+            "best_model_acc":      r.get("best_model_acc", 0),
         } for r in ok_rows])
 
         print(f"\n {'Symbol':<12} {'OOS Acc':>8} {'F1':>7} {'Wins':>5} {'Preds':>6} {'Rows':>6}")
@@ -490,10 +511,8 @@ def main() -> None:
         if all_win_rows:
             aw_df = pd.DataFrame(all_win_rows)
             model_cols = {
-                "lgbm_acc": "LightGBM", "xgb_acc": "XGBoost", "catboost_acc": "CatBoost",
-                "lstm_acc": "LSTM", "bilstm_acc": "BiLSTM", "gru_acc": "GRU",
-                "cnn_lstm_acc": "CNN_LSTM", "cnn_gru_acc": "CNN_GRU",
-                "tcn_gru_acc": "TCN_GRU", "tcn_transformer_acc": "TCN_Transformer",
+                "lgbm_acc": "LightGBM", "xgb_acc": "XGBoost",
+                "bilstm_acc": "BiLSTM", "tcn_transformer_acc": "TCN_Transformer",
                 "nbeats_acc": "NBEATS",
             }
             model_comp_rows = []
@@ -534,20 +553,26 @@ def main() -> None:
         skip_err = []
         for r in (skipped_rows + error_rows):
             skip_err.append({
-                "symbol":        r.get("symbol", ""),
-                "oos_accuracy":  None, "oos_f1": None,
-                "n_windows":     0, "n_predictions": 0,
-                "n_features":    0, "n_rows": int(r.get("n_rows", 0) or 0),
-                "status":        r.get("status", "skipped"),
+                "symbol": r.get("symbol", ""), "oos_accuracy": None, "oos_f1": None,
+                "n_windows": 0, "n_predictions": 0, "n_features": 0,
+                "n_rows": int(r.get("n_rows", 0) or 0),
+                "avg_lgbm_acc": None, "avg_xgb_acc": None,
+                "avg_lstm_acc": None, "avg_bilstm_acc": None, "avg_gru_acc": None,
+                "avg_cnn_lstm_acc": None, "avg_cnn_gru_acc": None,
+                "avg_tcn_gru_acc": None, "avg_tcn_transformer_acc": None, "avg_nbeats_acc": None,
+                "avg_dir_acc_up": None, "avg_dir_acc_down": None, "avg_pct_neutral": None,
+                "best_model": "", "best_model_acc": None,
+                "status": r.get("status", "skipped"),
             })
-        avg_row = pd.DataFrame([{
+        num_cols = [c for c in summary_df.columns if summary_df[c].dtype in (float, int)
+                    and c not in ("n_predictions",)]
+        avg_vals = {c: summary_df[c].mean() for c in num_cols}
+        avg_vals.update({
             "symbol": "AVERAGE", "oos_accuracy": avg_acc, "oos_f1": avg_f1,
-            "n_windows": summary_df["n_windows"].mean(),
             "n_predictions": summary_df["n_predictions"].sum(),
-            "n_features": summary_df["n_features"].mean(),
-            "n_rows": summary_df["n_rows"].mean(),
-            "status": "ok",
-        }])
+            "best_model": "", "status": "ok",
+        })
+        avg_row = pd.DataFrame([avg_vals])
         full_df = pd.concat(
             [summary_df, pd.DataFrame(skip_err), avg_row],
             ignore_index=True
@@ -658,6 +683,18 @@ def main() -> None:
     print(f"  Models   → {(MODELS_RUNS_DIR/run_id).relative_to(_V3_ROOT)}")
     print(f"  Prod     → {(MODELS_RUNS_DIR.parent/'production').relative_to(_V3_ROOT)}/{{symbol}}/")
     print(f"  Elapsed  : {elapsed:.1f}s  ({elapsed/60:.1f} min)")
+
+    # ── Auto-cleanup: keep only the 2 most recent model run folders to cap storage ──
+    try:
+        import shutil as _shutil
+        KEEP_MODEL_RUNS = 2
+        all_model_runs = sorted(MODELS_RUNS_DIR.glob("20*"), reverse=True)
+        to_delete = all_model_runs[KEEP_MODEL_RUNS:]
+        for old_run in to_delete:
+            _shutil.rmtree(old_run, ignore_errors=True)
+            print(f"  [cleanup] Removed old model run: {old_run.name}")
+    except Exception as _ce:
+        print(f"  [cleanup] Skipped: {_ce}")
 
     # ══════════════════════════════════════════════════════════════════════════
     #  STEP 6 — OPTIONAL BACKTEST

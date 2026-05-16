@@ -2802,7 +2802,7 @@ async def get_dashboard(run_id: Optional[str] = None):
                 ) if len(pdf) > 0 else [],
             }
 
-    # Orders — prefer file tied to current run_id, then generate on-the-fly
+    # Orders — prefer file tied to current run_id, then latest orders file, then generate on-the-fly
     orders = None
     orders_source = None
     if run_id:
@@ -2812,7 +2812,15 @@ async def get_dashboard(run_id: Optional[str] = None):
                 orders = json.load(f)
             orders_source = run_order_files[0].name
 
-    # If no run-specific file, generate orders from predictions using last_close as price
+    # Fall back to the latest orders file (any run) before generating on-the-fly
+    if orders is None:
+        all_order_files = sorted(_ORDERS_DIR.glob("orders_*.json"), reverse=True)
+        if all_order_files:
+            with open(all_order_files[0]) as f:
+                orders = json.load(f)
+            orders_source = all_order_files[0].name
+
+    # If still no orders file, generate on-the-fly from predictions
     if orders is None and run_id:
         pred_path = _RUNS_DIR / run_id / "next_day_predictions.csv"
         if pred_path.exists():

@@ -136,7 +136,7 @@ export default function PipelineControl({ onComplete }: PipelineControlProps) {
           <div className="text-left">
             <div className="text-sm font-semibold">Pipeline Control</div>
             <div className="text-xs text-muted-foreground">
-              {selected.size} of {allSymbols.length} stocks selected · {config.fastMode ? 'Fast (LGB+XGB)' : 'Full (5 models)'} · ₹{(config.capital/100000).toFixed(1)}L capital
+              {selected.size} of {allSymbols.length} stocks selected · {config.fastMode ? 'Fast (LGB+XGB+Cat)' : 'Full (6 models)'} · ₹{(config.capital/100000).toFixed(1)}L capital
             </div>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function PipelineControl({ onComplete }: PipelineControlProps) {
                 ))}
               </div>
               <div className="text-[9px] text-muted-foreground mt-1">
-                {config.fastMode ? 'LGB+XGB ~30min' : '5 models ~4hrs'}
+                {config.fastMode ? 'LGB+XGB ~30min' : 'LGB+XGB+BiLSTM+TCN-T+NBEATS ~4hrs'}
               </div>
             </div>
 

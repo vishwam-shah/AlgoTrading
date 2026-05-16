@@ -1,0 +1,27 @@
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {1.1}{\ignorespaces V2 prototype versus V3 system}}{5}{table.caption.5}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Selected Indian-market forecasting studies}}{12}{table.caption.6}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Nifty-100 sector distribution used in V3}}{17}{table.caption.8}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Feature families in the V3 engine}}{19}{table.caption.9}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Leakage audit and corresponding controls in V3}}{20}{table.caption.10}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces The ten-model V3 committee}}{22}{table.caption.11}%
+\contentsline {table}{\numberline {3.5}{\ignorespaces SBIN per-fold walk-forward window sizes and out-of-sample accuracy (run \texttt {20260505\_153704}).}}{24}{table.caption.12}%
+\contentsline {table}{\numberline {3.6}{\ignorespaces Run artefacts written to \texttt {V3/06\_results/runs/\{run\_id\}/}.}}{28}{table.caption.13}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Aggregate out-of-sample accuracy and F1 on all $62{,}212$ predictions (no signal gating).}}{29}{table.caption.14}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Per-model accuracy across all $(symbol, fold)$ cells (594 cells = 99 symbols $\times $ 6 folds).}}{30}{table.caption.15}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Top 10 symbols by out-of-sample accuracy (all $\sim $600 predictions per symbol).}}{31}{table.caption.16}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Portfolio backtest summary, 30 November 2023 -- 27 April 2026.}}{33}{table.caption.17}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Top single-symbol backtests by Sharpe (run \texttt {20260505\_153704}).}}{34}{table.caption.18}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Regime-conditional portfolio statistics.}}{35}{table.caption.19}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces HDFCBANK summary across six folds.}}{41}{table.caption.26}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces V2 prototype vs.\ V3 system, headline numbers.}}{44}{table.caption.30}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Live-layer file inventory and responsibilities.}}{48}{table.caption.32}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Indian-market delivery cost stack used by \texttt {paper\_trader.py}.}}{50}{table.caption.33}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Promotion-gate state, evaluated 2026-05-05 13:57. Decision: \texttt {no-go}.}}{52}{table.caption.34}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2}{\ignorespaces Software dependencies.}}{70}{table.caption.36}%

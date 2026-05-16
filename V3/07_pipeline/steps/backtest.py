@@ -246,10 +246,18 @@ def _simulate_stock(
     except Exception:
         date_range = ""
 
-    # Annualised return (assuming one trade per trading day on average)
-    trading_days_per_trade = ANNUAL_FACTOR / max(n_trades, 1)
-    holding_fraction = 1 / max(trading_days_per_trade, 1)
-    ann_return = (1 + total_ret) ** (ANNUAL_FACTOR / max(n_trades, 1)) - 1
+    # Annualised return — use actual calendar span if available, else cap at ±500%.
+    # Per-trade extrapolation (252/n_trades) produces absurd numbers when n_trades < 20.
+    try:
+        from datetime import date as _date
+        _parts = date_range.split(" ")
+        _d0 = _date.fromisoformat(_parts[0])
+        _d1 = _date.fromisoformat(_parts[-1])
+        _years = max((_d1 - _d0).days / 365.25, 1 / 52)  # floor at 1 week
+        ann_return = (1 + total_ret) ** (1 / _years) - 1
+    except Exception:
+        ann_return = (1 + total_ret) ** (ANNUAL_FACTOR / max(n_trades, 1)) - 1
+    ann_return = max(-1.0, min(ann_return, 5.0))  # cap at -100% / +500%
 
     return {
         "n_trades":       n_trades,
@@ -547,6 +555,66 @@ def run_trade_backtest(
     acc_mean, ci_lower, ci_upper = _bootstrap_accuracy_ci(outcomes_arr)
     bootstrap_significant = bool(ci_lower > 0.50) if len(all_outcomes) >= 20 else False
 
+    # ── Momentum baseline: buy top-5 by 20-day return, hold 10 days, repeat ────
+    # Same slot framework as the ML portfolio curve, but signals = raw price momentum.
+    # This answers "does ML add value over a simple momentum strategy?"
+    momentum_return: float = 0.0
+    try:
+        all_pred_syms = [s for s in tradeable_syms
+                         if (run_dir / s / "predictions.csv").exists()]
+        if len(all_pred_syms) >= 5:
+            # Load close prices from raw parquet
+            raw_dir = run_dir.parent.parent.parent / "01_data" / "raw"
+            price_map: dict = {}
+            for sym in all_pred_syms:
+                p = raw_dir / f"{sym}.parquet"
+                if p.exists():
+                    try:
+                        _df = pd.read_parquet(p, columns=["timestamp", "close"])
+                        _df["date"] = pd.to_datetime(_df["timestamp"]).dt.date.astype(str)
+                        price_map[sym] = _df.set_index("date")["close"]
+                    except Exception:
+                        pass
+
+            if price_map:
+                # Build a sorted daily index from the portfolio curve
+                all_dates = sorted({d for s in price_map.values() for d in s.index})
+                mom_equity = 1.0
+                mom_returns = []
+                i = 0
+                HOLD = 10; LOOKBACK = 20; TOP_N = 5
+                COST = 0.0025
+                while i < len(all_dates) - HOLD:
+                    d = all_dates[i]
+                    # Rank by 20-day momentum
+                    scores = {}
+                    for sym, ser in price_map.items():
+                        idx = [x for x in all_dates[:i+1] if x in ser.index]
+                        if len(idx) >= LOOKBACK + 1:
+                            px_now  = ser[idx[-1]]
+                            px_back = ser[idx[-LOOKBACK]]
+                            scores[sym] = (px_now - px_back) / max(px_back, 1e-9)
+                    top = sorted(scores, key=scores.get, reverse=True)[:TOP_N]  # type: ignore[arg-type]
+                    if not top:
+                        i += HOLD; continue
+                    slot_rets = []
+                    for sym in top:
+                        ser = price_map[sym]
+                        future_idx = [x for x in all_dates[i+1:i+1+HOLD] if x in ser.index]
+                        if len(future_idx) < 2:
+                            continue
+                        slot_ret = (ser[future_idx[-1]] / ser[future_idx[0]] - 1) - COST
+                        slot_rets.append(slot_ret)
+                    if slot_rets:
+                        avg_ret = sum(slot_rets) / len(slot_rets)
+                        mom_equity *= (1 + avg_ret)
+                        mom_returns.append(avg_ret)
+                    i += HOLD
+                momentum_return = round(float(mom_equity - 1.0), 4)
+                print(f"  Momentum baseline total return: {momentum_return:+.2%}")
+    except Exception as _me:
+        print(f"  Momentum baseline skipped: {_me}")
+
     # ── NIFTY buy-and-hold comparison ─────────────────────────────────────────
     nifty_return: Optional[float] = None
     nifty_start = nifty_end = ""
@@ -592,6 +660,8 @@ def run_trade_backtest(
         "avg_per_stock_return":  avg_per_stock_return,
         # Alias kept for backward-compat dashboards (= avg_per_stock_return).
         "portfolio_return":      avg_per_stock_return,
+        # Momentum baseline: top-5 by 20-day return, 10-day hold, same cost model.
+        "momentum_baseline_return": momentum_return,
     }
     with open(run_dir / "backtest_summary.json", "w") as _f:
         json.dump(bt_summary, _f, indent=2)

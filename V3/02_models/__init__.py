@@ -2,8 +2,8 @@
 V3 Models Package
 
 Available models:
-- Traditional ML: XGBoost, LightGBM, CatBoost
-- Deep Learning: LSTM, BiLSTM, GRU, CNN-LSTM, TCN, Transformer
+- Traditional ML: LightGBM, XGBoost
+- Deep Learning: BiLSTM, TCN-Transformer, NBEATS
 - Ensemble: Stacking, Voting
 """
 

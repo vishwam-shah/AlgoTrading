@@ -1,0 +1,69 @@
+\chapter{Introduction} \label{chapter1}
+
+\section{Problem Statement}
+
+The forecasting of next-day directional movements in equity prices is a long-standing problem at the intersection of statistical learning and market microstructure. From a deployment perspective the practical question is not whether a forecaster can attain an impressive in-sample $R^2$, but whether a probability output, when filtered through a confidence threshold and routed through a real Indian-market broker (with brokerage, exchange charges, Securities Transaction Tax, GST, SEBI levy, stamp duty, and realistic slippage), \emph{net} of all these frictions and on stochastically unseen out-of-sample days, produces a positive risk-adjusted return curve. This thesis develops, audits, and deploys such a system on the \textbf{Nifty-100 universe of the National Stock Exchange (NSE) of India}.
+
+The work was motivated by three observations from an earlier prototype of the same system (subsequently archived as the V2 prototype) and from the published Indian-market literature.
+
+\begin{enumerate}
+    \item \textbf{Headline accuracies in the literature are inflated by leakage and test-set construction.} Reported direction accuracies in the 60--70\% range for Indian stocks frequently rely on random train--test splits, on scalers fitted across the full panel, on labels created \emph{before} the split (which then leak into the test set through any forward-looking rolling statistic), or on a single contiguous test slice in which the model happens to ride a benign regime. The first version of this work reported 68.28\% direction accuracy on 106 stocks using a 60/20/20 chronological split; the same code, replayed under expanding-window walk-forward validation with $K = 6$ folds per symbol and the scaler refit per fold, settles to a mean accuracy in the low-50\%s. Both numbers are correct; the difference is the protocol.
+    \item \textbf{Tree models dominate tabular OHLCV; deep sequence models contribute only when used jointly.} On individual stocks, LightGBM and XGBoost consistently outperform LSTM/GRU/BiLSTM. However, deep models contribute non-trivial diversification when stacked with a logistic-regression meta-learner; we therefore train both families and let a learnt meta-learner blend them rather than discarding the deep stack on the basis of marginal solo accuracy.
+    \item \textbf{The economically interesting signal is not the raw accuracy --- it is the conditional accuracy at high calibrated confidence.} A 51.5\% all-days accuracy that becomes 60.3\% on the 1{,}495 signal-days at which calibrated probability exceeds $0.58$ \emph{and} the predicted absolute move exceeds 40bps (the round-trip transaction cost) is operationally very different from a 51.5\% all-days accuracy with no gating. The gating decision is the deployable artefact.
+\end{enumerate}
+
+\section{Goals and Contributions}
+
+The V3 system has four design goals, each of which corresponds to a contribution of this thesis.
+
+\subsection*{G1. Leakage-audited features}
+\textbf{Goal.} Build a feature engineering layer such that any feature used at decision time $t$ depends \emph{only} on data observable strictly before the NSE open of day $t$. \textbf{Contribution.} A documented audit of every feature family: target is constructed with a single \texttt{shift(-1)} \emph{after} all features are computed; the \texttt{RobustScaler} and the PCA fit are computed on the training window only; the global cues (S\&P 500, Nasdaq, US VIX, DXY, Crude, Nikkei) are shifted by one calendar day and merged into the Indian time series with \texttt{merge\_asof(direction=\textquotesingle backward\textquotesingle, strict prior)}, so that the Indian decision on date $t$ sees only the US close of $t-1$.
+
+\subsection*{G2. Heterogeneous ensemble with calibrated probability}
+\textbf{Goal.} Train an ensemble whose member errors are decorrelated, and produce a probability rather than a margin. \textbf{Contribution.} Ten models per symbol --- two gradient boosters (LightGBM, XGBoost) and eight deep sequence models (LSTM, BiLSTM, GRU, CNN-LSTM, CNN-GRU, TCN-GRU, TCN-Transformer, N-BEATS) --- combined by a logistic-regression meta-learner on out-of-fold tree probabilities. A single-parameter \textbf{temperature scaling}~\cite{guo2017calibration} is fitted on the validation slice and applied at inference, producing a probability whose reliability has been verified by a per-symbol calibration curve.
+
+\subsection*{G3. Expanding-window walk-forward validation}
+\textbf{Goal.} Quantify performance under the protocol that most closely matches deployment. \textbf{Contribution.} Six chronological folds per symbol with train ratio expanding from $0.70$ to $0.95$ in steps of $0.05$, with the scaler and PCA refit per fold. Aggregation across the $99 \times 6$ window grid yields $62{,}212$ out-of-sample predictions covering roughly two-and-a-half years of unseen trading days.
+
+\subsection*{G4. Live deployment with brokerage-aware promotion gate}
+\textbf{Goal.} Make it impossible for real money to flow into the strategy unless paper-trading evidence meets pre-registered KPIs. \textbf{Contribution.} A complete live layer: an Angel One SmartAPI client; a paper-trader with explicit Indian-market cost modelling (STT, exchange charges, GST, SEBI, stamp duty, slippage); an automated \texttt{PromotionGate} (\(\geq 40\) closed trades, \(\geq 20\) paper days, rolling Sharpe \(\geq 1.0\), rolling drawdown \(\leq 10\%\), fill rate \(\geq 90\%\), slippage \(\leq 25\)bps, Brier-score drift \(\leq 0.05\)); and a Vite/React/FastAPI dashboard for human-in-the-loop oversight. The gate currently evaluates to \texttt{no-go}, correctly blocking live capital while paper evidence accrues.
+
+\section{Scope and Universe}
+
+The system is evaluated on the Nifty-100 large-capitalisation universe. After a minimum-history filter, \textbf{99 of 100 symbols} are admitted and one (BAJAJHFL, listed too recently to provide an adequate training window) is automatically skipped. The data range is from \textbf{1 January 2018} to the run date; on the canonical run analysed in this thesis, the latest training window ends in late April 2026.
+
+Coverage spans 14 sectors (banking, IT, automobiles, FMCG, pharma, energy, metals, telecom, capital goods, cement, consumer durables, real estate, conglomerate / infra, defense), reflecting the cross-section of the Indian large-cap market. The sectoral allocation and the live broker layer are India-specific, but the modelling layer is portable: the same ten-model ensemble and the same walk-forward protocol can be lifted onto any equity universe with daily OHLCV plus exogenous cues.
+
+\section{Distinction from the V2 Prototype}
+
+The reader is referred for context to the predecessor system (the V2 prototype thesis), which reported a 68.28\% direction accuracy on 106 stocks using a 60/20/20 chronological split with four models (XGBoost, LSTM, GRU, Ridge-stacker). The differences are summarised in Table~\ref{tab:v2_vs_v3}; the operational gap is that the V2 number is the \emph{single-fold} accuracy under a benign regime, whereas the V3 numbers in this thesis are the \emph{six-fold expanding-window} accuracy aggregated over a multi-regime, $\sim$2.5-year out-of-sample period, on a larger model committee, with a leakage audit and live brokerage modelling that the V2 system did not implement.
+
+\begin{table}[H]
+\centering
+\caption{V2 prototype versus V3 system}
+\label{tab:v2_vs_v3}
+\renewcommand{\arraystretch}{1.35}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l l l}
+\toprule
+\textbf{Dimension} & \textbf{V2 (archive)} & \textbf{V3 (this thesis)} \\
+\midrule
+Universe                  & 106 stocks, 11 sectors                                    & 99/100 NSE Nifty-100, 14 sectors \\
+Validation protocol       & 60/20/20 single chronological split                        & Six-fold expanding-window walk-forward, train 0.70$\to$0.95 \\
+Train/scale leakage audit & Not enforced (single scaler fit)                          & Scaler + PCA fit per fold, target by \texttt{shift(-1)} only \\
+Model committee           & 4 (XGB, LSTM, GRU, Ridge-stack)                            & 10 (LGBM, XGB, LSTM, BiLSTM, GRU, CNN-LSTM, CNN-GRU, TCN-GRU, TCN-Transformer, N-BEATS) \\
+Meta-learner              & Ridge regression                                          & Logistic regression on out-of-fold tree probs \\
+Probability calibration   & None                                                      & Per-fold temperature scaling on val \\
+Exogenous cues            & Optional, market-context disabled                          & Global cues + NSE calendar, force-included by sector \\
+Gating                    & Single confidence threshold                               & MIN\_MOVE $\geq 0.4\%$ \emph{and} calibrated prob $\geq 0.58$ \\
+Live layer                & Not present                                               & Angel One SmartAPI, paper-trader, automated promotion gate, dashboard \\
+Reported headline         & 68.28\% direction acc (single split)                       & 51.45\% all-days; 60.33\% on 1{,}495 high-confidence signals (bootstrap CI $[57.99, 62.81]$) \\
+Portfolio backtest        & Not run end-to-end on the panel                            & Total return 225.5\%, Sharpe 1.656, max DD 21.5\% over $\sim$2.5 yrs \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\section{Organisation of the Thesis}
+
+The remainder of this report is organised as follows. \textbf{Chapter~\ref{chapter2}} reviews the relevant literature on supervised forecasting of equity direction, focussing on Indian-market work, on lookahead-bias guidance from L\'opez de Prado~\cite{prado2018walkforward}, on the gradient-boosting versus deep-recurrent contrast, and on probability calibration. \textbf{Chapter~\ref{chapter3}} describes the V3 pipeline in detail: data acquisition, feature engineering (with the global-cues and NSE-calendar additions), the ten-model committee, the walk-forward protocol, the meta-learner, and the temperature-scaling calibration. \textbf{Chapter~\ref{chapter4}} presents the results of the latest run (\texttt{20260505\_153704}): aggregate accuracy on $62{,}212$ out-of-sample predictions, the high-confidence bootstrap interval on $1{,}495$ signal-days, the cross-sectional top-15 portfolio backtest (225.5\% total return), regime-conditional diagnostics, Diebold--Mariano significance tests, and per-symbol tables. \textbf{Chapter~\ref{chapter5}} documents the live trading layer: the broker client, the paper-trading runner, the cost model, the promotion gate, and the dashboard. \textbf{Chapter~\ref{chapter6}} discusses what the system does well, what it does poorly, and the immediate roadmap. The appendix lists the complete 99-symbol per-stock summary, the full configuration, the Angel One workflow, and a description of every CSV/JSON artefact produced per run.

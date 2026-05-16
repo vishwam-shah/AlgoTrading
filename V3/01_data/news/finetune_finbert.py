@@ -21,6 +21,9 @@ Usage:
 
 from __future__ import annotations
 
+import sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 import argparse
 import sys
 from pathlib import Path
@@ -168,12 +171,12 @@ def finetune(epochs: int = 8, lr: float = 1e-5, batch_size: int = 16, max_sample
     ))
 
     if acc < 70:
-        print(f"\n  ⚠ Accuracy {acc:.1f}% below 70% — consider adding more training data")
+        print(f"\n  [!] Accuracy {acc:.1f}% below 70% -- consider adding more training data")
         print(f"    Run: python V3/01_data/news/finetune_finbert.py --epochs 10")
     elif acc < 85:
-        print(f"\n  → Accuracy {acc:.1f}% — good, run more epochs to push toward 90%")
+        print(f"\n  [>] Accuracy {acc:.1f}% -- good, run more epochs to push toward 90%")
     else:
-        print(f"\n  ✓ Accuracy {acc:.1f}% — target reached!")
+        print(f"\n  [ok] Accuracy {acc:.1f}% -- target reached!")
 
     # ── Save ──────────────────────────────────────────────────────────────────
     print(f"\n  Saving model to {SAVE_DIR} ...")

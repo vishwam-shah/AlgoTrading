@@ -28,6 +28,9 @@ Usage
 
 from __future__ import annotations
 
+import sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 import argparse
 import json
 import os
@@ -247,7 +250,7 @@ def _save_orders(orders: List[Dict]) -> Optional[Path]:
     path = _ORDERS_DIR / f"exits_{today}.json"
     with open(path, "w") as f:
         json.dump(orders, f, indent=2, default=str)
-    print(f"  [exit] wrote {len(orders)} SELL orders → {path.name}")
+    print(f"  [exit] wrote {len(orders)} SELL orders -> {path.name}")
     return path
 
 

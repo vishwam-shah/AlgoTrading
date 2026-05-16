@@ -17,6 +17,9 @@ Usage:
 
 from __future__ import annotations
 
+import sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 import argparse
 import sys
 import time

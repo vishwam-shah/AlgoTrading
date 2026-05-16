@@ -33,6 +33,9 @@ Usage:
 
 from __future__ import annotations
 
+import sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 import argparse
 import json
 import os
@@ -114,7 +117,7 @@ def run_evening(capital: float = 500_000) -> None:
     _log("Step 2/3 — Running V3 pipeline (fast mode) …")
     rc = _run([
         _PYTHON, str(_PIPELINE_DIR / "orchestrator.py"),
-        "--fast", "--force-features",
+        "--fast",
     ], "orchestrator.py --fast")
     if rc != 0:
         _log("ERROR: Pipeline failed — aborting evening run")
@@ -313,7 +316,7 @@ def run_reconcile() -> None:
                 _log("  WARNING: trade_history.parquet corrupted — starting fresh")
         _tmp = _HISTORY_PATH.with_suffix(".parquet.tmp")
         df.to_parquet(_tmp, index=False, compression="snappy")
-        _tmp.rename(_HISTORY_PATH)
+        _tmp.replace(_HISTORY_PATH)
         _log(f"  {len(rows)} records → {_HISTORY_PATH.name}")
 
     _log(f"  Funds: available=₹{funds.get('available', 0):,.0f}  "

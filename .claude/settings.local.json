@@ -6,7 +6,8 @@
       "Bash(dir \"C:\\Users\\Home\\Documents\\AI_IN_STOCK_V2\\models\\lstm\\HDFCBANK\")",
       "Bash(dir /s /b \"C:\\Users\\Home\\Documents\\AI_IN_STOCK_V2\\models\\lstm\\HDFCBANK\")",
       "Bash(dir /s /b \"C:\\Users\\Home\\Documents\\AI_IN_STOCK_V2\\results\")",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

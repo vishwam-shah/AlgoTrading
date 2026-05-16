@@ -124,8 +124,8 @@ class OrderManager:
                 **costs,
             )
             self.fills.append(rec)
-            print(f"  [paper] {side} {qty}×{symbol} @ ₹{sim_price:.2f}  "
-                  f"cost=₹{costs['net_cost']:.0f}")
+            print(f"  [paper] {side} {qty}x{symbol} @ Rs{sim_price:.2f}  "
+                  f"cost=Rs{costs['net_cost']:.0f}")
             return rec
 
         # Live order
@@ -201,7 +201,7 @@ class OrderManager:
 
         deadline = time.time() + timeout_min * 60
         print(f"  [fills] Waiting for {len(self.pending)} orders "
-              f"(timeout {timeout_min} min) …")
+              f"(timeout {timeout_min} min)...")
 
         while self.pending and time.time() < deadline:
             time.sleep(poll_interval_sec)
@@ -226,8 +226,8 @@ class OrderManager:
                     rec.other_charges  = costs["other_charges"]
                     rec.net_cost       = costs["net_cost"]
                     self.fills.append(rec)
-                    print(f"  [fill] {rec.symbol} {rec.filled_qty}×₹{rec.avg_price:.2f}  "
-                          f"cost=₹{rec.net_cost:.0f}")
+                    print(f"  [fill] {rec.symbol} {rec.filled_qty}x Rs{rec.avg_price:.2f}  "
+                          f"cost=Rs{rec.net_cost:.0f}")
                 elif status in ("rejected", "cancelled"):
                     rec = self.pending.pop(oid)
                     rec.status  = "REJECTED"
@@ -269,9 +269,9 @@ class OrderManager:
                 print("  WARNING: execution log parquet corrupted — starting fresh")
         _tmp = parq_path.with_suffix(".parquet.tmp")
         df.to_parquet(_tmp, index=False, compression="snappy")
-        _tmp.rename(parq_path)
+        _tmp.replace(parq_path)
 
-        print(f"  [exec_log] {len(self.fills)} fills → {json_path.name}")
+        print(f"  [exec_log] {len(self.fills)} fills -> {json_path.name}")
         return json_path
 
     def summary(self) -> Dict:

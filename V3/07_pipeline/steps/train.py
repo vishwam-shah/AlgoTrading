@@ -1,10 +1,9 @@
 """
 step 3 — Walk-Forward Training
 ================================
-Builds expanding-window schedule and trains the 9-model ensemble per window:
+Builds expanding-window schedule and trains the 5-model ensemble per window:
   Tree branch  : LightGBM + XGBoost (PCA-transformed features)
-  DL branch    : LSTM + BiLSTM + GRU + CNN-LSTM + TCN-GRU + TCN-Transformer + NBEATS
-                 (PCA-compressed sequences)
+  DL branch    : BiLSTM + TCN-Transformer + NBEATS (PCA-compressed sequences)
   Stacking     : LogisticRegression meta-learner on val-set model probabilities
   Regime       : Per-regime LightGBM blended with global ensemble
   Calibration  : Temperature scaling (single-parameter NLL minimisation on val)
@@ -43,7 +42,6 @@ from config_v3 import (  # type: ignore  # noqa: E402
 )
 from traditional.lightgbm_classifier  import LightGBMClassifier   # type: ignore
 from traditional.xgboost_classifier   import XGBoostClassifier    # type: ignore
-from traditional.catboost_classifier  import CatBoostClassifier   # type: ignore
 
 # ── Deep Learning — lazy-loaded once ─────────────────────────────────────────
 _DL_AVAILABLE: bool = False
@@ -61,7 +59,7 @@ def set_fast_mode(fast: bool) -> None:
     _FAST_MODE = fast
     if fast:
         _DL_CLASSES = []
-        print("  [train] FAST MODE — DL models disabled, trees only (LightGBM + XGBoost + CatBoost)")
+        print("  [train] FAST MODE — DL models disabled, trees only (LightGBM + XGBoost)")
 
 def _load_dl_models() -> None:
     global _DL_AVAILABLE, _DL_CLASSES
@@ -291,7 +289,6 @@ def train_window(
     _tree_specs = [
         (LightGBMClassifier,  "LightGBM",  dict(n_jobs=_N_JOBS, is_unbalance=True)),
         (XGBoostClassifier,   "XGBoost",   dict(n_jobs=_N_JOBS, scale_pos_weight=_spw)),
-        (CatBoostClassifier,  "CatBoost",  dict(thread_count=_N_JOBS)),
     ]
     for ModelClass, name, extra_kw in _tree_specs:
         try:
@@ -448,7 +445,7 @@ def train_window(
         try:
             # Build per-split tree-ensemble primary prob (DL excluded — uses sequences,
             # different sample indexing; tree branch is enough for a meta-filter).
-            _tree_names = [n for n in ("LightGBM", "XGBoost", "CatBoost") if n in trained_models]
+            _tree_names = [n for n in ("LightGBM", "XGBoost") if n in trained_models]
             if _tree_names:
                 from sklearn.metrics import log_loss as _ll
                 _wts = {n: 1.0 / max(_ll(y_val, val_probs_each[n]), 1e-6) for n in _tree_names}
@@ -530,7 +527,7 @@ def train_window(
     # ── Save checkpoint ───────────────────────────────────────────────────────
     win_path.mkdir(parents=True, exist_ok=True)
 
-    for name in ("LightGBM", "XGBoost", "CatBoost"):
+    for name in ("LightGBM", "XGBoost"):
         if name in trained_models:
             with open(win_path / f"{name.lower()}.pkl", "wb") as f:
                 pickle.dump(trained_models[name], f)

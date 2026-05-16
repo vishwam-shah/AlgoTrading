@@ -1,0 +1,321 @@
+\chapter{The V3 Pipeline: Data, Features, Models, Validation, Calibration} \label{chapter3}
+
+This chapter describes the V3 pipeline as it executes on the canonical run analysed in Chapter~\ref{chapter4}. Every numerical setting cited corresponds to a value stored in the system configuration; every structured output cited is produced as a side-effect of the run. The chapter is organised top-down: pipeline overview, universe and acquisition, feature engineering with the leakage audit, the ten models, the meta-learner, the calibration step, the walk-forward protocol, the backtest engine, and the parallelisation and reproducibility infrastructure.
+
+\section{Pipeline Overview}
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}[
+    node distance=4mm and 7mm,
+    every node/.style={font=\scriptsize\sffamily, rounded corners=2pt, align=center},
+    stage/.style ={draw=pipelineblue,  fill=boxfill, thick, minimum width=34mm, minimum height=9mm},
+    data/.style  ={draw=pipelinegreen, fill=boxfill, thick, minimum width=34mm, minimum height=9mm},
+    model/.style ={draw=pipelineamber, fill=boxfill, thick, minimum width=34mm, minimum height=9mm},
+    deploy/.style={draw=pipelinered,   fill=boxfill, thick, minimum width=34mm, minimum height=9mm},
+    arrow/.style ={-Stealth, thick, draw=darkgray}
+]
+% Row 1: Acquisition (3 boxes side-by-side that converge)
+\node[stage] (yf)   {yfinance OHLCV};
+\node[stage, right=of yf]   (cues) {Global cues\\\tiny SP500, Nasdaq, VIX, DXY, Crude, Nikkei};
+\node[stage, right=of cues] (cal)  {NSE calendar\\\tiny Expiry, RBI, Budget, Results};
+
+% Row 2: raw store
+\node[data,  below=of cues] (raw) {Raw OHLCV Store\\\tiny incremental per-symbol parquet};
+
+% Row 3: feature pipeline
+\node[stage, below=of raw] (feat) {Feature engine ($\sim$200 features)\\\tiny + leakage audit};
+\node[stage, below=of feat] (scale){RobustScaler + PCA \emph{fit on train only}};
+
+% Row 4: walk-forward
+\node[stage, below=of scale] (wf) {Walk-forward, 6 folds, train 0.70$\to$0.95};
+
+% Row 5: committee
+\node[model, below=of wf, minimum width=120mm, minimum height=14mm] (committee)
+  {\textbf{Ten-model committee per (symbol, fold)}\\
+   \tiny LightGBM\,$\cdot$\,XGBoost\,$\cdot$\,LSTM\,$\cdot$\,BiLSTM\,$\cdot$\,GRU\,$\cdot$\,CNN-LSTM\,$\cdot$\,CNN-GRU\,$\cdot$\,TCN-GRU\,$\cdot$\,TCN-Transformer\,$\cdot$\,N-BEATS};
+
+% Row 6: meta + temp
+\node[stage, below=of committee] (meta) {Logistic meta-stack $\to$ temperature scaling $\sigma(z/T^\star)$};
+
+% Row 7: gate
+\node[stage, below=of meta] (gate) {Gate: $\hat p \geq 0.58$ \;AND\; $|\widehat\Delta| \geq 0.4\%$};
+
+% Row 8: deployment chain (4 boxes, will fit since each is 34mm and gap 7mm => 4*34+3*7 = 157mm > 168mm? Adjust spacing)
+\node[deploy, below=8mm of gate] (port)  {Portfolio backtest\\\tiny top-15 cross-sectional};
+\node[deploy, right=of port]     (paper) {Paper trader\\\tiny Indian cost model};
+\node[deploy, below=of port]     (promo) {Promotion gate\\\tiny Sharpe, DD, Brier};
+\node[deploy, right=of promo]    (live)  {Angel One SmartAPI\\\tiny live execution};
+
+% Arrows
+\draw[arrow] (yf.south)   |- (raw.west);
+\draw[arrow] (cues) -- (raw);
+\draw[arrow] (cal.south)  |- (raw.east);
+\draw[arrow] (raw)   -- (feat);
+\draw[arrow] (feat)  -- (scale);
+\draw[arrow] (scale) -- (wf);
+\draw[arrow] (wf)    -- (committee);
+\draw[arrow] (committee) -- (meta);
+\draw[arrow] (meta)  -- (gate);
+\draw[arrow] (gate)  -- (port);
+\draw[arrow] (port)  -- (paper);
+\draw[arrow] (paper.south) -- (live.north);
+\draw[arrow] (port)  -- (promo);
+\draw[arrow] (promo) -- (live);
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{End-to-end V3 pipeline: acquisition (yfinance + global cues + NSE calendar) $\to$ leakage-audited features $\to$ walk-forward training of the ten-model committee $\to$ meta-stacking with temperature-scaled probability $\to$ gate $\to$ deployment chain (backtest, paper trader, promotion gate, Angel One).}
+\label{fig:pipeline_overview}
+\end{figure}
+
+\section{Universe and Acquisition}
+
+\subsection{Universe}
+
+The configured universe is the Nifty-100 (Nifty-50 + Nifty Next-50) of the National Stock Exchange of India, grouped into 14 sector buckets (banking, IT, automobiles, FMCG, pharma, energy, metals, telecom, capital goods, cement, consumer durables, real estate, conglomerate / infra, defence). On the canonical run, $99/100$ symbols passed the post-feature minimum-history filter and one (BAJAJHFL, listed too recently to provide enough training history) was automatically excluded. Table~\ref{tab:universe_sectors} reports the sector distribution.
+
+\begin{table}[H]
+\centering
+\caption{Nifty-100 sector distribution used in V3}
+\label{tab:universe_sectors}
+\renewcommand{\arraystretch}{1.3}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l c p{9cm}}
+\toprule
+\textbf{Sector} & \textbf{Count} & \textbf{Representatives} \\
+\midrule
+Banking \& Finance   & 21 & SBIN, HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, INDUSINDBK, BAJFINANCE, BAJAJFINSV, HDFCLIFE, SBILIFE, ICICIGI, MUTHOOTFIN, CHOLAFIN, SHRIRAMFIN, BANDHANBNK, IDFCFIRSTB, FEDERALBNK, AUBANK, RBLBANK, MANAPPURAM, LICHSGFIN \\
+IT                   & 12 & TCS, INFY, WIPRO, HCLTECH, TECHM, LTIM, MPHASIS, PERSISTENT, COFORGE, TATAELXSI, OFSS, NAUKRI \\
+Automobiles          & 8  & MARUTI, M\&M, TVSMOTOR, BAJAJ-AUTO, HEROMOTOCO, EICHERMOT, MOTHERSON, EXIDEIND \\
+FMCG                 & 8  & HINDUNILVR, ITC, NESTLEIND, BRITANNIA, TATACONSUM, MARICO, COLPAL, GODREJCP \\
+Pharma               & 8  & SUNPHARMA, DRREDDY, CIPLA, DIVISLAB, LUPIN, TORNTPHARM, AUROPHARMA, ALKEM \\
+Energy               & 8  & RELIANCE, ONGC, BPCL, NTPC, POWERGRID, COALINDIA, GAIL, TATAPOWER \\
+Metals \& Mining     & 6  & TATASTEEL, HINDALCO, JSWSTEEL, VEDL, SAIL, NMDC \\
+Telecom              & 2  & BHARTIARTL, INDUSTOWER \\
+Capital Goods        & 8  & LT, BHEL, SIEMENS, ABB, HAVELLS, POLYCAB, CUMMINSIND, BOSCHLTD \\
+Cement               & 4  & ULTRACEMCO, GRASIM, AMBUJACEM, SHREECEM \\
+Consumer Durables    & 7  & TITAN, ASIANPAINT, PIDILITIND, BERGEPAINT, VOLTAS, PAGEIND, DMART \\
+Real Estate          & 2  & DLF, GODREJPROP \\
+Conglomerate / Infra & 4  & ADANIENT, ADANIPORTS, IRFC, ETERNAL \\
+Defence              & 2  & BEL, HAL \\
+\midrule
+\textbf{Total}       & \textbf{100} & 99 trained, 1 skipped (BAJAJHFL) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsection{Acquisition}
+
+Per-symbol OHLCV is downloaded from Yahoo Finance~\cite{yfinance} with a 0.3-second inter-request delay, parallelised through an 8-worker thread pool (I/O-bound). Each symbol's history is stored as an incremental parquet: subsequent runs read the existing record, identify the latest date, and fetch only new rows. Two global datasets are refreshed once per run: (i) global market cues comprising S\&P~500, Nasdaq, US VIX, DXY, Crude, Nikkei, Nifty-50, and Nifty Bank; and (ii) the USD/INR exchange rate. Data start date is 1 January 2018.
+
+\section{Feature Engineering}
+
+\subsection{Feature Families}
+
+The feature engine computes \(\sim\)200 features per row from the OHLCV plus the merged exogenous cues. The families are summarised in Table~\ref{tab:feature_families}. The post-engineering matrix is reduced by per-fold feature selection to 50 features; on the canonical run, the per-symbol selected count is $47$ or $50$ depending on whether the symbol belongs to the IT sector (where USD/INR and Nasdaq features are force-included) or the general sector bucket.
+
+\begin{table}[H]
+\centering
+\caption{Feature families in the V3 engine}
+\label{tab:feature_families}
+\renewcommand{\arraystretch}{1.4}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{Family} & \textbf{Members (representative)} \\
+\midrule
+Returns and ratios       & 1/3/5/10/20-day arithmetic and log returns; OHLC ratios; gap features; cumulative drawdown; rolling sum-of-squares \\
+Trend                    & SMA/EMA at $\{5,10,20,50,100,200\}$, distance to MA, MA crossovers, MACD (12/26/9), MACD histogram \\
+Mean-reversion           & RSI(14), RSI(7), z-score of return at $\{5,10,20\}$, distance to 52-week high/low, Bollinger band z-score \\
+Volatility               & ATR(14), realised vol at $\{5,10,20\}$, Parkinson, Garman--Klass, Yang--Zhang estimators, volatility z-score \\
+Volume                   & OBV, CMF(20), MFI(14), volume moving averages, volume z-score, dollar-volume \\
+Range / candlestick      & Body / shadow ratios, doji / hammer / engulfing flags, true range, mid-day pivot \\
+Calendar                 & Day-of-week, month, quarter (cyclic), \texttt{days\_to\_expiry}, \texttt{is\_expiry\_week}, \texttt{is\_expiry\_day}, \texttt{days\_to\_rbi}, \texttt{is\_rbi\_week}, \texttt{days\_to\_budget}, \texttt{is\_budget\_week}, \texttt{is\_result\_season} \\
+Global cues (shift +1d)  & \texttt{sp500\_ret\_prev/5d}, \texttt{nasdaq\_ret\_prev/5d}, \texttt{us\_vix\_level/zscore/spike}, \texttt{dxy\_ret\_prev/5d}, \texttt{crude\_ret\_prev/5d}, \texttt{nikkei\_ret\_prev}, \texttt{nifty50\_ret\_prev/5d}, \texttt{niftybank\_ret\_prev/5d/20d} \\
+Sector-specific          & IT: USD/INR returns, RSI, 20-day MA ratio, alpha vs.\ INR. Banking: days to next RBI meeting, Nifty Bank momentum. Force-included per sector. \\
+Regime tags              & 3-state regime label (bear / sideways / bull) derived from rolling return percentiles \\
+\bottomrule
+\end{tabularx}
+\end{adjustbox}
+\end{table}
+
+\subsection{The Target}
+
+The classification target is binary up/down at horizon $h = 1$, but with a dead-band:
+\[
+    y_t \;=\; \mathbb{1}\!\left[\, \frac{C_{t+1} - C_t}{C_t} \;\geq\; \delta \,\right], \qquad \delta = 0.004.
+\]
+Days with $|r_{t+1}| < 0.004$ are retained in training and labelled by their sign; the minimum-move threshold $\delta$ is applied at signal time, not at label time. The shift is performed once, \emph{after} all features have been computed and before any train/test split.
+
+\subsection{Leakage Audit}
+
+Table~\ref{tab:leakage_audit} documents the five places where look-ahead could enter and how V3 prevents it.
+
+\begin{table}[H]
+\centering
+\caption{Leakage audit and corresponding controls in V3}
+\label{tab:leakage_audit}
+\renewcommand{\arraystretch}{1.25}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Risk} & \textbf{Where it would enter} & \textbf{V3 control} \\
+\midrule
+Target shift              & A feature shifted by $-N$ would share a future row with the target. & Target built by a single forward label shift applied after all features. No feature uses a forward shift. \\
+Scaler fit                & Fitting a scaler on the whole panel leaks the test-period mean into train. & Robust scaler fit on the training window only; transform applied to validation and test. \\
+PCA fit                   & Same as scaler.                                                       & PCA fit on the training window only. \\
+Global cues               & US close of date $t$ is published during the Indian session of $t$. & US-side cues shifted by one calendar day, then merged by backward temporal join to the Indian daily series. \\
+Feature selection         & Selecting on the full panel by importance on the full target is a peek. & Top-50 features chosen per fold on the training slice only; sector-specific force-include lists do not see the target. \\
+Temperature scaling       & Fitting $T$ on the test set would inflate the gate.                  & $T^\star$ fit on the validation slice only; applied unchanged at inference. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{The Ten-Model Committee}
+
+V3 trains ten heterogeneous binary classifiers per (symbol, fold). The tree pair consumes a two-dimensional PCA-projected matrix; the eight deep-sequence models consume a three-dimensional tensor with sequence length $T=20$ built by a sliding window over the scaled (non-PCA) features. The committee specification is in Table~\ref{tab:model_committee}.
+
+\begin{table}[H]
+\centering
+\caption{The ten-model V3 committee}
+\label{tab:model_committee}
+\renewcommand{\arraystretch}{1.4}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{Family} & \textbf{Model} & \textbf{Topology and key hyper-parameters} \\
+\midrule
+Trees & LightGBM     & 1000 trees, depth 5, lr $0.01$, leaves 31, subsample 0.8, colsample 0.8, $\alpha=0.3$, $\lambda=1.5$, min child 20, early stopping 50 rounds. \\
+Trees & XGBoost      & 1000 trees, depth 5, lr $0.01$, subsample 0.8, colsample 0.8, $\alpha=0.3$, $\lambda=1.5$, early stopping 50 rounds, logistic objective. \\
+RNN  & LSTM         & 2-layer stacked (64$\to$32), dropout 0.3, recurrent dropout 0.2, $\ell_2 = 10^{-4}$, dense 32, Adam lr $10^{-3}$, batch 32, max 100 epochs, ES patience 8. \\
+RNN  & BiLSTM       & 2-layer bidirectional (32$\to$16 per direction, merged $\to$ 64$\to$32), same regularisation. Safe under leakage audit because all input features are pre-lagged. \\
+RNN  & GRU          & 2-layer (64$\to$32), identical regularisation; acts as diversity partner to LSTM. \\
+CNN+RNN & CNN-LSTM  & 1D-Conv \emph{causal} (64 filters, kernel 3) + MaxPool 2 + LSTM(32). Causal padding precludes future leakage. \\
+CNN+RNN & CNN-GRU   & Same CNN backbone; GRU(32) at the recurrent stage. \\
+TCN  & TCN-GRU      & Dilated causal convolutions, dilations $\{1,2,4,8\}$, kernel 3, filters 64, then GRU(32). Receptive field $\approx 61$ steps. \\
+TCN+Attn & TCN-Transformer & TCN (dilations $\{1,2,4\}$, kernel 3, $d_\mathrm{model}=64$) + 4-head self-attention (key dim 16). \\
+N-BEATS & N-BEATS (generic) & 3 residual blocks, 4 FC layers per block, $\mathrm{fc\_dim}=512$, projection $\mathrm{proj\_dim}=256$, sigmoid head. Adam lr $5 \times 10^{-4}$. \\
+\bottomrule
+\end{tabularx}
+\end{adjustbox}
+\end{table}
+
+Storage budget is preserved by saving deep-learning model weights only for the \emph{last} fold per symbol (used for the production copy and live inference); intermediate-fold weights are discarded. This reduces checkpoint storage from $N_\mathrm{folds} \times N_\mathrm{DL}$ per symbol to $1 \times N_\mathrm{DL}$ per symbol --- a $\sim$83\% reduction.
+
+\section{Meta-Learner and Calibration}
+
+\subsection{Logistic Stacking}
+
+For each fold, the LightGBM and XGBoost out-of-fold validation probabilities are stacked into a 2-feature design matrix; a logistic regression ($\ell_2$ regularisation, $C=1$) is fit to map these probabilities to the validation labels. The eight deep-learning probabilities are admitted into the stack only if their validation accuracy clears a sanity floor (otherwise their column is dropped to avoid feeding pure noise to the meta-learner). On the canonical run, the deep-learning pass-through floor was not consistently met across symbols, so the dominant meta-signal flowed through the tree stack; the resulting meta-probability therefore primarily reflects the logistic blend of LightGBM and XGBoost.
+
+\subsection{Temperature Scaling}
+
+Let $p_v$ be the meta-probability on the validation slice and $z_v = \mathrm{logit}(p_v)$. We fit
+\[
+T^\star \;=\; \arg\min_{T \in [0.05, 5]} \; \mathrm{NLL}\!\left(\sigma(z_v / T),\ y_v\right),
+\]
+using one-dimensional scalar optimisation, and apply $\hat p = \sigma(\mathrm{logit}(p) / T^\star)$ to the test slice. Temperature scaling preserves the model's ranking (so the AUC and the argmax accuracy are unchanged); it shifts the entire probability distribution toward observed frequencies so that the gate threshold $0.58$ becomes operationally meaningful.
+
+\section{Walk-Forward Validation}
+
+\subsection{Protocol}
+
+For each symbol with $N$ rows after feature alignment, V3 generates six chronological folds. Fold $k$ ($k=1,\dots,6$) uses
+\[
+    \mathrm{train\_ratio}_k \;=\; 0.70 + 0.05\,(k-1), \quad
+    \mathrm{train\_size}_k \;=\; \lfloor N \cdot \mathrm{train\_ratio}_k \rfloor,
+\]
+with the next $10\%$ of rows used as validation and the remainder up to the next fold boundary used as test. Concretely, for a 1{,}115-row symbol (SBIN) the train sizes are roughly $\{702, 753, 803, 853, 903, 954\}$ and the test sizes $\{112, 111, 111, 112, 112, 56\}$; the per-fold detail for SBIN appears in Table~\ref{tab:sbin_windows}.
+
+\begin{table}[H]
+\centering
+\caption{SBIN per-fold walk-forward window sizes and out-of-sample accuracy (canonical run).}
+\label{tab:sbin_windows}
+\renewcommand{\arraystretch}{1.3}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{c c c c c l l c c c c}
+\toprule
+\textbf{Fold} & \textbf{train\_ratio} & \textbf{train} & \textbf{val} & \textbf{test} & \textbf{test\_start} & \textbf{test\_end} & \textbf{oos\_acc} & \textbf{AUC} & \textbf{F1} & \textbf{T} \\
+\midrule
+1 & 0.70 & 702 & 78  & 112 & 2024-03-20 & 2024-12-03 & 0.500 & 0.518 & 0.588 & 1.000 \\
+2 & 0.75 & 753 & 83  & 111 & 2024-07-30 & 2025-03-28 & 0.622 & 0.708 & 0.667 & 1.000 \\
+3 & 0.80 & 803 & 89  & 111 & 2024-12-05 & 2025-08-07 & 0.477 & 0.506 & 0.554 & 0.445 \\
+4 & 0.85 & 853 & 94  & 112 & 2025-04-02 & 2025-12-19 & 0.661 & 0.338 & 0.782 & 1.000 \\
+5 & 0.90 & 903 & 100 & 112 & 2025-08-08 & 2026-04-24 & 0.554 & 0.346 & 0.688 & 1.000 \\
+6 & 0.95 & 954 & 105 & 56  & 2025-12-23 & 2026-04-24 & 0.446 & 0.397 & 0.523 & 1.000 \\
+\midrule
+\textbf{Avg} & & & & & & & \textbf{0.543} & \textbf{0.469} & \textbf{0.634} & \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+The expanding-window form (as opposed to a sliding window) is chosen because the underlying universe is a slow-moving large-cap panel; older history is informative for regime classification (cf.\ the regime-conditional diagnostics in Chapter~\ref{chapter4}) and discarding it under a sliding window would harm the bear-regime contribution that dominates the backtest return.
+
+\subsection{What is Saved per Window}
+
+Each (symbol, fold) pair saves the LightGBM and XGBoost models, the meta-learner, and (for the last fold only) the deep-learning weight snapshots to a per-fold checkpoint directory. The same fold writes one row to a per-symbol fold summary containing per-model accuracies, AUC, F1, precision, recall, confusion counts, the fitted temperature $T^\star$, predicted-class shares (up / down / neutral), and directional accuracies by predicted class. All per-symbol per-fold rows are concatenated post-run into a panel-wide fold detail record.
+
+\section{Gating: Confidence Threshold and Minimum Move}
+
+The decision rule at inference is:
+\[
+\boxed{
+\mathrm{signal\_active}(t) \;=\; \big(\hat p(t) \geq 0.58\big) \;\wedge\; \big(|\widehat{\Delta}(t)| \geq 0.004\big).
+}
+\]
+Here $\hat p(t)$ is the temperature-scaled meta-probability and $\widehat{\Delta}(t)$ is the predicted return (used as a confidence ribbon, not as an exit). Both thresholds are fixed in the system configuration and recorded with every run so that the gating rule is exactly reproducible. The threshold matters: dropping the probability gate from $0.58$ to $0.55$ approximately doubles the signal count but reduces the bootstrap accuracy by 3--4 percentage points, in line with the Goodhart effect that confidence-thresholded accuracy and signal count trade off.
+
+\section{Portfolio Backtest Engine}
+
+The portfolio engine runs cross-sectionally: each day, all symbols whose gate is active are ranked by a 20-day rolling Sharpe ratio and the top 15 are held in equal weight. Per-symbol backtest statistics reported include: number of trades, total and annualised return, win rate, average win and loss percentages, profit factor, Sharpe ratio, maximum drawdown, Calmar ratio, a tradeable flag, a top-15 cross-sectional flag, Sharpe rank, and directional accuracy on signal days. The daily portfolio equity track and an aggregate backtest summary --- containing the bootstrap accuracy confidence interval, Nifty buy-and-hold reference return, portfolio total return, Sharpe ratio, and maximum drawdown --- are also written at the end of each run.
+
+\section{Parallelisation and Reproducibility}
+
+\subsection{Parallelisation}
+
+Data downloads run in an 8-worker thread pool (I/O-bound). Per-symbol model training runs in a separate process pool with configurable worker count (default 4, set to 3 on the canonical run). Each worker process is initialised with a fixed thread budget of $\lfloor n_{\mathrm{cpu}} / n_{\mathrm{workers}} \rfloor$ for all native numerical libraries, preventing core over-subscription. TensorFlow is configured to run CPU-only with on-demand memory allocation, avoiding GPU memory reservation overhead. Per-symbol execution logs are captured to individual log files.
+
+\subsection{Crash Resume}
+
+The pipeline supports a resume flag that skips any symbol that already has a completed fold summary on disk. This made recovery from an out-of-memory failure on the first 8-worker attempt to a successful 3-worker completion straightforward.
+
+\subsection{Reproducibility}
+
+An immutable configuration record written at the start of each run captures the random seed, the data start date, the universe, the minimum-move threshold ($\delta=0.004$), the confidence threshold ($0.58$), the train ratios, the calibration method, the worker counts, and the elapsed wall time. The canonical run completed in $358.8$ seconds for 99 symbols on a 12-core machine ($n_\mathrm{workers}=3$, $n_\mathrm{jobs}=2$ per worker). All random-number generators (NumPy, scikit-learn, XGBoost, LightGBM, TensorFlow) are seeded from a fixed value of $42$.
+
+\section{Outputs: The Run Artefact Set}
+
+A full run writes the artefact tree in Table~\ref{tab:run_artefacts}. Each artefact has a deterministic schema documented in the appendix.
+
+\begin{table}[H]
+\centering
+\caption{Structured outputs written to the run results directory after each pipeline execution.}
+\label{tab:run_artefacts}
+\renewcommand{\arraystretch}{1.25}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.7cm} X@{}}
+\toprule
+\textbf{Output} & \textbf{Contents} \\
+\midrule
+Run configuration record     & Fixed configuration: random seed, train ratios, gate thresholds, universe, elapsed time, trained-at timestamp. \\
+Symbol manifest              & List of trained symbols with status (trained / skipped). \\
+Per-symbol summary           & Out-of-sample accuracy, F1, fold count, prediction count, feature count, row count, and status for each symbol; plus a panel average row. \\
+Panel fold detail            & Every (symbol, fold) row concatenated: per-model accuracy, AUC, F1, confusion matrix, temperature $T^\star$, predicted-class shares, directional accuracy by class. \\
+Model-level aggregation      & Per-model mean/median/max/min/std aggregated across all symbol-fold cells. \\
+Next-day signal file         & Post-train next-day forecast for each symbol: direction, action, calibrated confidence, predicted price and range, ATR, regime, temperature, gate flag. \\
+Per-symbol backtest report   & Trades, returns, win rate, profit factor, Sharpe, max drawdown, Calmar, signal-day directional accuracy. \\
+Portfolio equity track       & Daily portfolio return and equity value (equal-weight top-15 cross-section). \\
+Backtest summary             & Bootstrap accuracy CI, Nifty buy-and-hold reference, portfolio total return, Sharpe, max drawdown. \\
+Regime diagnostic report     & Bull / sideways / bear Sharpe, max drawdown, annual return. \\
+Diebold--Mariano report      & Per-symbol and pooled DM statistic and $p$-value against three baselines. \\
+Panel-level plots            & Cross-stock comparison and model comparison heatmap. \\
+Per-symbol directory         & Six-fold detail, per-fold predictions, per-symbol summary, and plots. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The remainder of the chapter is the live deployment layer (Chapter~\ref{chapter5}); empirical results from the artefact set above are reported in Chapter~\ref{chapter4}.

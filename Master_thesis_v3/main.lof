@@ -1,0 +1,18 @@
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces End-to-end V3 pipeline: acquisition (yfinance + global cues + NSE calendar) $\to $ leakage-audited features $\to $ walk-forward training of the ten-model committee $\to $ meta-stacking with temperature-scaled probability $\to $ gate $\to $ deployment chain (backtest, paper trader, promotion gate, Angel One).}}{15}{figure.caption.7}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Cross-stock OOS accuracy distribution. Each point is the six-fold mean accuracy of a symbol. The dashed line at 0.50 is the random baseline; the dashed line near 0.51 is the panel mean.}}{36}{figure.caption.20}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Per-model per-symbol accuracy heatmap. The two columns are LightGBM and XGBoost; rows are the 99 symbols. Darker cells indicate higher per-fold mean accuracy. Sectoral clusters (banking rows, pharma rows) are visible as horizontal bands.}}{37}{figure.caption.21}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Per-model performance distribution (V2 panel, retained for cross-pipeline visual continuity). Box widths are IQRs; whiskers are 1.5$\times $IQR.}}{38}{figure.caption.22}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Direction-accuracy distribution across the panel. The right-skew is real and survives the protocol change from V2 (single split) to V3 (walk-forward); only the location moves.}}{39}{figure.caption.23}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces SBIN per-fold OOS accuracy and aggregate confusion matrix.}}{40}{figure.caption.24}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces SBIN confidence timeline. The vertical bars are signal-day confidence; signals concentrate around RBI / results windows.}}{40}{figure.caption.25}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces HDFCBANK per-fold OOS accuracy and aggregate confusion matrix.}}{41}{figure.caption.27}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces CHOLAFIN per-fold accuracy and confidence timeline. Signal density is low and signals cluster around results / NBFC news windows.}}{42}{figure.caption.28}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces RELIANCE per-fold accuracy and confidence timeline.}}{43}{figure.caption.29}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Live deployment topology. Daily cron drives signal publishing $\to $ paper-trade entries $\to $ exits $\to $ ledger $\to $ PnL reconciliation $\to $ promotion gate. Only when the promotion gate emits \texttt {go} does \texttt {order\_manager.py} route real orders through the Angel One SmartAPI client. \texttt {risk\_guard.py} is a pre-trade circuit breaker.}}{47}{figure.caption.31}%
+\addvspace {10\p@ }

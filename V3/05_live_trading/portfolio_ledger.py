@@ -25,6 +25,9 @@ losing state.json never loses history.
 """
 from __future__ import annotations
 
+import sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 import json
 import sys
 import time
@@ -112,7 +115,7 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     with open(tmp, "w") as f:
         json.dump(payload, f, indent=2, default=str)
-    tmp.rename(path)
+    tmp.replace(path)   # replace() overwrites on Windows; rename() does not
 
 
 def _read_state() -> LedgerState:
@@ -162,7 +165,7 @@ def _append_event(event: dict) -> None:
             pass
     tmp = _EVENTS.with_suffix(".parquet.tmp")
     df.to_parquet(tmp, index=False, compression="snappy")
-    tmp.rename(_EVENTS)
+    tmp.replace(_EVENTS)
 
 
 # ── Rebuild from executions (truth source) ────────────────────────────────────
@@ -319,7 +322,7 @@ def mark_to_market(ltp: Dict[str, float]) -> Tuple[float, float]:
             pass
     tmp = _NAV.with_suffix(".parquet.tmp")
     row.to_parquet(tmp, index=False, compression="snappy")
-    tmp.rename(_NAV)
+    tmp.replace(_NAV)
     s.nav_yesterday = nav_today
     _write_state(s)
     return float(nav_today), float(daily_ret)

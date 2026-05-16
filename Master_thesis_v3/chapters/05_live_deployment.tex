@@ -1,0 +1,169 @@
+\chapter{Live Deployment: Paper Trading, Promotion Gate, and the Angel One SmartAPI Bridge} \label{chapter5}
+
+The model is only one half of a deployable system; the other half is the path from a next-day signal to a placed order on the exchange floor, with all the cost, latency, fill-quality, calibration-drift, and operational-error checks that the path implies. This chapter documents the V3 live layer: the broker client, the paper trader, the cost model, the promotion gate, and the dashboard. As of the most recent evaluation, the promotion gate evaluates to a rejection decision, which is the correct state: paper-trading evidence has not yet accumulated to the pre-registered thresholds, and real capital is therefore not deployed.
+
+\section{Architecture}
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}[
+    every node/.style={font=\scriptsize\sffamily, rounded corners=2pt, align=center},
+    box/.style   ={draw=pipelineblue,  fill=boxfill, thick, minimum width=32mm, minimum height=9mm},
+    state/.style ={draw=pipelinegreen, fill=boxfill, thick, minimum width=32mm, minimum height=9mm},
+    danger/.style={draw=pipelinered,   fill=boxfill, thick, minimum width=32mm, minimum height=9mm},
+    arrow/.style ={-Stealth, thick, draw=darkgray},
+    node distance=4mm and 6mm
+]
+% Row 1 -- signal pipeline
+\node[box] (preds)   {Signal File\\\tiny next-day forecasts};
+\node[box, right=of preds]   (cron)    {Daily Scheduler\\\tiny 09:10 IST};
+\node[box, right=of cron]    (signal)  {Signal Publisher\\\tiny gate filter};
+\node[box, right=of signal]  (paper)   {Paper Trader\\\tiny entries};
+\node[box, right=of paper]   (exit)    {Exit Manager\\\tiny stop / trail / timeout};
+% Row 2 -- ledger / reconciliation
+\node[state, below=of cron]   (ledger) {Portfolio Ledger\\\tiny open lots \& PnL};
+\node[state, below=of signal] (recon)  {PnL Reconciler\\\tiny mark-to-market};
+\node[state, below=of paper]  (gate)   {Promotion Gate\\\tiny Sharpe / DD / Brier};
+\node[box,   below=of exit]   (risk)   {Risk Guard\\\tiny notional caps};
+% Row 3 -- broker
+\node[danger, below=8mm of recon] (broker) {Broker Client\\\tiny Angel One SmartAPI};
+\node[danger, right=of broker]    (orders) {Order Manager\\\tiny live entries};
+% Arrows -- row 1 chain
+\draw[arrow] (preds)  -- (cron);
+\draw[arrow] (cron)   -- (signal);
+\draw[arrow] (signal) -- (paper);
+\draw[arrow] (paper)  -- (exit);
+% Row 1 -> Row 2
+\draw[arrow] (paper) -- (ledger);
+\draw[arrow] (exit)  -- (ledger);
+\draw[arrow] (paper) -- (recon);
+\draw[arrow] (ledger.east) -- (recon.west);
+\draw[arrow] (recon) -- (gate);
+% Row 2 -> Row 3 (gated)
+\draw[arrow] (gate.south) -- ++(0,-3mm) -| (broker.north);
+\draw[arrow] (risk) -- (orders);
+\draw[arrow] (broker) -- (orders);
+\end{tikzpicture}
+\end{adjustbox}
+\caption{Live deployment architecture. The daily scheduler drives signal publishing $\to$ paper-trade entries $\to$ exits $\to$ portfolio ledger $\to$ PnL reconciliation $\to$ promotion gate. Only when the promotion gate emits an approval decision does the Order Manager route real orders through the Angel One SmartAPI broker client. The Risk Guard is a pre-trade circuit breaker.}
+\label{fig:live_architecture}
+\end{figure}
+
+\section{Components}
+
+The live layer is organised into a set of single-responsibility modules, each corresponding to one node in Figure~\ref{fig:live_architecture}.
+
+\begin{table}[H]
+\centering
+\caption{Live-layer component inventory and responsibilities.}
+\label{tab:live_layer_files}
+\renewcommand{\arraystretch}{1.35}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{Component} & \textbf{Responsibility} \\
+\midrule
+Broker Client        & Wraps the Angel One SmartAPI~\cite{angelone_smartapi}. Implements login, instrument-master lookup, order placement, position read, and order book read. Session tokens are cached and refreshed automatically. \\
+Instrument Resolver  & Fetches the daily NSE instrument master from Angel One; maps internal ticker symbols to exchange-required identifiers. \\
+Signal Publisher     & Reads the next-day signal file, applies the gate (probability $\geq 0.58$, predicted move $\geq 0.4\%$), and emits a filtered daily signal for the paper and live traders. \\
+Paper Trader         & Executes gated signal-day entries at simulated market price using the Indian cost model; records each lot with entry cost in the portfolio ledger. \\
+Exit Manager         & Computes per-lot exits using ATR-based stop-loss, trailing stops, and a maximum holding window. \\
+Portfolio Ledger     & Single source of truth for open lots and realised PnL. Persisted between daily runs. \\
+PnL Reconciler       & Marks-to-market all open lots from the latest price data; computes realised and unrealised PnL, rolling Sharpe, and rolling drawdown. \\
+Promotion Gate       & Aggregates paper evidence (trade count, trading days, Sharpe, drawdown, slippage, fill rate, Brier drift) and emits an approval or rejection decision. \\
+Risk Guard           & Pre-trade circuit breaker: rejects live orders that violate notional position caps or concentration limits. \\
+Order Manager        & Live-mode equivalent of the Paper Trader; routes orders to the Broker Client only when the Promotion Gate has emitted an approval. \\
+Production Inference & Single-symbol live inference using the production model weights; generates the next-day signal at 09:00 IST before the scheduler runs. \\
+Daily Scheduler      & The cron entry-point (09:10 IST). Sequences: refresh instruments $\to$ publish signals $\to$ paper-trade entries $\to$ exit check $\to$ reconcile $\to$ evaluate promotion gate. \\
+\bottomrule
+\end{tabularx}
+\end{adjustbox}
+\end{table}
+
+\section{The Indian Brokerage Cost Model}
+
+Indian equity costs are not a single commission number. They are a stack of charges that vary by side (buy vs.\ sell), product (delivery vs.\ intraday), and exchange (NSE vs.\ BSE). The Paper Trader implements them as the components in Table~\ref{tab:cost_model}. The entry cost is computed on entry and recorded with each lot in the portfolio ledger; the exit-side stack is computed on exit before realised PnL is booked.
+
+\begin{table}[H]
+\centering
+\caption{Indian-market delivery cost stack implemented by the Paper Trader.}
+\label{tab:cost_model}
+\renewcommand{\arraystretch}{1.35}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{Component} & \textbf{Rate} & \textbf{Notes} \\
+\midrule
+Brokerage             & flat / per-order   & Modelled as a flat per-order charge, capped (e.g.\ Zerodha-style $\min(\text{0.03\%}, \text{INR}\,20)$). \\
+STT (sell side only)  & 0.1\% of sell notional & Securities Transaction Tax. Asymmetric: buys are not taxed. \\
+Exchange transaction  & $\sim$0.00345\% of notional (NSE) & Charged on both buy and sell legs. \\
+SEBI turnover fee     & INR\,10 / crore & Negligible at retail size but included for fidelity. \\
+GST                   & 18\% of (brokerage + exchange + SEBI) & Applied on the service-tax base, not on STT or stamp. \\
+Stamp duty (buy side) & 0.015\% of buy notional (delivery) & Charged once per buy; rate is state-dependent in principle but capped uniformly at NSE level. \\
+Slippage              & modelled at $\sim$10bps per side & Configurable; the promotion gate enforces $\leq 25$bps observed. \\
+\bottomrule
+\end{tabularx}
+\end{adjustbox}
+\end{table}
+
+A representative entry from the ledger illustrates the cost-per-lot booking: a CUMMINSIND lot of $6$ shares at INR\,5{,}134.94 books an entry cost of INR\,26.30 ($\sim$8.5\,bps per side on an INR\,30{,}810 notional), within the $\leq 25$\,bps slippage budget. The full stack is re-applied symmetrically at exit; the realised PnL is therefore net of every Indian-equity friction.
+
+\section{The Paper Trader and the Ledger}
+
+The Paper Trader is invoked by the Daily Scheduler each trading day after the signal file is produced. For each qualifying buy signal, it computes a position size from the portfolio notional cap, records a synthetic order identifier, books the entry cost, and appends a lot record to the portfolio ledger. The Portfolio Ledger component keeps the running cash balance, the list of open lots, and realised PnL.
+
+As of the latest evaluation the ledger contains roughly $13{,}000$ lots accumulated over a multi-month paper trading run, with starting capital INR\,5{,}00{,}000 and a running cash balance that has gone negative ($-$INR\,1.22\,cr) because the paper run was deliberately over-allocated --- in paper mode the trader does not block on negative cash, which lets us stress-test the size of the lot stream the system can generate and the throughput of the reconciler.
+
+\section{The Promotion Gate}
+
+The promotion gate is the single decision that authorises the system to graduate from paper to live. It evaluates seven quantitative checks and writes a gate decision record that the order pathway reads before each session. The current decision and the underlying checks are in Table~\ref{tab:promotion_gate}. The decision is no-go: three of the seven checks (trade count, paper days, rolling Sharpe) are not yet satisfied because the live paper trader has not been running long enough to accumulate $\geq 40$ closed trades over $\geq 20$ paper days. The remaining four checks pass.
+
+\begin{table}[H]
+\centering
+\caption{Promotion-gate state, evaluated 2026-05-05 13:57. Decision: no-go.}
+\label{tab:promotion_gate}
+\renewcommand{\arraystretch}{1.35}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l c c c}
+\toprule
+\textbf{Check} & \textbf{Value} & \textbf{Threshold} & \textbf{Pass?} \\
+\midrule
+Minimum closed trades      & $0$    & $\geq 40$    & No  \\
+Minimum paper-trading days & $0$    & $\geq 20$    & No  \\
+Minimum rolling Sharpe     & $0.0$  & $\geq 1.0$   & No  \\
+Maximum rolling drawdown   & $0.0$  & $\leq 0.10$  & Yes \\
+Maximum slippage (bps)     & $0.0$  & $\leq 25$    & Yes \\
+Minimum fill rate          & $1.0$  & $\geq 0.9$   & Yes \\
+Maximum Brier drift        & N/A    & $\leq 0.05$  & Yes (no closed trades $\Rightarrow$ no drift) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+The cooldown period after a rejection is $5$ days; the gate is re-evaluated daily by the Daily Scheduler. Only when all seven checks pass, in sequence, on a non-cooldown day, does the gate emit an approval and unlock the live order pathway. This is deliberately conservative: a slow false-negative is much cheaper than a fast false-positive when real capital is involved.
+
+\section{The Angel One SmartAPI Bridge}
+
+Angel One is the broker selected for production because their SmartAPI exposes order placement, position queries, instrument master, and historical data, all under a single TOTP-secured authentication. The Broker Client wraps four operations: login, order placement (symbol, side, quantity, delivery product), position read, and order book read. The Instrument Resolver runs once per session and maps every Nifty-100 symbol to its exchange-required trading symbol and instrument token. Authentication uses an API key, an MPIN, and a TOTP secret stored in the operator's secrets file (outside the repository). The live order path is intentionally serialised behind the promotion gate: the Order Manager reads the gate decision before placing any order, and falls back to paper-trading mode if the gate has not emitted an approval.
+
+\section{The FastAPI Backend and the Vite/React Dashboard}
+
+The system has a thin human-in-the-loop layer. A FastAPI backend exposes the pipeline as REST endpoints (pipeline trigger, run history, today's signals, ledger state, gate decision) and the React/Vite frontend renders them as dashboard panels: pipeline control, out-of-sample metrics, paper-trading summary, accuracy heatmap, equity curve, execution log, portfolio ledger, portfolio positions, open orders, exits table, signals table, and feature importance. The dashboard is the operator's only on-ramp; nothing on it can override the promotion gate.
+
+\section{Operational Cadence}
+
+The daily operational schedule is:
+
+\begin{enumerate}
+    \item \textbf{08:55 IST} -- refresh the Angel One instrument master.
+    \item \textbf{09:10 IST} -- the Production Inference module runs per-symbol inference; the next-day signal file is assembled.
+    \item \textbf{09:12 IST} -- the Signal Publisher writes the gated signal file.
+    \item \textbf{09:15 IST (market open)} -- the Paper Trader books entries at the open; the Exit Manager books exits.
+    \item \textbf{15:35 IST (post-close)} -- the PnL Reconciler marks the book to close; rolling Sharpe and drawdown are updated.
+    \item \textbf{15:45 IST} -- the Promotion Gate re-evaluates; the gate decision record is updated.
+\end{enumerate}
+
+\section{What Live Trading Does Not Currently Cover}
+
+The live layer covers delivery cash equity. It does \emph{not} currently cover: (i) F\&O legs --- the model's prediction of the underlying could in principle be routed to a 1$\Delta$ option; (ii) intraday MIS product --- the cost stack and the exit logic differ from delivery; (iii) margin / leverage --- the system trades $100\%$ funded delivery, by design, until the gate has provided enough evidence to justify leverage; (iv) order book / depth-aware sizing --- the slippage budget is enforced \emph{ex post} but not \emph{ex ante} from a real-time depth read. These are roadmap items, not blockers.
