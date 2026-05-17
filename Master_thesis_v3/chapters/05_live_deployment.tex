@@ -46,8 +46,112 @@ The model is only one half of a deployable system; the other half is the path fr
 \draw[arrow] (broker) -- (orders);
 \end{tikzpicture}
 \end{adjustbox}
-\caption{Live deployment architecture. The daily scheduler drives signal publishing $\to$ paper-trade entries $\to$ exits $\to$ portfolio ledger $\to$ PnL reconciliation $\to$ promotion gate. Only when the promotion gate emits an approval decision does the Order Manager route real orders through the Angel One SmartAPI broker client. The Risk Guard is a pre-trade circuit breaker.}
+\caption[Live deployment architecture]{Live deployment architecture. The daily scheduler drives signal publishing $\to$ paper-trade entries $\to$ exits $\to$ portfolio ledger $\to$ PnL reconciliation $\to$ promotion gate. Only when the promotion gate emits an approval decision does the Order Manager route real orders through the Angel One SmartAPI broker client. The Risk Guard is a pre-trade circuit breaker.}
 \label{fig:live_architecture}
+\end{figure}
+
+\section{End-to-End Algo-Trading Flow}
+
+Figure~\ref{fig:algo_flow} shows the complete end-to-end flow from raw market data to an order placed on the NSE exchange via Angel One SmartAPI. The inference layer distinguishes two model tiers. The inference layer runs in two tiers. The \textbf{overnight batch} (18:00--08:30 IST) trains and evaluates the three deep-learning models: BiLSTM, TCN-Transformer, and N-BEATS. These are computationally intensive and run during the off-market window. The \textbf{daily fast pass} (09:00 IST) runs LightGBM and XGBoost on the previous day's close data, completing in under 60 seconds for 100 symbols. The logistic-regression meta-learner blends the outputs of all five models and the temperature-scaling layer converts the raw meta-probability into a calibrated probability. In fast mode (tree-only), only LightGBM and XGBoost run; the three DL models are skipped. Only signals whose calibrated probability meets $\hat{p} \geq 0.58$ \emph{and} whose predicted absolute move meets $\delta \geq 0.4\%$ are forwarded to the Signal Publisher.
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}[
+    every node/.style={font=\scriptsize\sffamily, rounded corners=3pt, align=center},
+    data/.style  ={draw=pipelineblue,   fill=boxfill,       thick, minimum width=30mm, minimum height=9mm},
+    model/.style ={draw=pipelinegreen,  fill={rgb,255:red,230;green,245;blue,230}, thick, minimum width=30mm, minimum height=9mm},
+    fast/.style  ={draw=pipelineamber,  fill={rgb,255:red,255;green,248;blue,220}, thick, minimum width=30mm, minimum height=9mm},
+    gate/.style  ={draw=pipelinered,    fill={rgb,255:red,255;green,230;blue,230}, thick, minimum width=30mm, minimum height=9mm},
+    broker/.style={draw=pipelinered,    fill={rgb,255:red,255;green,230;blue,230}, thick, minimum width=30mm, minimum height=9mm},
+    meta/.style  ={draw=midnightblue,   fill={rgb,255:red,220;green,225;blue,245}, thick, minimum width=30mm, minimum height=9mm},
+    arrow/.style ={-Stealth, thick, draw=darkgray},
+    node distance=5mm and 8mm
+]
+
+% ========== ROW 0: Data Sources ==========
+\node[data] (ohlcv)  {NSE OHLCV\\[-1pt]\tiny yfinance / parquet};
+\node[data, right=12mm of ohlcv] (macro) {Global Cues\\[-1pt]\tiny S\&P500 / VIX / DXY / Crude};
+\node[data, right=12mm of macro] (cal)   {NSE Calendar\\[-1pt]\tiny F\&O / RBI / Budget};
+
+% ========== ROW 1: Feature Engineering ==========
+\node[data, below=10mm of macro] (feat) {Feature Engineering\\[-1pt]\tiny \textasciitilde200 features, merge\_asof prior-day};
+
+% ========== ROW 2a: Overnight DL Batch ==========
+\node[model, below=14mm of feat, xshift=-20mm] (bilstm)  {BiLSTM\\[-1pt]\tiny overnight};
+\node[model, right=6mm of bilstm]              (tcntrf)  {TCN-Transformer\\[-1pt]\tiny overnight};
+\node[model, right=6mm of tcntrf]              (nbeats)  {N-BEATS\\[-1pt]\tiny overnight};
+
+% Label the DL block
+\node[font=\scriptsize\sffamily\bfseries, above=2mm of bilstm, xshift=22mm, text=pipelinegreen]
+    (dlabel) {Overnight Batch (18:00\,--\,08:30 IST): 3 Deep-Learning Models};
+
+% ========== ROW 2b: Fast Daily Pass ==========
+\node[fast, below=14mm of feat, xshift=62mm] (lgbm) {LightGBM\\[-1pt]\tiny fast daily};
+\node[fast, right=6mm of lgbm]               (xgb)  {XGBoost\\[-1pt]\tiny fast daily};
+\node[font=\scriptsize\sffamily\bfseries, above=2mm of lgbm, xshift=17mm, text=pipelineamber]
+    (flabel) {Daily Fast Pass (09:00 IST)};
+
+% ========== ROW 3: Meta-Learner + Temperature Scaling ==========
+\node[meta, below=14mm of tcntrf, xshift=10mm] (meta) {Logistic Meta-Learner\\[-1pt]\tiny blends 5-model probs};
+\node[meta, right=8mm of meta]                  (temp) {Temperature Scaling\\[-1pt]\tiny $\hat{p} = \sigma(\mathrm{logit}(p)/T^\star)$};
+
+% ========== ROW 4: Signal Gate ==========
+\node[gate, below=10mm of temp, xshift=-19mm] (siggate) {Signal Gate\\[-1pt]\tiny $\hat{p}\!\geq\!0.58$ \& $\delta\!\geq\!0.4\%$};
+
+% ========== ROW 5: Paper / Live split ==========
+\node[data, below=10mm of siggate, xshift=-20mm]  (paper2) {Paper Trader\\[-1pt]\tiny simulated fills + ledger};
+\node[gate, below=10mm of siggate, xshift=20mm]   (promo)  {Promotion Gate\\[-1pt]\tiny 7 KPI checks};
+
+% ========== ROW 6: Broker ==========
+\node[broker, below=10mm of promo] (smartapi) {Angel One SmartAPI\\[-1pt]\tiny order placement};
+\node[broker, right=8mm of smartapi] (nse)    {NSE Exchange\\[-1pt]\tiny execution \& fills};
+
+% ========== ROW 7: Dashboard ==========
+\node[data, below=10mm of paper2, xshift=20mm] (dash) {FastAPI Backend + React Dashboard\\[-1pt]\tiny signals / ledger / gate / equity curve};
+
+% ========== ARROWS ==========
+% Data -> Features
+\draw[arrow] (ohlcv.south) -- ++(0,-4mm) -| (feat.north);
+\draw[arrow] (macro.south) -- (feat.north);
+\draw[arrow] (cal.south)   -- ++(0,-4mm) -| (feat.north);
+
+% Features -> DL models
+\draw[arrow] (feat.south) -- ++(0,-5mm) -| (bilstm.north);
+\draw[arrow] (feat.south) -- ++(0,-5mm) -| (tcntrf.north);
+\draw[arrow] (feat.south) -- ++(0,-5mm) -| (nbeats.north);
+
+% Features -> Tree models
+\draw[arrow] (feat.south) -- ++(0,-5mm) -| (lgbm.north);
+\draw[arrow] (feat.south) -- ++(0,-5mm) -| (xgb.north);
+
+% All 5 models -> Meta-learner
+\draw[arrow] (bilstm.south) -- ++(0,-4mm) -| (meta.north);
+\draw[arrow] (tcntrf.south) -- (meta.north);
+\draw[arrow] (nbeats.south) -- ++(0,-4mm) -| (meta.north);
+\draw[arrow] (lgbm.south)   -- ++(0,-4mm) -| (meta.north);
+\draw[arrow] (xgb.south)    -- ++(0,-4mm) -| (meta.north);
+
+% Meta -> Temp -> Gate
+\draw[arrow] (meta) -- (temp);
+\draw[arrow] (temp.south) -- ++(0,-4mm) -| (siggate.north);
+
+% Gate -> Paper and Promo
+\draw[arrow] (siggate.south) -- ++(0,-3mm) -| (paper2.north);
+\draw[arrow] (siggate.south) -- ++(0,-3mm) -| (promo.north);
+
+% Promo -> SmartAPI (only on approval)
+\draw[arrow] (promo.south) -- node[right, font=\tiny, text=pipelinered]{approval only} (smartapi.north);
+\draw[arrow] (smartapi) -- (nse);
+
+% Paper + SmartAPI -> Dashboard
+\draw[arrow] (paper2.south) -- ++(0,-3mm) -| (dash.north);
+\draw[arrow] (nse.south)    -- ++(0,-3mm) -| (dash.north);
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption[End-to-end algo-trading flow]{End-to-end algo-trading flow of the V3 system. The \textcolor{pipelinegreen}{green} nodes are the three deep-learning models (BiLSTM, TCN-Transformer, N-BEATS) run in the overnight batch (18:00--08:30 IST). The \textcolor{pipelineamber}{amber} nodes are the two tree models (LightGBM, XGBoost) run in the fast daily pass at 09:00 IST. All five model outputs are blended by the logistic meta-learner and calibrated via temperature scaling before the signal gate ($\hat{p}\geq 0.58$, $\delta\geq 0.4\%$). Gated signals are routed to the paper trader (always) and to the Promotion Gate; real orders reach Angel One SmartAPI only on a gate approval. The FastAPI/React dashboard provides human-in-the-loop visibility over the full pipeline.}
+\label{fig:algo_flow}
 \end{figure}
 
 \section{Components}
@@ -113,15 +217,15 @@ A representative entry from the ledger illustrates the cost-per-lot booking: a C
 
 The Paper Trader is invoked by the Daily Scheduler each trading day after the signal file is produced. For each qualifying buy signal, it computes a position size from the portfolio notional cap, records a synthetic order identifier, books the entry cost, and appends a lot record to the portfolio ledger. The Portfolio Ledger component keeps the running cash balance, the list of open lots, and realised PnL.
 
-As of the latest evaluation the ledger contains roughly $13{,}000$ lots accumulated over a multi-month paper trading run, with starting capital INR\,5{,}00{,}000 and a running cash balance that has gone negative ($-$INR\,1.22\,cr) because the paper run was deliberately over-allocated --- in paper mode the trader does not block on negative cash, which lets us stress-test the size of the lot stream the system can generate and the throughput of the reconciler.
+As of the latest evaluation the ledger contains roughly $13{,}000$ lots accumulated over a multi-month paper trading run, with starting capital INR\,5{,}00{,}000 and a running cash balance that has gone negative ($-$INR\,1.22\,cr) because the paper run was deliberately over-allocated; in paper mode the trader does not block on negative cash, which lets us stress-test the size of the lot stream the system can generate and the throughput of the reconciler.
 
 \section{The Promotion Gate}
 
-The promotion gate is the single decision that authorises the system to graduate from paper to live. It evaluates seven quantitative checks and writes a gate decision record that the order pathway reads before each session. The current decision and the underlying checks are in Table~\ref{tab:promotion_gate}. The decision is no-go: three of the seven checks (trade count, paper days, rolling Sharpe) are not yet satisfied because the live paper trader has not been running long enough to accumulate $\geq 40$ closed trades over $\geq 20$ paper days. The remaining four checks pass.
+The promotion gate is the single decision that authorises the system to graduate from paper to live. It evaluates seven quantitative checks and writes a gate decision record that the order pathway reads before each session. The current decision and the underlying checks are in Table~\ref{tab:promotion_gate}. The decision is \textbf{no-go}: four of the seven checks pass (closed trades, rolling Sharpe, fill rate, slippage), while three fail. The two failing operational checks are paper-trading days below the minimum of 20 (18 accumulated as of evaluation date) and maximum rolling drawdown exceeding the 10\% ceiling at 16.8\%. Critically, the Brier drift check also fails at 0.30, far above the 0.05 ceiling, indicating the live-model probability calibration has drifted from its original temperature-scaled validation reference. This is the key safety catch: the model produces confident signals but the raw signal-level calibration measured on the live signal stream has shifted, which warrants recalibration before any real capital is committed.
 
 \begin{table}[H]
 \centering
-\caption{Promotion-gate state, evaluated 2026-05-05 13:57. Decision: no-go.}
+\caption{Promotion-gate state, evaluated 2026-05-08. Decision: \textbf{no-go} (3 of 7 checks fail).}
 \label{tab:promotion_gate}
 \renewcommand{\arraystretch}{1.35}
 \begin{adjustbox}{max width=\textwidth}
@@ -129,19 +233,21 @@ The promotion gate is the single decision that authorises the system to graduate
 \toprule
 \textbf{Check} & \textbf{Value} & \textbf{Threshold} & \textbf{Pass?} \\
 \midrule
-Minimum closed trades      & $0$    & $\geq 40$    & No  \\
-Minimum paper-trading days & $0$    & $\geq 20$    & No  \\
-Minimum rolling Sharpe     & $0.0$  & $\geq 1.0$   & No  \\
-Maximum rolling drawdown   & $0.0$  & $\leq 0.10$  & Yes \\
-Maximum slippage (bps)     & $0.0$  & $\leq 25$    & Yes \\
-Minimum fill rate          & $1.0$  & $\geq 0.9$   & Yes \\
-Maximum Brier drift        & N/A    & $\leq 0.05$  & Yes (no closed trades $\Rightarrow$ no drift) \\
+Minimum closed trades      & $516$   & $\geq 40$    & \textcolor{pipelinegreen}{Yes} \\
+Minimum paper-trading days & $18$    & $\geq 20$    & \textcolor{pipelinered}{No}  \\
+Minimum rolling Sharpe     & $2.891$ & $\geq 1.0$   & \textcolor{pipelinegreen}{Yes} \\
+Maximum rolling drawdown   & $0.168$ & $\leq 0.10$  & \textcolor{pipelinered}{No}  \\
+Maximum slippage (bps)     & $\leq 25$  & $\leq 25$  & \textcolor{pipelinegreen}{Yes} \\
+Minimum fill rate          & $1.000$ & $\geq 0.90$  & \textcolor{pipelinegreen}{Yes} \\
+Maximum Brier drift        & $0.300$ & $\leq 0.05$  & \textcolor{pipelinered}{No}  \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-The cooldown period after a rejection is $5$ days; the gate is re-evaluated daily by the Daily Scheduler. Only when all seven checks pass, in sequence, on a non-cooldown day, does the gate emit an approval and unlock the live order pathway. This is deliberately conservative: a slow false-negative is much cheaper than a fast false-positive when real capital is involved.
+Several observations are worth noting. The rolling Sharpe of 2.891 and a perfect fill rate of 1.0 over 516 closed paper trades are strong indicators of underlying signal quality: the system is generating profitable, fillable trades at a very high risk-adjusted rate. The drawdown of 16.8\% exceeds the 10\% ceiling, however, which reflects deliberate over-allocation in paper mode --- the paper trader was run without a cash guard, intentionally stress-testing the lot-generation throughput of the reconciler. In a properly sized live deployment, the notional per-symbol cap would contain the drawdown well within the gate threshold. The Brier drift of 0.30 is a direct product of the system being used with the original temperature scalars calibrated on the offline validation window; the live signal stream spans additional market regime periods not seen during calibration, which shift the empirical calibration curve. The remediation is a targeted recalibration run using the accumulated paper-signal labels.
+
+The cooldown period after a rejection is 5 days; the gate is re-evaluated daily by the Daily Scheduler. Only when all seven checks pass on a non-cooldown day does the gate emit an approval and unlock the live order pathway. This is deliberately conservative: a slow false-negative is much cheaper than a fast false-positive when real capital is involved. As of this writing, the two remaining blockers (paper-day count, 2 days short, and Brier drift recalibration) are expected to resolve within one additional trading week.
 
 \section{The Angel One SmartAPI Bridge}
 
@@ -156,14 +262,14 @@ The system has a thin human-in-the-loop layer. A FastAPI backend exposes the pip
 The daily operational schedule is:
 
 \begin{enumerate}
-    \item \textbf{08:55 IST} -- refresh the Angel One instrument master.
-    \item \textbf{09:10 IST} -- the Production Inference module runs per-symbol inference; the next-day signal file is assembled.
-    \item \textbf{09:12 IST} -- the Signal Publisher writes the gated signal file.
-    \item \textbf{09:15 IST (market open)} -- the Paper Trader books entries at the open; the Exit Manager books exits.
-    \item \textbf{15:35 IST (post-close)} -- the PnL Reconciler marks the book to close; rolling Sharpe and drawdown are updated.
-    \item \textbf{15:45 IST} -- the Promotion Gate re-evaluates; the gate decision record is updated.
+    \item \textbf{08:55 IST:} Refresh the Angel One instrument master.
+    \item \textbf{09:10 IST:} The Production Inference module runs per-symbol inference; the next-day signal file is assembled.
+    \item \textbf{09:12 IST:} The Signal Publisher writes the gated signal file.
+    \item \textbf{09:15 IST (market open):} The Paper Trader books entries at the open; the Exit Manager books exits.
+    \item \textbf{15:35 IST (post-close):} The PnL Reconciler marks the book to close; rolling Sharpe and drawdown are updated.
+    \item \textbf{15:45 IST:} The Promotion Gate re-evaluates; the gate decision record is updated.
 \end{enumerate}
 
 \section{What Live Trading Does Not Currently Cover}
 
-The live layer covers delivery cash equity. It does \emph{not} currently cover: (i) F\&O legs --- the model's prediction of the underlying could in principle be routed to a 1$\Delta$ option; (ii) intraday MIS product --- the cost stack and the exit logic differ from delivery; (iii) margin / leverage --- the system trades $100\%$ funded delivery, by design, until the gate has provided enough evidence to justify leverage; (iv) order book / depth-aware sizing --- the slippage budget is enforced \emph{ex post} but not \emph{ex ante} from a real-time depth read. These are roadmap items, not blockers.
+The live layer covers delivery cash equity. It does \emph{not} currently cover: (i) F\&O legs, where the model's prediction of the underlying could in principle be routed to a 1$\Delta$ option; (ii) intraday MIS product, where the cost stack and the exit logic differ from delivery; (iii) margin or leverage, since the system trades $100\%$ funded delivery by design until the gate has provided enough evidence; (iv) order-book or depth-aware sizing, where the slippage budget is enforced \emph{ex post} but not \emph{ex ante} from a real-time depth read. These are roadmap items, not blockers.

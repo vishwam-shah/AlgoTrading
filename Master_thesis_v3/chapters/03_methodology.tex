@@ -1,6 +1,6 @@
 \chapter{The V3 Pipeline: Data, Features, Models, Validation, Calibration} \label{chapter3}
 
-This chapter describes the V3 pipeline as it executes on the canonical run analysed in Chapter~\ref{chapter4}. Every numerical setting cited corresponds to a value stored in the system configuration; every structured output cited is produced as a side-effect of the run. The chapter is organised top-down: pipeline overview, universe and acquisition, feature engineering with the leakage audit, the ten models, the meta-learner, the calibration step, the walk-forward protocol, the backtest engine, and the parallelisation and reproducibility infrastructure.
+This chapter describes the V3 pipeline as it executes on the canonical run analysed in Chapter~\ref{chapter4}. Every numerical setting cited corresponds to a value stored in the system configuration; every structured output cited is produced as a side-effect of the run. The chapter is organised top-down: pipeline overview, universe and acquisition, feature engineering with the leakage audit, the five models, the meta-learner, the calibration step, the walk-forward protocol, the backtest engine, and the parallelisation and reproducibility infrastructure.
 
 \section{Pipeline Overview}
 
@@ -33,8 +33,8 @@ This chapter describes the V3 pipeline as it executes on the canonical run analy
 
 % Row 5: committee
 \node[model, below=of wf, minimum width=120mm, minimum height=14mm] (committee)
-  {\textbf{Ten-model committee per (symbol, fold)}\\
-   \tiny LightGBM\,$\cdot$\,XGBoost\,$\cdot$\,LSTM\,$\cdot$\,BiLSTM\,$\cdot$\,GRU\,$\cdot$\,CNN-LSTM\,$\cdot$\,CNN-GRU\,$\cdot$\,TCN-GRU\,$\cdot$\,TCN-Transformer\,$\cdot$\,N-BEATS};
+  {\textbf{Five-model committee per (symbol, fold)}\\
+   \tiny LightGBM\,$\cdot$\,XGBoost\,$\cdot$\,BiLSTM\,$\cdot$\,TCN-Transformer\,$\cdot$\,N-BEATS};
 
 % Row 6: meta + temp
 \node[stage, below=of committee] (meta) {Logistic meta-stack $\to$ temperature scaling $\sigma(z/T^\star)$};
@@ -66,7 +66,7 @@ This chapter describes the V3 pipeline as it executes on the canonical run analy
 
 \end{tikzpicture}
 \end{adjustbox}
-\caption{End-to-end V3 pipeline: acquisition (yfinance + global cues + NSE calendar) $\to$ leakage-audited features $\to$ walk-forward training of the ten-model committee $\to$ meta-stacking with temperature-scaled probability $\to$ gate $\to$ deployment chain (backtest, paper trader, promotion gate, Angel One).}
+\caption[End-to-end V3 pipeline]{End-to-end V3 pipeline: acquisition (yfinance + global cues + NSE calendar) $\to$ leakage-audited features $\to$ walk-forward training of the five-model committee $\to$ meta-stacking with temperature-scaled probability $\to$ gate $\to$ deployment chain (backtest, paper trader, promotion gate, Angel One).}
 \label{fig:pipeline_overview}
 \end{figure}
 
@@ -74,7 +74,7 @@ This chapter describes the V3 pipeline as it executes on the canonical run analy
 
 \subsection{Universe}
 
-The configured universe is the Nifty-100 (Nifty-50 + Nifty Next-50) of the National Stock Exchange of India, grouped into 14 sector buckets (banking, IT, automobiles, FMCG, pharma, energy, metals, telecom, capital goods, cement, consumer durables, real estate, conglomerate / infra, defence). On the canonical run, $99/100$ symbols passed the post-feature minimum-history filter and one (BAJAJHFL, listed too recently to provide enough training history) was automatically excluded. Table~\ref{tab:universe_sectors} reports the sector distribution.
+The configured universe is the Nifty-100 (Nifty-50 + Nifty Next-50) of the National Stock Exchange of India, grouped into 14 sector buckets (banking, IT, automobiles, FMCG, pharma, energy, metals, telecom, capital goods, cement, consumer durables, real estate, conglomerate / infra, defence). On the latest full run (\texttt{20260513\_164028}), all $100$ symbols passed the post-feature minimum-history filter. Table~\ref{tab:universe_sectors} reports the sector distribution.
 
 \begin{table}[H]
 \centering
@@ -174,13 +174,13 @@ Temperature scaling       & Fitting $T$ on the test set would inflate the gate. 
 \end{tabularx}
 \end{table}
 
-\section{The Ten-Model Committee}
+\section{The Five-Model Committee}
 
-V3 trains ten heterogeneous binary classifiers per (symbol, fold). The tree pair consumes a two-dimensional PCA-projected matrix; the eight deep-sequence models consume a three-dimensional tensor with sequence length $T=20$ built by a sliding window over the scaled (non-PCA) features. The committee specification is in Table~\ref{tab:model_committee}.
+V3 trains five heterogeneous binary classifiers per (symbol, fold). The tree pair (LightGBM, XGBoost) consumes a two-dimensional PCA-projected matrix; the three deep-sequence models (BiLSTM, TCN-Transformer, N-BEATS) consume a three-dimensional tensor with sequence length $T=20$ built by a sliding window over the scaled (non-PCA) features. The committee specification is in Table~\ref{tab:model_committee}.
 
 \begin{table}[H]
 \centering
-\caption{The ten-model V3 committee}
+\caption{The five-model V3 committee}
 \label{tab:model_committee}
 \renewcommand{\arraystretch}{1.4}
 \begin{adjustbox}{max width=\textwidth}
@@ -188,28 +188,23 @@ V3 trains ten heterogeneous binary classifiers per (symbol, fold). The tree pair
 \toprule
 \textbf{Family} & \textbf{Model} & \textbf{Topology and key hyper-parameters} \\
 \midrule
-Trees & LightGBM     & 1000 trees, depth 5, lr $0.01$, leaves 31, subsample 0.8, colsample 0.8, $\alpha=0.3$, $\lambda=1.5$, min child 20, early stopping 50 rounds. \\
-Trees & XGBoost      & 1000 trees, depth 5, lr $0.01$, subsample 0.8, colsample 0.8, $\alpha=0.3$, $\lambda=1.5$, early stopping 50 rounds, logistic objective. \\
-RNN  & LSTM         & 2-layer stacked (64$\to$32), dropout 0.3, recurrent dropout 0.2, $\ell_2 = 10^{-4}$, dense 32, Adam lr $10^{-3}$, batch 32, max 100 epochs, ES patience 8. \\
-RNN  & BiLSTM       & 2-layer bidirectional (32$\to$16 per direction, merged $\to$ 64$\to$32), same regularisation. Safe under leakage audit because all input features are pre-lagged. \\
-RNN  & GRU          & 2-layer (64$\to$32), identical regularisation; acts as diversity partner to LSTM. \\
-CNN+RNN & CNN-LSTM  & 1D-Conv \emph{causal} (64 filters, kernel 3) + MaxPool 2 + LSTM(32). Causal padding precludes future leakage. \\
-CNN+RNN & CNN-GRU   & Same CNN backbone; GRU(32) at the recurrent stage. \\
-TCN  & TCN-GRU      & Dilated causal convolutions, dilations $\{1,2,4,8\}$, kernel 3, filters 64, then GRU(32). Receptive field $\approx 61$ steps. \\
-TCN+Attn & TCN-Transformer & TCN (dilations $\{1,2,4\}$, kernel 3, $d_\mathrm{model}=64$) + 4-head self-attention (key dim 16). \\
-N-BEATS & N-BEATS (generic) & 3 residual blocks, 4 FC layers per block, $\mathrm{fc\_dim}=512$, projection $\mathrm{proj\_dim}=256$, sigmoid head. Adam lr $5 \times 10^{-4}$. \\
+Trees   & LightGBM         & 1000 trees, depth 5, lr $0.01$, leaves 31, subsample 0.8, colsample 0.8, $\alpha=0.3$, $\lambda=1.5$, min child 20, early stopping 50 rounds. \\
+Trees   & XGBoost          & 1000 trees, depth 5, lr $0.01$, subsample 0.8, colsample 0.8, $\alpha=0.3$, $\lambda=1.5$, early stopping 50 rounds, logistic objective. \\
+RNN     & BiLSTM           & 2-layer bidirectional (32$\to$16 per direction, merged $\to$ 64$\to$32), dropout 0.3, recurrent dropout 0.2, $\ell_2=10^{-4}$, Adam lr $10^{-3}$, batch 32, max 100 epochs, ES patience 8. Safe under leakage audit as all input features are pre-lagged. \\
+TCN+Attn & TCN-Transformer & TCN (dilated causal convolutions, dilations $\{1,2,4\}$, kernel 3, $d_\mathrm{model}=64$) followed by 4-head self-attention (key dim 16). Receptive field $\approx 29$ steps. \\
+N-BEATS & N-BEATS          & 3 residual backcast blocks, 4 FC layers per block, $\mathrm{fc\_dim}=512$, projection $\mathrm{proj\_dim}=256$, sigmoid classification head. Adam lr $5 \times 10^{-4}$. \\
 \bottomrule
 \end{tabularx}
 \end{adjustbox}
 \end{table}
 
-Storage budget is preserved by saving deep-learning model weights only for the \emph{last} fold per symbol (used for the production copy and live inference); intermediate-fold weights are discarded. This reduces checkpoint storage from $N_\mathrm{folds} \times N_\mathrm{DL}$ per symbol to $1 \times N_\mathrm{DL}$ per symbol --- a $\sim$83\% reduction.
+Storage budget is preserved by saving deep-learning model weights only for the \emph{last} fold per symbol (used for the production copy and live inference); intermediate-fold weights are discarded. This reduces checkpoint storage from $N_\mathrm{folds} \times N_\mathrm{DL}$ per symbol to $1 \times N_\mathrm{DL}$ per symbol, a $\sim$83\% reduction.
 
 \section{Meta-Learner and Calibration}
 
 \subsection{Logistic Stacking}
 
-For each fold, the LightGBM and XGBoost out-of-fold validation probabilities are stacked into a 2-feature design matrix; a logistic regression ($\ell_2$ regularisation, $C=1$) is fit to map these probabilities to the validation labels. The eight deep-learning probabilities are admitted into the stack only if their validation accuracy clears a sanity floor (otherwise their column is dropped to avoid feeding pure noise to the meta-learner). On the canonical run, the deep-learning pass-through floor was not consistently met across symbols, so the dominant meta-signal flowed through the tree stack; the resulting meta-probability therefore primarily reflects the logistic blend of LightGBM and XGBoost.
+For each fold, the LightGBM and XGBoost out-of-fold validation probabilities are stacked into a 2-feature design matrix; a logistic regression ($\ell_2$ regularisation, $C=1$) is fit to map these probabilities to the validation labels. The three deep-learning probabilities are admitted into the stack only if their validation accuracy clears a sanity floor (otherwise their column is dropped to avoid feeding pure noise to the meta-learner). On the canonical run, the deep-learning pass-through floor was not consistently met across symbols, so the dominant meta-signal flowed through the tree stack; the resulting meta-probability therefore primarily reflects the logistic blend of LightGBM and XGBoost.
 
 \subsection{Temperature Scaling}
 
@@ -228,12 +223,12 @@ For each symbol with $N$ rows after feature alignment, V3 generates six chronolo
     \mathrm{train\_ratio}_k \;=\; 0.70 + 0.05\,(k-1), \quad
     \mathrm{train\_size}_k \;=\; \lfloor N \cdot \mathrm{train\_ratio}_k \rfloor,
 \]
-with the next $10\%$ of rows used as validation and the remainder up to the next fold boundary used as test. Concretely, for a 1{,}115-row symbol (SBIN) the train sizes are roughly $\{702, 753, 803, 853, 903, 954\}$ and the test sizes $\{112, 111, 111, 112, 112, 56\}$; the per-fold detail for SBIN appears in Table~\ref{tab:sbin_windows}.
+with the next $10\%$ of rows used as validation and the remainder up to the next fold boundary used as test. Concretely, for a 1{,}115-row symbol (SBIN) the train sizes are roughly $\{702, 753, 803, 853, 903, 954\}$ and the test sizes $\{112, 111, 111, 112, 112, 56\}$; the per-fold detail for SBIN appears in Table~\ref{tab:sbin_wf_example}.
 
 \begin{table}[H]
 \centering
 \caption{SBIN per-fold walk-forward window sizes and out-of-sample accuracy (canonical run).}
-\label{tab:sbin_windows}
+\label{tab:sbin_wf_example}
 \renewcommand{\arraystretch}{1.3}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{c c c c c l l c c c c}
@@ -285,7 +280,7 @@ The pipeline supports a resume flag that skips any symbol that already has a com
 
 \subsection{Reproducibility}
 
-An immutable configuration record written at the start of each run captures the random seed, the data start date, the universe, the minimum-move threshold ($\delta=0.004$), the confidence threshold ($0.58$), the train ratios, the calibration method, the worker counts, and the elapsed wall time. The canonical run completed in $358.8$ seconds for 99 symbols on a 12-core machine ($n_\mathrm{workers}=3$, $n_\mathrm{jobs}=2$ per worker). All random-number generators (NumPy, scikit-learn, XGBoost, LightGBM, TensorFlow) are seeded from a fixed value of $42$.
+An immutable configuration record written at the start of each run captures the random seed, the data start date, the universe, the minimum-move threshold ($\delta=0.004$), the confidence threshold ($0.58$), the train ratios, the calibration method, the worker counts, and the elapsed wall time. The latest full run completed on a 12-core machine ($n_\mathrm{workers}=4$, $n_\mathrm{jobs}=2$ per worker) covering all 100 symbols. All random-number generators (NumPy, scikit-learn, XGBoost, LightGBM, TensorFlow) are seeded from a fixed value of $42$.
 
 \section{Outputs: The Run Artefact Set}
 

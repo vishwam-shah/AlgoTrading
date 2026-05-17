@@ -38,6 +38,7 @@
 \usepackage{tikz}
 \usepackage{listings}
 \usepackage{microtype}
+\usepackage[titles]{tocloft}
 
 % Suppress overfull/underfull warnings
 \hbadness=10000
@@ -97,14 +98,34 @@
 \let\ps@plain\ps@fancy
 \makeatother
 
-% ================== TITLE FORMATTING ==================
-\titleformat{\chapter}[display]{\huge\bfseries\color{auburn}}{\chaptertitlename\ \thechapter}{10pt}{\Huge}
-\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
-\titleformat{\section}{\Large\bfseries\color{vividauburn}}{\thesection}{12pt}{}
-\titleformat{\subsection}{\large\bfseries\color{bole}}{\thesubsection}{10pt}{}
+% ================== PAGE GEOMETRY (binding margins per guidelines) ==================
+\geometry{
+    a4paper,
+    left=1.5in,
+    right=1.0in,
+    top=1.0in,
+    bottom=1.0in,
+    headheight=21pt
+}
 
-% ================== SPACING ==================
-\doublespacing
+% ================== TITLE FORMATTING ==================
+% Chapter Title: 20pt Bold  |  Headings: 14.4pt Bold  |  Subheadings: 12pt Bold
+\titleformat{\chapter}[display]
+    {\fontsize{20pt}{24pt}\selectfont\bfseries\color{auburn}}
+    {\chaptertitlename\ \thechapter}{10pt}
+    {\fontsize{20pt}{24pt}\selectfont\bfseries}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+
+\titleformat{\section}
+    {\fontsize{14.4pt}{17pt}\selectfont\bfseries\color{vividauburn}}
+    {\thesection}{12pt}{}
+
+\titleformat{\subsection}
+    {\fontsize{12pt}{14pt}\selectfont\bfseries\color{bole}}
+    {\thesubsection}{10pt}{}
+
+% ================== SPACING: 1.5 line spacing, 12pt body font ==================
+\onehalfspacing
 
 % ================== HYPERREF SETTINGS ==================
 \hypersetup{
@@ -132,6 +153,25 @@
 
 % ========== FRONT MATTER ==========
 \input{chapters/00_frontmatter}
+
+% ========== TABLE OF CONTENTS / LOF / LOT ==========
+\pagestyle{fancy}
+\addcontentsline{toc}{chapter}{Contents}
+\tableofcontents
+
+\clearpage
+\pagestyle{fancy}
+\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+
+\clearpage
+\pagestyle{fancy}
+\addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
+
+\cleardoublepage
+\pagenumbering{arabic}
+\pagestyle{fancy}
 
 % ========== CHAPTER 1: INTRODUCTION ==========
 \input{chapters/01_introduction}

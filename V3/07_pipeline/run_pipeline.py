@@ -129,17 +129,11 @@ try:
     from deep_learning.base_deep                  import get_dl_splits             # noqa: E402
     _DL_AVAILABLE = True
     _DL_CLASSES = [
-        (LSTMClassifier,           "LSTM"),
         (BiLSTMClassifier,         "BiLSTM"),
-        (GRUClassifier,            "GRU"),
-        (CNNLSTMClassifier,        "CNN_LSTM"),
-        # CNN_GRU removed — statistically identical to CNN_LSTM (both ~50.73%)
-        # Keeping both adds correlated noise that dilutes better tree models' votes
-        (TCNGRUClassifier,         "TCN_GRU"),
         (TCNTransformerClassifier, "TCN_Transformer"),
         (NBEATSClassifier,         "NBEATS"),
     ]
-    print("  [DL] models available: LSTM, BiLSTM, GRU, CNN_LSTM, CNN_GRU, TCN_GRU, TCN_Transformer, NBEATS")
+    print("  [DL] models active: BiLSTM, TCN_Transformer, NBEATS (full mode = LGB+XGB+BiLSTM+TCN-T+NBEATS)")
 except ImportError as _dl_err:
     print(f"  [DL] models unavailable: {_dl_err}. Running tree-only.")
 
@@ -1993,9 +1987,8 @@ def run_symbol(
     # Production folder already has the final models; run checkpoints are only
     # needed during training. Deleting here keeps runs/ folder tiny (~KB vs MB).
     try:
-        sym_run_dir = Path(MODELS_DIR) / "runs" / run_id / symbol
-        if sym_run_dir.exists():
-            shutil.rmtree(sym_run_dir)
+        if model_run_path.exists():
+            shutil.rmtree(model_run_path)
     except Exception:
         pass
 

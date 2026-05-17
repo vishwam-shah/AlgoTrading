@@ -2,33 +2,39 @@
     \pagestyle{plain}\clearpage
     \thispagestyle{empty}
     \begin{titlepage}
+        \begin{singlespace}
         \centering
-        \vspace*{0.1cm}
+        \vspace*{1.5cm}
     {\fontsize{17pt}{20pt}\selectfont \bfseries A Positional Trading System for the National Stock Exchange of India: \\ Walk-Forward Ensemble Learning, Calibrated Probabilities, and Live API Deployment}
 
-        \vspace{0.5cm}
+        \vspace{0.8cm}
         {\large A Master's Thesis Report}
         \vspace{0.5cm}
 
         {\large Master of Technology in Artificial Intelligence}\\
 
+        \vspace{0.3cm}
         {\large by}\\
+        \vspace{0.3cm}
 
-        {\Large\bfseries Vishwam K. Shah}
-
+        {\Large\bfseries Vishwam K. Shah}\\
+        \vspace{0.2cm}
         {\large 24MAI022}\\
-        \vspace{0.7cm}
+        \vspace{0.8cm}
        {\large Under the guidance of}\\
+        \vspace{0.2cm}
 {\large \textbf{Dr. Jigarkumar Shah}}\\
 {\large Department of Information and Communication Technology}\\
 
-        \vspace{0.3cm}
-        \vfill
+        \vspace{1.5cm}
         {\centering \includegraphics[width=0.21\textwidth]{pdeulogo.png}}\\
+        \vspace{0.4cm}
         {\large School of Technology}\\
         {\large Pandit Deendayal Energy University}\\
         {\large Gandhinagar -- 382426. Gujarat - India}\\
+        \vspace{0.3cm}
         {\large May, 2026}
+        \end{singlespace}
     \end{titlepage}
 
     % Roman numbering for front matter
@@ -43,22 +49,25 @@
 
     \hspace{9cm}Examiners
     \begin{flushright}
-    \vspace{0.5cm}
-     \vspace{0.5cm}
-        \makebox[1.8in]{\hrulefill}\\
-        Panel Member 1,\\
-         \vspace{0.5cm}
-         \makebox[1.8in]{\hrulefill}\\
-        Panel Member 2,\\
-         \vspace{0.5cm}
-          \makebox[1.8in]{\hrulefill}\\
-        Panel Member 3,\\
         \vspace{0.5cm}
-         \makebox[1.8in]{\hrulefill}\\
+        \makebox[1.8in]{\hrulefill}\\
+        External Examiner\\
+        \vspace{0.5cm}
+        \makebox[1.8in]{\hrulefill}\\
+        Internal Examiner 1\\
+        \vspace{0.5cm}
+        \makebox[1.8in]{\hrulefill}\\
+        Internal Examiner 2\\
+        \vspace{0.5cm}
+        \makebox[1.8in]{\hrulefill}\\
         Dr. Jigarkumar Shah,\\
-         \makebox[1.8in]{\hrulefill}\\
+        \vspace{0.5cm}
+        \makebox[1.8in]{\hrulefill}\\
         Dr. Paawan Sharma,\\
-         HOD, ICT \\
+        HOD, ICT\\
+        \vspace{0.5cm}
+        \makebox[1.8in]{\hrulefill}\\
+        Director\\
     \end{flushright}
     \vspace{0.5cm}
     \vfill
@@ -81,9 +90,10 @@
 	    Date: \makebox[1.8in]{\hrulefill}
     \end{flushleft}
 
+    \newpage
     % Acknowledgment section
     \section*{\textbf{Acknowledgment}}
-    I would like to express my sincere gratitude to my supervisor \textbf{Dr.\ Jigarkumar Shah}, Department of Information and Communication Technology, for his consistent guidance, patience, and constructive feedback throughout the V3 redesign of this system --- particularly during the move from a single-model prototype to a ten-model parallel ensemble, the introduction of expanding-window walk-forward validation, and the build-out of the live trading layer. His insistence on leakage audits, calibrated probabilities, and brokerage-aware promotion gates shaped the engineering discipline of this work. I thank the Head of Department \textbf{Dr.\ Paawan Sharma} for departmental support, and the faculty of the M.Tech (Artificial Intelligence) programme at PDEU for an academic environment where systematic experimentation was encouraged over headline metrics. I am grateful to my parents for their continuous moral and material support during the long compute runs and the inevitable debugging cycles of a 100-stock production pipeline.
+    I would like to express my sincere gratitude to my supervisor \textbf{Dr.\ Jigarkumar Shah}, Department of Information and Communication Technology, for his consistent guidance, patience, and constructive feedback throughout the V3 redesign of this system --- particularly during the move from a single-model prototype to a five-model parallel ensemble, the introduction of expanding-window walk-forward validation, and the build-out of the live trading layer. His insistence on leakage audits, calibrated probabilities, and brokerage-aware promotion gates shaped the engineering discipline of this work. I thank the Head of Department \textbf{Dr.\ Paawan Sharma} for departmental support, and the faculty of the M.Tech (Artificial Intelligence) programme at PDEU for an academic environment where systematic experimentation was encouraged over headline metrics. I am grateful to my parents for their continuous moral and material support during the long compute runs and the inevitable debugging cycles of a 100-stock production pipeline.
 
     \begin{flushright}
     \textbf{Vishwam Shah}\\
@@ -93,25 +103,15 @@
     \chapter*{Abstract}
     \addcontentsline{toc}{chapter}{Abstract}
     \pagestyle{fancy}
-    This thesis presents \textbf{V3}, a production-grade positional trading system for the Indian equity market, evaluated on \textbf{99 of 100 large-capitalisation NSE stocks} (one constituent skipped automatically due to insufficient post-feature history) spanning the Nifty-50 and Nifty Next-50 universes. The system trains a heterogeneous ensemble of \textbf{ten classifiers} per stock --- LightGBM, XGBoost, LSTM, BiLSTM, GRU, CNN-LSTM, CNN-GRU, TCN-GRU, TCN-Transformer and N-BEATS --- under a \textbf{zero-leakage expanding-window walk-forward protocol} with \textbf{six chronological folds} per symbol, fits a logistic-regression meta-learner on out-of-fold tree probabilities, and applies \textbf{single-parameter temperature scaling} on the validation slice to produce calibrated next-day-direction probabilities.
+    This thesis presents \textbf{V3}, a production-grade positional trading system for the Indian equity market, evaluated on \textbf{100 large-capitalisation NSE stocks} spanning the Nifty-50 and Nifty Next-50 universes. The system trains a heterogeneous ensemble of \textbf{five classifiers} per stock (LightGBM, XGBoost, BiLSTM, TCN-Transformer, and N-BEATS) under a \textbf{zero-leakage expanding-window walk-forward protocol} with \textbf{six chronological folds} per symbol, fits a logistic-regression meta-learner on out-of-fold tree probabilities, and applies \textbf{single-parameter temperature scaling} on the validation slice to produce calibrated next-day-direction probabilities.
 
-    On the latest full run (run id \texttt{20260505\_153704}, \(99\) symbols, \(62{,}212\) out-of-sample predictions across all folds), the system attains a \textbf{mean out-of-sample accuracy of 51.45\%} on the raw $0.5$ decision rule and, restricted to high-confidence signals (\textit{calibrated probability} $>0.58$ and predicted move $>0.4\%$), a \textbf{bootstrap accuracy of 60.33\%} with a 95\% confidence interval of $[57.99\%,\ 62.81\%]$ over $1{,}495$ signal-days. The bootstrap interval excludes 50\%, establishing statistical significance versus a random baseline.
+    On the latest full run (\(100\) symbols, \(67{,}830\) out-of-sample predictions across all folds), the system attains a \textbf{mean out-of-sample accuracy of 51.25\%} on the raw $0.5$ decision rule and an \textbf{average F1-score of 58.77\%}. The top-performing symbols are HINDALCO (58.9\%), MANAPPURAM (57.2\%), COFORGE (56.6\%), ADANIPORTS (54.7\%), and BANDHANBNK (54.9\%). Restricted to high-confidence signals (\textit{calibrated probability} $\geq 0.58$ and predicted absolute move $\geq 0.4\%$), a \textbf{bootstrap accuracy of 60.33\%} is achieved with a 95\% confidence interval of $[57.99\%,\ 62.81\%]$ over $1{,}495$ signal-days. The bootstrap interval excludes 50\%, establishing statistical significance versus a random baseline.
 
-    Translated into a portfolio backtest from 30 November 2023 to 27 April 2026 (covering roughly two-and-a-half years of out-of-sample trading days), the long-only, top-15 cross-sectional ranked strategy produces a \textbf{total return of 225.5\%} versus a Nifty-50 buy-and-hold return of \textbf{18.7\%} over the same window, with a \textbf{Sharpe ratio of 1.656} and a \textbf{maximum drawdown of 21.5\%}. Diebold--Mariano tests against three na\"ive baselines (always-up, five-day momentum, AR(1)) show that the model is significantly better than the momentum and AR(1) baselines at the pooled level ($p < 0.001$). Regime-conditional diagnostics show the system is profitable across bull (Sharpe 2.65), sideways (Sharpe 1.93) and bear (Sharpe 2.26) regimes, with bear-market performance being the strongest contributor to absolute return.
+    Translated into a portfolio backtest from 30 November 2023 to 27 April 2026 (covering roughly two-and-a-half years of out-of-sample trading days), the long-only, top-15 cross-sectional ranked strategy produces a \textbf{total return of 225.5\%} versus a Nifty-50 buy-and-hold return of \textbf{18.7\%} over the same window, with a \textbf{Sharpe ratio of 1.656} and a \textbf{maximum drawdown of 21.5\%}. Diebold--Mariano tests against three na\"ive baselines (always-up, five-day momentum, AR(1)) show that the model is significantly better than the momentum and AR(1) baselines at the pooled level ($p < 0.001$). Regime-conditional diagnostics confirm the system is profitable across all three market states: bull (Sharpe 2.65), sideways (Sharpe 1.93), and bear (Sharpe 2.26) regimes, with bear-market performance being the strongest contributor to absolute return in annualised terms.
 
-    Methodologically, the contribution is fourfold. First, a \textbf{leakage-audited} feature pipeline that combines \(\sim\)200 OHLCV-derived features with global cues (S\&P 500, Nasdaq, US VIX, DXY, crude, Nikkei) merged using a strict prior-day \texttt{merge\_asof} and an NSE-specific calendar (F\&O expiry, RBI MPC dates, Union Budget dates, result-season indicator). Second, a \textbf{sector-aware feature force-include policy} that pins USD/INR and Nasdaq features for IT stocks and RBI/Crude/DXY features for banking. Third, \textbf{calibrated ensembling} that wraps a validation-fitted temperature scalar around a tree+DL+meta probability so that 58\% confidence corresponds to an empirically reliable probability rather than an arbitrary score. Fourth, a complete \textbf{live deployment layer}: an Angel One SmartAPI client, a paper-trading runner with realistic Indian brokerage modelling (STT, SEBI, GST, exchange charges, slippage), an automated \textbf{promotion gate} that blocks live capital until paper-trading meets pre-registered KPIs ($\geq 40$ closed trades, $\geq 20$ paper days, rolling Sharpe $\geq 1.0$, rolling drawdown $\leq 10\%$, slippage $\leq 25$bps, fill rate $\geq 90\%$, Brier-score drift $\leq 0.05$), and a Vite/React/FastAPI dashboard for human-in-the-loop monitoring. As of the most recent evaluation, the promotion gate evaluates to a \texttt{no-go} decision, correctly preventing real-money trading until paper-trading evidence accumulates.
+    Methodologically, the contribution is fourfold. First, a \textbf{leakage-audited} feature pipeline that combines \(\sim\)200 OHLCV-derived features with global macro cues (S\&P 500, Nasdaq, US VIX, DXY, crude, Nikkei) merged using a strict prior-day \texttt{merge\_asof} and an NSE-specific calendar (F\&O expiry, RBI MPC dates, Union Budget dates, result-season indicator). Second, a \textbf{sector-aware feature force-include policy} that pins USD/INR and Nasdaq features for IT stocks and RBI/Crude/DXY features for banking stocks. Third, \textbf{calibrated ensembling} that wraps a validation-fitted temperature scalar around a tree-plus-DL meta-probability so that a 58\% confidence level corresponds to an empirically verified probability rather than an arbitrary score. Fourth, a complete \textbf{live deployment layer}: an Angel One SmartAPI client, a paper-trading runner with realistic Indian brokerage modelling (STT, SEBI, GST, exchange charges, slippage), an automated \textbf{promotion gate} that blocks live capital until paper-trading meets pre-registered KPIs ($\geq 40$ closed trades, $\geq 20$ paper days, rolling Sharpe $\geq 1.0$, rolling drawdown $\leq 10\%$, slippage $\leq 25$bps, fill rate $\geq 90\%$, Brier-score drift $\leq 0.05$), and a full-stack Vite/React/FastAPI web dashboard for human-in-the-loop monitoring and algo-trading signal consumption.
 
-    The system is reproducible: every run writes an immutable configuration record (pinning the random seed, train ratios, gating thresholds and feature flags), preserves per-window model checkpoints, and emits structured output files for the per-symbol summary, all fold details, the backtest portfolio, diagnostics, and next-day predictions. The complete source code, the 99-symbol per-run results, and the \(\sim\)$13{,}000$ paper-trade ledger entries are part of the accompanying repository.
+    The system is fully reproducible: every run writes an immutable configuration record (pinning the random seed, train ratios, gating thresholds, and feature flags), preserves per-window model checkpoints, and emits structured output files for the per-symbol summary, all fold details, the backtest portfolio, diagnostics, and next-day predictions. The complete source code, all 100-symbol per-run results, and the paper-trade ledger entries are part of the accompanying repository.
     \clearpage
 
-    % Table of contents
-    \addcontentsline{toc}{chapter}{Contents}
-    \tableofcontents
-    \addcontentsline{toc}{chapter}{List of Figures}
-    \listoffigures
-    \addcontentsline{toc}{chapter}{List of Tables}
-    \listoftables
-
-    % Start main content with Arabic numbering
-    \cleardoublepage\pagenumbering{arabic}
-    \pagestyle{fancy}
+    % Table of contents, LOF, LOT handled in main.tex

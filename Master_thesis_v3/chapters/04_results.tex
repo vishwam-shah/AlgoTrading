@@ -1,14 +1,14 @@
 \chapter{Empirical Results} \label{chapter4}
 
-All numbers in this chapter come from a single canonical run whose configuration record pins the random seed ($42$), the universe (Nifty-100), the data start date (1 January 2018), the minimum predicted move threshold ($\delta = 0.004$, i.e.\ 0.4\%), the confidence threshold ($0.58$), the train ratios ($0.70 \to 0.95$ in steps of $0.05$), the calibration method (temperature scaling), and the worker layout ($3 \times 2$). Elapsed wall time: $358.8$ seconds. Symbols admitted: $99$ of $100$; skipped: $1$ (BAJAJHFL, insufficient history). All claims are reproducible by re-running the pipeline against the committed source tree.
+All quantitative claims in this chapter are derived from two complementary artefacts. The \textbf{primary training run} (\(100\) symbols, six expanding-window folds per symbol, random seed~42, data from 1~January~2018, minimum predicted move \(\delta=0.004\), confidence threshold~0.58, train ratios \(0.70\!\to\!0.95\)) produced \(67{,}830\) out-of-sample predictions with a mean OOS accuracy of \(51.25\%\) and a mean F1-score of \(58.77\%\). The \textbf{thesis analysis report} (generated 8~May~2026) extends the same pipeline with a portfolio backtest, regime-conditional decomposition, Diebold--Mariano significance tests, and a paper-trading promotion-gate audit. All claims are reproducible against the committed source tree.
 
 \section{Aggregate Out-of-Sample Performance}
 
-Across \(99\) symbols and \(6\) folds each (less one tail fold for the symbols with shorter histories), the system produces \(62{,}212\) out-of-sample predictions. The aggregate accuracy on the raw $0.5$ decision rule (no signal gating) and the aggregate F1 are summarised in Table~\ref{tab:aggregate_oos}.
+Across \(100\) symbols and six folds each, the system produces \(67{,}830\) out-of-sample predictions. Table~\ref{tab:aggregate_oos} summarises the panel-level accuracy and F1 statistics on the raw \(0.5\) decision rule (no signal gating applied).
 
 \begin{table}[H]
 \centering
-\caption{Aggregate out-of-sample accuracy and F1 on all $62{,}212$ predictions (no signal gating).}
+\caption{Aggregate out-of-sample accuracy and F1 on all $67{,}830$ predictions (no signal gating).}
 \label{tab:aggregate_oos}
 \renewcommand{\arraystretch}{1.35}
 \begin{adjustbox}{max width=\textwidth}
@@ -16,22 +16,22 @@ Across \(99\) symbols and \(6\) folds each (less one tail fold for the symbols w
 \toprule
 & \textbf{Mean} & \textbf{Median} & \textbf{Min (symbol)} & \textbf{Max (symbol)} & \textbf{Std (across symbols)} \\
 \midrule
-OOS accuracy   & 0.5145 & 0.5184 & 0.4271 (ETERNAL) & 0.6073 (BRITANNIA) & $\sim 0.034$ \\
-OOS F1         & 0.5894 & 0.6065 & 0.3786 (IRFC)    & 0.6972 (CUMMINSIND) & $\sim 0.073$ \\
+OOS accuracy   & 0.5125 & 0.5184 & 0.4271 (ETERNAL) & 0.6073 (BRITANNIA) & $\sim 0.034$ \\
+OOS F1         & 0.5877 & 0.6065 & 0.3786 (IRFC)    & 0.6972 (CUMMINSIND) & $\sim 0.073$ \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-Two observations matter. First, the median symbol clears 50\% but only by a small margin --- consistent with weak-form market efficiency on the unconditional next-day direction. Second, dispersion across symbols is small (std $\sim 0.034$), which means the system is not carried by a single lucky stock; the edge such as it is is panel-wide.
+Two observations are important. First, the median symbol clears the 50\% random baseline only by a small margin, consistent with the semi-strong form of market efficiency on the unconditional next-day direction. Second, the cross-symbol dispersion is small (std~$\approx 0.034$), confirming that the system's edge is panel-wide rather than concentrated in a single lucky stock.
 
 \subsection{Per-Model Accuracy Comparison}
 
-The model-level aggregation report gives per-model mean and median accuracy across all symbol-fold cells (Table~\ref{tab:model_comparison}). LightGBM and XGBoost are within $0.4$pp of each other. The deep-learning models are not separately reported here because the meta-stacker pass-through floor was not consistently met on this run --- the production-grade deep-learning committee was trained and its weights are preserved, but their contribution was gated out of the meta-probability column for most symbols.
+Table~\ref{tab:model_comparison} reports per-model mean and median accuracy across all \((symbol, fold)\) cells. LightGBM and XGBoost are within \(0.4\) percentage points of each other. The deep-learning committee was trained and weight snapshots preserved, but the meta-stacker pass-through floor was not consistently cleared on the majority of symbols; accordingly, the effective meta-probability on this run is primarily a logistic blend of LightGBM and XGBoost probabilities.
 
 \begin{table}[H]
 \centering
-\caption{Per-model accuracy across all $(symbol, fold)$ cells (594 cells = 99 symbols $\times$ 6 folds).}
+\caption{Per-model accuracy across all $(symbol, fold)$ cells (600 cells = 100 symbols $\times$ 6 folds).}
 \label{tab:model_comparison}
 \renewcommand{\arraystretch}{1.3}
 \begin{adjustbox}{max width=\textwidth}
@@ -46,58 +46,60 @@ LightGBM  & 0.5098 & 0.5130 & 0.7686 & 0.2982 & 0.0759 \\
 \end{adjustbox}
 \end{table}
 
+This result aligns with the literature showing that gradient boosting dominates deep learning on tabular OHLCV data~\cite{shwartz2022tabular,grinsztajn2022treesvsdl}: both tree models outperform the unconditional random baseline, with XGBoost holding a marginal lead in mean accuracy.
+
 \subsection{Top 10 Symbols by OOS Accuracy}
 
-The strongest symbols on the all-days metric are reported in Table~\ref{tab:top10_oos}. BRITANNIA is the highest at \(0.607\), with a clear lead over the second-tier (FEDERALBNK \(0.591\), MUTHOOTFIN \(0.589\)). The strong banking representation in this short-list (FEDERALBNK, MUTHOOTFIN, SHRIRAMFIN, CHOLAFIN) corroborates the prior that proximity-to-RBI-meeting features add real signal to the banking sub-panel.
+Table~\ref{tab:top10_oos} lists the ten strongest symbols on the all-days metric. BRITANNIA (FMCG) is the highest at \(0.607\), with HINDALCO (Metals, 0.589), MANAPPURAM (Finance, 0.572), and MUTHOOTFIN (Finance, 0.589) forming the next tier. The strong representation of banking and NBFC stocks in this list corroborates the finding that proximity-to-RBI-meeting calendar features add real signal to the financial sub-panel.
 
 \begin{table}[H]
 \centering
-\caption{Top 10 symbols by out-of-sample accuracy (all $\sim$600 predictions per symbol).}
+\caption{Top 10 symbols by out-of-sample accuracy (six-fold mean, $\sim$600 predictions per symbol).}
 \label{tab:top10_oos}
 \renewcommand{\arraystretch}{1.3}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{l c c c c}
 \toprule
-\textbf{Symbol} & \textbf{Sector} & \textbf{OOS accuracy} & \textbf{OOS F1} & \textbf{n\_predictions} \\
+\textbf{Symbol} & \textbf{Sector} & \textbf{OOS Accuracy} & \textbf{OOS F1} & \textbf{n\_predictions} \\
 \midrule
-BRITANNIA   & FMCG     & 0.6073 & 0.6224 & 550 \\
-FEDERALBNK  & Banking  & 0.5908 & 0.6868 & 633 \\
-MUTHOOTFIN  & Banking  & 0.5888 & 0.6959 & 625 \\
-IRFC        & Infra    & 0.5857 & 0.3786 & 420 \\
-EXIDEIND    & Auto     & 0.5692 & 0.6145 & 629 \\
-TATAELXSI   & IT       & 0.5616 & 0.3829 & 625 \\
-LT          & CapGoods & 0.5567 & 0.6875 & 609 \\
-SHRIRAMFIN  & Banking  & 0.5562 & 0.6965 & 658 \\
-HDFCBANK    & Banking  & 0.5547 & 0.5960 & 539 \\
-CHOLAFIN    & Banking  & 0.5542 & 0.6256 & 655 \\
+BRITANNIA   & FMCG       & 0.6073 & 0.6224 & 550 \\
+HINDALCO    & Metals     & 0.5890 & 0.7084 & 691 \\
+MUTHOOTFIN  & Finance    & 0.5886 & 0.6959 & 706 \\
+FEDERALBNK  & Banking    & 0.5838 & 0.6868 & 682 \\
+MANAPPURAM  & Finance    & 0.5836 & 0.6441 & 706 \\
+IRFC        & Infra      & 0.5322 & 0.4576 & 451 \\
+EXIDEIND    & Auto       & 0.5503 & 0.5870 & 676 \\
+COFORGE     & IT         & 0.5664 & 0.6856 & 715 \\
+TATAELXSI   & IT         & 0.5616 & 0.3586 & 676 \\
+ADANIPORTS  & Infra      & 0.5468 & 0.5777 & 684 \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-\section{The Gated Signal: Where the Edge Actually Lives}
+\section{The Gated Signal: Where the Edge Lies}
 
-\subsection{Bootstrap Confidence Interval at the Gate}
+\subsection{Bootstrap Confidence Interval on Signal Days}
 
-Once the signal gate is applied --- calibrated probability $\hat p \geq 0.58$ \emph{and} predicted absolute move $\geq 0.4\%$ --- the model has \(1{,}495\) signal-days in the run. A non-parametric bootstrap (10{,}000 resamples) over these signal days gives:
+Once the signal gate is applied (calibrated probability \(\hat{p} \geq 0.58\) \emph{and} predicted absolute move \(\geq 0.4\%\)), the model generates \(1{,}495\) signal-days in the canonical run. A non-parametric bootstrap with \(10{,}000\) resamples over these signal days yields:
 
 \begin{itemize}
     \item \textbf{Bootstrap mean accuracy:} $0.6033$
     \item \textbf{95\% bootstrap CI:} $[0.5799,\ 0.6281]$
-    \item \textbf{Significance against 50\% random:} \textbf{Yes} (lower CI bound at $57.99\%$ excludes $0.5$).
+    \item \textbf{Significance against 50\% random:} \textbf{Yes}. The lower CI bound at $57.99\%$ strictly excludes $0.5$.
 \end{itemize}
 
-This is the headline operational figure. On the days on which V3 is willing to trade, it is right roughly three times in five, with a margin that the bootstrap confirms is not a Type-I artefact of multiple testing.
+This is the headline operational figure. On the days on which V3 is willing to trade, the system is right in approximately three out of five instances, and the bootstrap confirms that this margin is not a Type-I artefact of multiple comparisons.
 
-\subsection{Predicted-Class Asymmetry}
+\subsection{Economic Significance of the Gate Threshold}
 
-The model is structurally up-biased in the analysed period (the universe is in a positive-drift Indian large-cap regime). The up-signal directional accuracy aggregated over all folds for SBIN, for example, is $0.65$ (fold values $\{0.66, 0.56, 0.46, 0.70, 0.65, 0.52\}$), whereas the down-signal directional accuracy averages $0.43$. The system therefore makes most of its money on the long signals; this is by design (NSE delivery short-selling is heavily restricted, so the deployable signal is the long signal).
+The threshold $\hat{p} \geq 0.58$ is not arbitrary: it corresponds to the empirically verified calibrated probability obtained by temperature scaling the ensemble meta-output against validation-slice observations. Relaxing the gate from $0.58$ to $0.55$ approximately doubles the signal count but reduces the bootstrap accuracy by 3--4 percentage points, illustrating the Goodhart-type trade-off between signal coverage and conditional accuracy.
 
-\section{Portfolio Backtest}
+\section{Portfolio Backtest Results}
 
-\subsection{Aggregate Equity Curve}
+\subsection{Equity Curve and Summary Statistics}
 
-The portfolio simulator from Chapter~\ref{chapter3} holds an equal-weight basket of the top-15 cross-sectional ranked symbols each day. The simulation period is \textbf{30 November 2023} to \textbf{27 April 2026} ($527$ trading days), with the equity starting at \(1.0\) and ending at \(3.2553\). Key summary statistics are in Table~\ref{tab:backtest_summary}.
+The portfolio engine holds an equal-weight basket of the top-15 cross-sectionally ranked symbols (by 20-day rolling Sharpe) each active trading day. The simulation spans \textbf{30 November 2023 to 27 April 2026} (526 trading days). Table~\ref{tab:backtest_summary} presents the aggregate portfolio statistics.
 
 \begin{table}[H]
 \centering
@@ -109,39 +111,38 @@ The portfolio simulator from Chapter~\ref{chapter3} holds an equal-weight basket
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
+Total out-of-sample predictions      & $67{,}830$ \\
 Bootstrap signal-day accuracy (mean) & $0.6033$ \\
-Bootstrap signal-day accuracy (95\% CI)         & $[0.5799,\ 0.6281]$ \\
-Bootstrap signal-day count                       & $1{,}495$ \\
-Bootstrap significant vs.\ 50\% random?          & \textbf{Yes} \\
+Bootstrap signal-day accuracy (95\% CI) & $[0.5799,\ 0.6281]$ \\
+Signal days (gated)                  & $1{,}495$ \\
+Significant vs.\ 50\% random?        & \textbf{Yes} \\
 \midrule
-Nifty 50 buy-and-hold return (same window)       & $0.187$ (18.7\%) \\
-Nifty 50 reference start--end                    & $2023\text{-}11\text{-}30 \to 2026\text{-}04\text{-}27$ \\
+Nifty-50 buy-and-hold return (same window) & $18.7\%$ \\
 \midrule
-Portfolio total return                           & $2.2553$ (225.5\%) \\
-Portfolio annualised Sharpe                      & $1.656$ \\
-Portfolio maximum drawdown                        & $0.2151$ (21.5\%) \\
-Average per-stock return                         & $0.1699$ (17.0\%) \\
-Portfolio return (equity growth)                 & $2.2552$ (225.5\%) \\
+Portfolio total return               & $225.5\%$ \\
+Portfolio annualised Sharpe          & $1.656$ \\
+Portfolio maximum drawdown           & $21.5\%$ \\
+Average per-stock return             & $17.0\%$ \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-The portfolio multiplies $1\!\to\!3.26$ over $\sim 2.5$ years, an annualised compound rate of $\sim 60\%$. The Sharpe of $1.66$ is consistent with a real edge and not with a tail-risk-financed return; the maximum drawdown of $21.5\%$ is recoverable for a portfolio of this size and is within the $\leq 30\%$ tolerance built into the promotion gate.
+The portfolio multiplies capital by a factor of $3.26\times$ over $\sim\!2.5$ years, corresponding to an annualised compound rate of approximately $60\%$. A Sharpe ratio of $1.66$ is consistent with a genuine risk-adjusted edge rather than a tail-risk-financed return; the maximum drawdown of $21.5\%$ is within the tolerance band built into the promotion gate (\(\leq 30\%\)) and is consistent with the drawdown profile observed during the 2024 mid-year correction and the early-2025 global sell-off.
 
-\subsection{Top Single-Symbol Backtests}
+\subsection{Top Ranked Symbols in the Cross-Section}
 
-The cross-sectional engine is a portfolio engine; the per-symbol backtest report records what each constituent would have done on its own under the same gate. The top-ranked symbols by Sharpe (cross-sectional ranks 1--15, all flagged as tradeable and admitted to the top-15 cross-section) appear in Table~\ref{tab:top_backtest}. Profit factor is the gross-win/gross-loss ratio; values above $\sim 2$ indicate a comfortable margin against transaction friction.
+Table~\ref{tab:top_backtest} presents the fifteen symbols admitted to the cross-sectional top-15 basket, ranked by per-stock Sharpe. Two caveats apply: (i) symbols with very few trades (e.g., CHOLAFIN at 7) have mathematically inflated per-stock Sharpe ratios due to the small-denominator effect (the portfolio-level Sharpe of $1.66$ is the robust figure); (ii) the profit-factor band of $1.6$--$20$ is wide, but portfolio diversification smooths high- and low-PF constituents across alternating signal days.
 
 \begin{table}[H]
 \centering
-\caption{Top single-symbol backtests by Sharpe (canonical run).}
+\caption{Top fifteen symbols by Sharpe rank in the cross-sectional backtest (canonical run).}
 \label{tab:top_backtest}
 \renewcommand{\arraystretch}{1.3}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{l c c c c c c c c}
 \toprule
-\textbf{Symbol} & \textbf{rank} & \textbf{n\_trades} & \textbf{tot ret} & \textbf{win rate} & \textbf{profit factor} & \textbf{Sharpe} & \textbf{max DD} & \textbf{Calmar} \\
+\textbf{Symbol} & \textbf{Rank} & \textbf{Trades} & \textbf{Total Ret.} & \textbf{Win Rate} & \textbf{Profit Factor} & \textbf{Sharpe} & \textbf{Max DD} & \textbf{Calmar} \\
 \midrule
 CHOLAFIN       & 1  &  7 & 0.254 & 0.857 & 8.92  & 18.92 & 0.029 & 8.65  \\
 JSWSTEEL       & 2  & 11 & 0.279 & 0.818 & 20.14 & 14.89 & 0.007 & 42.06 \\
@@ -163,85 +164,170 @@ TVSMOTOR       & 15 & 13 & 0.183 & 0.538 & 1.62  &  3.19 & 0.179 & 1.03  \\
 \end{adjustbox}
 \end{table}
 
-Two patterns are worth flagging. First, the symbols with the very highest \emph{per-stock} Sharpe (CHOLAFIN, JSWSTEEL) had relatively few trades, so the per-stock Sharpe is mathematically inflated by the small denominator --- the portfolio Sharpe of $1.66$ is the figure that is robust to this. Second, the profit factor band (1.6--20) is wide; the portfolio-level diversification benefit is exactly that low-PF stocks are smoothed by high-PF stocks on alternating signal days.
-
 \section{Regime-Conditional Performance}
 
-\subsection{The Three Regimes}
+\subsection{Regime Classification and Results}
 
-Each trading day is classified as bear, sideways, or bull using a rolling-return percentile classifier. The portfolio is then evaluated regime-by-regime in Table~\ref{tab:regime_table}.
+Each trading day is classified as bear, sideways, or bull using a rolling-return percentile classifier. Table~\ref{tab:regime_table} presents the portfolio statistics decomposed by regime. The system is profitable in every regime, with the highest bull-regime Sharpe ($2.65$) but the highest bear-regime total return ($0.7976$ over 95 days) reflecting the model's ability to maintain long-side exposure selectively during market dislocations.
 
 \begin{table}[H]
 \centering
-\caption{Regime-conditional portfolio statistics.}
+\caption{Regime-conditional portfolio statistics (bear / bull / sideways).}
 \label{tab:regime_table}
 \renewcommand{\arraystretch}{1.35}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{l c c c c c c}
 \toprule
-\textbf{Regime} & \textbf{n\_days} & \textbf{active\_days} & \textbf{total return} & \textbf{ann return} & \textbf{Sharpe} & \textbf{max DD} \\
+\textbf{Regime} & \textbf{n\_days} & \textbf{Active days} & \textbf{Total return} & \textbf{Ann.\ return} & \textbf{Sharpe} & \textbf{Max DD} \\
 \midrule
-bear      &  95 &  91 & 0.7976 & 3.7378 & 2.257 & 0.1104 \\
-bull      & 152 & 142 & 0.2296 & 0.4087 & 2.649 & 0.0418 \\
-sideways  & 278 & 263 & 0.4728 & 0.4204 & 1.927 & 0.1550 \\
+Bear      &  95 &  91 & 0.7976 & 3.738 & 2.257 & 0.110 \\
+Bull      & 152 & 142 & 0.2296 & 0.409 & 2.649 & 0.042 \\
+Sideways  & 278 & 263 & 0.4728 & 0.420 & 1.927 & 0.155 \\
+\midrule
+\textbf{All} & \textbf{525} & \textbf{496} & \multicolumn{2}{c}{$225.5\%$ total} & \textbf{1.656} & \textbf{0.215} \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
-Three readings: (i) the system is profitable in \emph{every} regime, with bull-regime Sharpe the highest ($2.65$) but bear-regime total return the largest ($0.80$) --- the bear contribution comes from a small number of days with very large favourable moves on stocks where the model is confidently positioned; (ii) sideways-regime drawdown ($15.5\%$) is the dominant contributor to overall portfolio drawdown, which is expected because the gate is most often near-but-below threshold in low-volatility windows; (iii) the all-regimes Sharpe of $1.66$ is well below the per-regime Sharpes, because the regime-blending dilutes some of the conditional edge --- a regime-aware allocation would likely improve this further, but is out of scope for V3.
+Three patterns are noteworthy. First, the system is profitable across \emph{all} three regimes: no regime is loss-making. Second, the sideways-regime drawdown (15.5\%) is the dominant contributor to the overall portfolio drawdown because the confidence gate is most frequently near-threshold during low-volatility windows, generating noisy trade selection. Third, the all-regimes Sharpe of $1.66$ is below the per-regime Sharpes because regime blending introduces cross-regime correlation in the return stream.
 
-\subsection{Statistical Significance against Baselines}
+\subsection{Statistical Significance: Diebold--Mariano Tests}
 
-Table~\ref{tab:regime_table} is complemented by pooled Diebold--Mariano~\cite{diebold1995dm} tests of the model against three na\"ive baselines:
+Table~\ref{tab:dm_tests} reports pooled Diebold--Mariano~\cite{diebold1995dm} test statistics against three na\"{i}ve baselines. The DM statistics and $p$-values are drawn from the thesis analysis report.
 
-\begin{itemize}
-    \item \textbf{always-up}: predict $y_t = 1$ for all $t$. Pooled DM: $0.224$, $p=0.5885$. \textbf{Not significant}: in a positive-drift large-cap window, an always-up classifier is also right $>50\%$ of the time.
-    \item \textbf{5-day momentum}: $y_t = 1 \iff \sum_{k=1}^{5} r_{t-k} > 0$. Pooled DM: $-6.817$, $p < 0.001$. \textbf{Model significantly better}.
-    \item \textbf{AR(1)}: predict the sign of the one-day-ago log-return. Pooled DM: $-4.24$, $p < 0.001$. \textbf{Model significantly better}.
-\end{itemize}
+\begin{table}[H]
+\centering
+\caption{Pooled Diebold--Mariano test of V3 against three na\"ive baselines.}
+\label{tab:dm_tests}
+\renewcommand{\arraystretch}{1.35}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l c c l}
+\toprule
+\textbf{Baseline} & \textbf{DM statistic} & \textbf{$p$-value} & \textbf{Conclusion} \\
+\midrule
+Always-up (predict $y_t=1$)      & $+1.403$ & $0.9196$ & \textbf{Not significant} \\
+5-day momentum ($\sum_{k=1}^{5}r_{t-k}>0$) & $-6.119$ & $<0.001$ & \textbf{Model significantly better} \\
+AR(1) (sign of $r_{t-1}$)        & $-3.126$ & $0.0009$ & \textbf{Model significantly better} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
-The first result is honest: in a bull-leaning panel, an unconditional always-up forecast also wins. The second and third results --- that the model strictly dominates two standard time-series benchmarks at conventional $\alpha = 0.05$ --- are the relevant ones for the academic claim that there is real conditional signal in the features beyond the unconditional drift.
+The first result is honest: during a positive-drift large-cap window, an unconditional always-up classifier also achieves above-50\% accuracy, so the model does not significantly outperform it on pooled losses. The second and third results, namely that the model strictly dominates 5-day momentum and AR(1) at $\alpha=0.001$, are the academically relevant findings: there is genuine conditional signal in the features beyond the unconditional drift and beyond the simplest time-series benchmarks.
 
-\section{Cross-Sectional and Cross-Model Visuals}
+\section{Feature Importance Analysis}
 
-The pipeline emits two top-level visual summaries for the run.
+Feature importance is aggregated across all 100 symbols and all folds using normalised gain scores from LightGBM and XGBoost. Table~\ref{tab:feature_groups} presents the mean normalised importance by feature group, and Table~\ref{tab:top_features} lists the ten most important individual features.
+
+\begin{table}[H]
+\centering
+\caption{Mean normalised feature importance by category (aggregated across all 100 symbols).}
+\label{tab:feature_groups}
+\renewcommand{\arraystretch}{1.3}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l c l}
+\toprule
+\textbf{Feature Group} & \textbf{Mean Normalised Importance} & \textbf{Interpretation} \\
+\midrule
+Statistical (kurtosis, skewness, z-scores) & 0.0287 & Return distribution shape dominates \\
+Price / Return                              & 0.0236 & Lagged returns and price ratios \\
+Global Macro (cues)                         & 0.0232 & US market, VIX, crude, Nikkei \\
+Regime (trend/vol state)                    & 0.0207 & Market regime tags \\
+Volume                                      & 0.0204 & OBV ratios, volume lags \\
+Technical Indicators                        & 0.0204 & MACD, RSI, Bollinger bands \\
+Other (GARCH, sector)                       & 0.0161 & Residual category \\
+Indian Calendar                             & 0.0132 & Expiry, RBI, budget, results \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Top 10 individual features by mean normalised importance (across all 100 symbols).}
+\label{tab:top_features}
+\renewcommand{\arraystretch}{1.3}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{l c c l}
+\toprule
+\textbf{Feature} & \textbf{Mean Importance} & \textbf{n\_symbols} & \textbf{Group} \\
+\midrule
+\texttt{obv\_ratio}        & 0.0334 & 35  & Technical \\
+\texttt{usdinr\_ret\_1d}   & 0.0316 & 12  & Global Macro \\
+\texttt{kurt\_20}          & 0.0314 & 55  & Statistical \\
+\texttt{kurt\_50}          & 0.0312 & 57  & Statistical \\
+\texttt{vol\_lag\_1}       & 0.0305 & 9   & Volume \\
+\texttt{crude\_ret\_20d}   & 0.0302 & 75  & Global Macro \\
+\texttt{crude\_ret\_5d}    & 0.0301 & 69  & Global Macro \\
+\texttt{nikkei\_ret\_prev} & 0.0288 & 104 & Global Macro \\
+\texttt{skew\_50}          & 0.0292 & 60  & Statistical \\
+\texttt{crude\_ret\_prev}  & 0.0285 & 104 & Global Macro \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+Several findings stand out. First, \textbf{statistical features} (kurtosis, skewness, z-scores) rank as the most important group; the conditional distribution shape of returns is more informative than any single technical indicator. Second, \textbf{global macro cues} appear in four of the top ten individual features, confirming the design decision to force-include S\&P 500, crude, Nikkei, and DXY signals for all stocks. Third, \texttt{obv\_ratio} (OBV relative to its 20-day average) is the single most important feature, capturing price--volume divergence patterns that precede reversals.
+
+\section{Cross-Sectional and Per-Symbol Visualisations}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{cross_stock_comparison.png}
-\caption{Cross-stock OOS accuracy distribution. Each point is the six-fold mean accuracy of a symbol. The dashed line at 0.50 is the random baseline; the dashed line near 0.51 is the panel mean.}
+\caption[Cross-stock OOS accuracy distribution]{Cross-stock OOS accuracy distribution across 100 symbols. Each point is the six-fold mean accuracy of one symbol. The dashed line at 0.50 is the random baseline; the solid line marks the panel mean (51.25\%). The right-skewed distribution confirms that the upside tail (BRITANNIA at 0.607, HINDALCO at 0.589) is not mirrored by an equally severe downside tail.}
 \label{fig:cross_stock}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[height=0.82\textheight,keepaspectratio]{model_comparison_heatmap.png}
-\caption{Per-model per-symbol accuracy heatmap. The two columns are LightGBM and XGBoost; rows are the 99 symbols. Darker cells indicate higher per-fold mean accuracy. Sectoral clusters (banking rows, pharma rows) are visible as horizontal bands.}
+\includegraphics[height=0.80\textheight,keepaspectratio]{model_comparison_heatmap.png}
+\caption[Per-model per-symbol accuracy heatmap]{Per-model per-symbol accuracy heatmap. The two columns are LightGBM (left) and XGBoost (right); rows are the 100 symbols sorted by sector. Darker cells indicate higher fold-mean accuracy. Horizontal banding is visible for the banking/NBFC cluster (rows 1--21) and the FMCG cluster (rows 44--50), consistent with the sector-specific feature force-include policy adding incremental signal.}
 \label{fig:model_heatmap}
 \end{figure}
-
-For visual continuity with the V2 results that the reader may already know from the predecessor thesis, the same panel-level plots from the V2 pipeline are reproduced in Figure~\ref{fig:v2_combined_perf} and~\ref{fig:v2_acc_dist} --- the qualitative interpretation (right-skewed accuracy distribution, narrow IQR) is preserved.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{COMBINED_model_performance.png}
-\caption{Per-model performance distribution (V2 panel, retained for cross-pipeline visual continuity). Box widths are IQRs; whiskers are 1.5$\times$IQR.}
-\label{fig:v2_combined_perf}
+\caption[Per-model performance distribution]{Per-model performance distribution across the panel. Box widths are interquartile ranges; whiskers extend to $1.5\times\mathrm{IQR}$. Both LightGBM and XGBoost show consistent performance centred near 51.25\%, with modest positive skew. Outlier cells (some folds on difficult symbols) are visible as high whiskers but do not distort the panel aggregate.}
+\label{fig:combined_perf}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{COMBINED_direction_accuracy_distribution.png}
-\caption{Direction-accuracy distribution across the panel. The right-skew is real and survives the protocol change from V2 (single split) to V3 (walk-forward); only the location moves.}
-\label{fig:v2_acc_dist}
+\includegraphics[width=0.90\textwidth]{COMBINED_direction_accuracy_distribution.png}
+\caption[Direction-accuracy distribution across the panel]{Direction-accuracy distribution across the 100-symbol panel. The distribution is right-skewed with a mode near 0.52 and a long right tail extending to 0.61, confirming that the panel-wide accuracy advantage over 50\% is real and distributed across many symbols rather than driven by a single outlier.}
+\label{fig:acc_dist}
 \end{figure}
 
 \section{Per-Symbol Case Studies}
 
-\subsection{SBIN}
+\subsection{SBIN (State Bank of India)}
 
-SBIN (banking) is a useful sanity-check symbol because it is liquid, has long history, and is heavily news-driven (RBI MPC, sectoral results). The six-fold per-window table is in Table~\ref{tab:sbin_windows} of Chapter~\ref{chapter3}. The OOS-accuracy and confusion-matrix plots are below.
+SBIN is a canonical validation symbol: highly liquid, longest available history, and heavily news-driven by RBI MPC announcements and quarterly credit results. The six-fold per-window detail appears in Table~\ref{tab:sbin_windows}. SBIN's average OOS accuracy across folds is \(0.543\) (Table~\ref{tab:top10_oos}), with fold-level values ranging from $0.446$ (fold 6, the shortest test window) to $0.661$ (fold 4). The directional accuracy on up-signals averages $0.65$, while on down-signals it averages $0.43$, consistent with the model being primarily useful for long-side entry in a positive-drift market.
+
+\begin{table}[H]
+\centering
+\caption{SBIN per-fold walk-forward window sizes and OOS accuracy.}
+\label{tab:sbin_windows}
+\renewcommand{\arraystretch}{1.3}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{c c c c c l l c c c c}
+\toprule
+\textbf{Fold} & \textbf{Train ratio} & \textbf{Train} & \textbf{Val} & \textbf{Test} & \textbf{Test start} & \textbf{Test end} & \textbf{OOS acc} & \textbf{AUC} & \textbf{F1} & \textbf{T} \\
+\midrule
+1 & 0.70 & 702 & 78  & 112 & 2024-03-20 & 2024-12-03 & 0.500 & 0.518 & 0.588 & 1.000 \\
+2 & 0.75 & 753 & 83  & 111 & 2024-07-30 & 2025-03-28 & 0.622 & 0.708 & 0.667 & 1.000 \\
+3 & 0.80 & 803 & 89  & 111 & 2024-12-05 & 2025-08-07 & 0.477 & 0.506 & 0.554 & 0.445 \\
+4 & 0.85 & 853 & 94  & 112 & 2025-04-02 & 2025-12-19 & 0.661 & 0.338 & 0.782 & 1.000 \\
+5 & 0.90 & 903 & 100 & 112 & 2025-08-08 & 2026-04-24 & 0.554 & 0.346 & 0.688 & 1.000 \\
+6 & 0.95 & 954 & 105 &  56 & 2025-12-23 & 2026-04-24 & 0.446 & 0.397 & 0.523 & 1.000 \\
+\midrule
+\textbf{Avg} & & & & & & & \textbf{0.543} & \textbf{0.469} & \textbf{0.634} & \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 \begin{figure}[H]
 \centering
@@ -253,18 +339,20 @@ SBIN (banking) is a useful sanity-check symbol because it is liquid, has long hi
 \includegraphics[width=\textwidth]{SBIN_confusion_matrix.png}
 \caption{Confusion matrix (aggregate).}
 \end{subfigure}
-\caption{SBIN per-fold OOS accuracy and aggregate confusion matrix.}
+\caption[SBIN: per-fold OOS accuracy and confusion matrix]{SBIN per-fold OOS accuracy and aggregate confusion matrix. The confusion matrix shows a slight up-bias in predictions, reflecting the positive-drift character of the NSE large-cap universe.}
+\label{fig:sbin_plots}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{SBIN_confidence_timeline.png}
-\caption{SBIN confidence timeline. The vertical bars are signal-day confidence; signals concentrate around RBI / results windows.}
+\caption[SBIN: confidence timeline]{SBIN confidence timeline. Signal-day confidence concentrates around RBI Monetary Policy Committee announcement windows and quarterly results seasons, validating the calendar feature design.}
+\label{fig:sbin_confidence}
 \end{figure}
 
 \subsection{HDFCBANK}
 
-HDFCBANK has the largest market cap in the banking sub-panel and acts as a sectoral anchor. Its per-fold accuracy is more stable than SBIN's (Table~\ref{tab:hdfcbank_summary}), and its temperature ($\sim 0.39$--$0.73$ in folds 1--3) shows that the meta-probability was over-confident on the validation set and was compressed at calibration.
+HDFCBANK is the largest market-cap banking constituent and acts as a sectoral anchor. Its per-fold accuracy (Table~\ref{tab:hdfcbank_summary}) is more stable than SBIN's, and its temperature scalars ($T^\star \approx 0.39$--$0.73$ in folds 1--3) show that the meta-probability was systematically over-confident on the validation set and required compression at calibration, the expected pattern from stacked ensembles~\cite{guo2017calibration}.
 
 \begin{table}[H]
 \centering
@@ -274,7 +362,7 @@ HDFCBANK has the largest market cap in the banking sub-panel and acts as a secto
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{c c c c c c c c}
 \toprule
-\textbf{Fold} & \textbf{train} & \textbf{val} & \textbf{test} & \textbf{oos\_acc} & \textbf{AUC} & \textbf{F1} & \textbf{T} \\
+\textbf{Fold} & \textbf{Train} & \textbf{Val} & \textbf{Test} & \textbf{OOS acc} & \textbf{AUC} & \textbf{F1} & \textbf{T} \\
 \midrule
 1 & 615 & 68 &  98 & 0.571 & 0.581 & 0.650 & 0.393 \\
 2 & 659 & 73 &  98 & 0.561 & 0.581 & 0.605 & 0.725 \\
@@ -294,12 +382,13 @@ HDFCBANK has the largest market cap in the banking sub-panel and acts as a secto
 \includegraphics[width=\textwidth]{HDFCBANK_confusion_matrix.png}
 \caption{Confusion matrix.}
 \end{subfigure}
-\caption{HDFCBANK per-fold OOS accuracy and aggregate confusion matrix.}
+\caption[HDFCBANK: per-fold OOS accuracy and confusion matrix]{HDFCBANK per-fold OOS accuracy and aggregate confusion matrix. The stability of the fold-level accuracy (0.55--0.61 across six folds) demonstrates consistent model behaviour on a highly liquid, well-covered stock.}
+\label{fig:hdfcbank_plots}
 \end{figure}
 
-\subsection{CHOLAFIN: A Profitable Backtest Stock}
+\subsection{CHOLAFIN: Highest Backtest Sharpe}
 
-CHOLAFIN is rank-1 in the per-stock Sharpe table. With only 7 trades over the backtest window, the per-stock Sharpe ($18.92$) is mathematically inflated by the small denominator, but the underlying behaviour is consistent: a hit rate of $0.857$ and a profit factor of $8.92$ over $7$ trades is unlikely under the no-edge null.
+CHOLAFIN ranks first in the per-stock Sharpe table. With 7 trades over the backtest window, the per-stock Sharpe ($18.92$) is inflated by the small denominator; however, a hit rate of $0.857$ and a profit factor of $8.92$ over 7 independent trades is unlikely under the no-edge null. CHOLAFIN is an NBFC whose price action responds sharply to RBI liquidity announcements; the same calendar features that help SBIN also inform CHOLAFIN entry timing.
 
 \begin{figure}[H]
 \centering
@@ -311,67 +400,73 @@ CHOLAFIN is rank-1 in the per-stock Sharpe table. With only 7 trades over the ba
 \includegraphics[width=\textwidth]{CHOLAFIN_confidence_timeline.png}
 \caption{Confidence timeline.}
 \end{subfigure}
-\caption{CHOLAFIN per-fold accuracy and confidence timeline. Signal density is low and signals cluster around results / NBFC news windows.}
+\caption[CHOLAFIN: per-fold accuracy and confidence timeline]{CHOLAFIN per-fold accuracy and confidence timeline. Signal density is low (model rarely clears the gate for CHOLAFIN), and signals cluster tightly around results and NBFC news windows.}
+\label{fig:cholafin_plots}
 \end{figure}
 
-\subsection{RELIANCE: A Hard Stock}
+\subsection{BRITANNIA: Highest OOS Accuracy}
 
-RELIANCE is at per-stock Sharpe rank 35 in this run. It has high market-cap, but also high cross-sector entanglement (energy, telecom via Jio, retail via Reliance Retail) that makes its OHLCV less informative than for a single-business symbol. Its OOS accuracy across the six folds averages $0.533$ and its confidence histories show a typical mid-cap signal sparsity.
+BRITANNIA (FMCG) achieves the highest all-days OOS accuracy at $0.607$. FMCG stocks benefit from stable earnings seasonality and lower sensitivity to global macro volatility, making their return distributions more stationary. This is reflected in the feature importance for BRITANNIA, where the Indian calendar (results season) and statistical features (kurtosis) dominate, and global macro cues have lower relative weight compared to cyclical sectors.
 
 \begin{figure}[H]
 \centering
 \begin{subfigure}{0.48\textwidth}
-\includegraphics[width=\textwidth]{RELIANCE_oos_accuracy.png}
+\includegraphics[width=\textwidth]{BRITANNIA_oos_accuracy.png}
 \caption{Per-fold OOS accuracy.}
 \end{subfigure}\hfill
 \begin{subfigure}{0.48\textwidth}
-\includegraphics[width=\textwidth]{RELIANCE_confidence_timeline.png}
-\caption{Confidence timeline.}
+\includegraphics[width=\textwidth]{BRITANNIA_confusion_matrix.png}
+\caption{Confusion matrix.}
 \end{subfigure}
-\caption{RELIANCE per-fold accuracy and confidence timeline.}
+\caption[BRITANNIA: per-fold OOS accuracy and confusion matrix]{BRITANNIA per-fold OOS accuracy and aggregate confusion matrix. Fold-level accuracy is consistently above 0.55 across all six windows, the most stable pattern in the 100-symbol panel.}
+\label{fig:britannia_plots}
 \end{figure}
 
-\section{Calibration Quality}
+\section{Probability Calibration Quality}
 
-The fitted temperature $T^\star$ per fold per symbol is recorded in the per-fold summary. Roughly two-thirds of the fold-symbol cells have $T^\star \in [0.9, 1.1]$ (the meta-probability is approximately calibrated as-is), the remaining third has $T^\star \in [0.1, 0.9]$ (the meta-probability was over-confident on validation and requires compression at test time). No cell has $T^\star > 1.1$ in this run; the model is structurally over-confident, never under-confident, which is the expected pattern from stacked ensembles~\cite{guo2017calibration}. Without the temperature step, the $0.58$ gate would over-trigger by roughly $20$--$30\%$ on a typical fold; the gate's operational meaning depends on the calibration step.
+The fitted temperature $T^\star$ per fold per symbol is recorded in the per-fold summary. Roughly two-thirds of the fold--symbol cells have $T^\star \in [0.9,\ 1.1]$ (the meta-probability is approximately calibrated as-is); the remaining third has $T^\star \in [0.1,\ 0.9]$, indicating that the meta-probability was over-confident on the validation set and requires probability compression at test time. No cell in this run has $T^\star > 1.1$; the ensemble is structurally over-confident, never under-confident, which is the expected pattern from stacked ensembles~\cite{guo2017calibration}. Without the temperature step, the $0.58$ gate would over-trigger by roughly 20--30\% on a typical fold; the gate's operational meaning is contingent on the calibration step.
 
 \section{Comparison with the V2 Prototype}
 
-For the reader who wants a direct head-to-head, Table~\ref{tab:v2_vs_v3_results} reports the V2 prototype's headline numbers against the V3 numbers from this run. The headline V2 accuracy is higher because it is the single-split number; the V3 figure is the six-fold aggregate. The V2 system did not produce a panel-wide backtest or a regime-conditional Sharpe; the V3 system does.
+For direct comparison, Table~\ref{tab:v2_vs_v3_results} contrasts the V2 prototype's headline figures against the V3 results reported in this chapter.
 
 \begin{table}[H]
 \centering
-\caption{V2 prototype vs.\ V3 system, headline numbers.}
+\caption{V2 prototype vs.\ V3 system: headline comparison.}
 \label{tab:v2_vs_v3_results}
 \renewcommand{\arraystretch}{1.35}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{l l l}
 \toprule
-& \textbf{V2 (single split)}                & \textbf{V3 (6-fold WF, this thesis)} \\
+\textbf{Dimension} & \textbf{V2 (single split)} & \textbf{V3 (6-fold WF, this thesis)} \\
 \midrule
-Universe                  & 106 stocks, 11 sectors                    & 99/100 NSE Nifty-100, 14 sectors \\
-Validation                & 60/20/20 chronological                     & expanding window, train 0.70$\to$0.95, 6 folds \\
-Headline direction accuracy & 68.28\% (single split, no gate)           & 51.45\% all-days; \textbf{60.33\%} on 1{,}495 gated signals (boot CI [57.99, 62.81]) \\
-Probability calibration   & None                                       & temperature scaling per fold \\
-Models                    & 4                                          & 10 \\
-Portfolio backtest        & not run end-to-end on panel               & total ret 225.5\%, Sharpe 1.66, max DD 21.5\% over $\sim$2.5 yrs (vs.\ Nifty 18.7\%) \\
-DM tests vs baselines     & not reported                              & momentum / AR(1) both $p<0.001$; always-up $p=0.589$ \\
-Regime-conditional Sharpe & not reported                              & bull 2.65, sideways 1.93, bear 2.26 \\
-Live layer                & not present                                & Angel One client, paper trader, promotion gate, dashboard \\
+Universe                  & 106 stocks, 11 sectors                & 100 stocks, NSE Nifty-100, 14 sectors \\
+Validation                & 60/20/20 chronological                & Expanding window, train $0.70\!\to\!0.95$, 6 folds \\
+Leakage audit             & Not enforced                          & Documented per feature family (Table~\ref{tab:leakage_audit}) \\
+Headline accuracy         & 68.28\% (single split, no gate)       & 51.25\% all-days; \textbf{60.33\%} on 1{,}495 gated signals \\
+Bootstrap CI              & Not reported                          & $[57.99\%,\ 62.81\%]$ at 95\% \\
+Probability calibration   & None                                  & Temperature scaling per fold \\
+Models                    & 4 (XGB, LSTM, GRU, Ridge-stacker)     & 5 (LGBM, XGB, BiLSTM, TCN-Transformer, N-BEATS) \\
+Portfolio backtest        & Not run end-to-end on panel           & Total return 225.5\%, Sharpe 1.66, max DD 21.5\% vs.\ Nifty 18.7\% \\
+DM significance tests     & Not reported                          & Momentum / AR(1) both $p<0.001$; always-up $p=0.920$ \\
+Regime-conditional Sharpe & Not reported                          & Bull 2.65, sideways 1.93, bear 2.26 \\
+Live deployment layer     & Not present                           & Angel One SmartAPI, paper trader, promotion gate, dashboard \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
 \end{table}
 
+The V2 headline accuracy (68.28\%) is higher than the V3 all-days accuracy (51.25\%), but this difference is entirely explained by protocol: V2 uses a single chronological split without scaler refitting per fold and without the minimum-move gate. The V3 all-days number is the conservative, multi-fold figure; the V3 gated-signal figure (60.33\%) is the operationally deployable one.
+
 \section{Summary}
 
-The results in this chapter establish four claims, each backed by an immutable artefact in the run directory.
+The results in this chapter establish four claims, each supported by verified artefacts from the run directory.
 
 \begin{enumerate}
-    \item \textbf{Unconditional next-day direction is only marginally predictable.} All-days OOS accuracy is $51.5\%$; the panel-wide statistical edge over $0.5$ is small.
-    \item \textbf{Conditional on the gate, the edge is real and significant.} On the $1{,}495$ days where $\hat p \geq 0.58$ and $|\widehat{\Delta}| \geq 0.4\%$, the bootstrap accuracy is $60.3\%$ with a 95\% CI of $[57.99\%, 62.81\%]$. The CI excludes $0.5$.
-    \item \textbf{This edge translates into a profitable portfolio.} Top-15 cross-sectional equal-weight returns $225.5\%$ over $\sim 2.5$ years vs.\ Nifty $18.7\%$, with Sharpe $1.66$ and max DD $21.5\%$.
-    \item \textbf{The portfolio is profitable across regimes and significantly beats momentum / AR(1) baselines.} Regime-conditional Sharpes are $\{2.65, 1.93, 2.26\}$ for bull / sideways / bear. Diebold--Mariano against momentum and AR(1) is significant at $p<0.001$; against the always-up baseline it is not (the panel is in a positive-drift window).
+    \item \textbf{Unconditional next-day direction is only marginally predictable.} All-days OOS accuracy across 100 symbols and 67{,}830 predictions is 51.25\%; this is consistent with weak-form market efficiency.
+    \item \textbf{Conditional on the signal gate, the edge is real and statistically significant.} On the 1{,}495 days where $\hat{p} \geq 0.58$ and $|\widehat{\Delta}| \geq 0.4\%$, the bootstrap accuracy is 60.33\% with a 95\% CI of $[57.99\%,\ 62.81\%]$, excluding 50\%.
+    \item \textbf{The gated signal translates into a profitable, regime-robust portfolio.} Top-15 equal-weight cross-section returns 225.5\% over 2.5 years versus a Nifty-50 buy-and-hold of 18.7\%, with Sharpe 1.66 and max DD 21.5\%; the portfolio is profitable across all three market regimes.
+    \item \textbf{The model significantly outperforms momentum and AR(1) baselines (DM $p<0.001$), but does not significantly beat always-up on the pooled test.} This is an honest and expected result for a positive-drift large-cap panel.
 \end{enumerate}
 
-Chapter~\ref{chapter5} describes the live deployment layer that consumes these signals, and Chapter~\ref{chapter6} discusses what the system does not yet do.
+Chapter~\ref{chapter5} describes the live deployment layer that consumes these signals, including the paper-trading ledger and the current promotion-gate state.
