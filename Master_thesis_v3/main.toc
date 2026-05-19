@@ -1,26 +1,25 @@
 \babel@toc {english}{}\relax 
 \contentsline {chapter}{Abstract}{iv}{chapter*.1}%
-\contentsline {chapter}{Contents}{vi}{chapter*.1}%
-\contentsline {chapter}{List of Figures}{ix}{chapter*.2}%
-\contentsline {chapter}{List of Tables}{x}{chapter*.3}%
+\contentsline {chapter}{Contents}{v}{chapter*.1}%
+\contentsline {chapter}{List of Figures}{viii}{chapter*.2}%
+\contentsline {chapter}{List of Tables}{ix}{chapter*.3}%
 \contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Problem Statement}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Goals and Contributions}{2}{section.1.2}%
 \contentsline {section}{\numberline {1.3}Scope and Universe}{3}{section.1.3}%
-\contentsline {section}{\numberline {1.4}Distinction from the V2 Prototype}{3}{section.1.4}%
-\contentsline {section}{\numberline {1.5}Organisation of the Thesis}{4}{section.1.5}%
+\contentsline {section}{\numberline {1.4}Our Motivation Behind this Work}{3}{section.1.4}%
 \contentsline {chapter}{\numberline {2}Literature Survey}{5}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Scope of the Survey}{5}{section.2.1}%
 \contentsline {section}{\numberline {2.2}The Directional Forecasting Problem and the EMH Null}{5}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Gradient Boosting for Tabular Finance}{5}{section.2.3}%
+\contentsline {section}{\numberline {2.3}Gradient Boosting for Tabular Finance}{6}{section.2.3}%
 \contentsline {section}{\numberline {2.4}Deep Sequence Models on Daily OHLCV}{6}{section.2.4}%
-\contentsline {section}{\numberline {2.5}Ensembling, Stacking, and the Meta-Learner}{6}{section.2.5}%
+\contentsline {section}{\numberline {2.5}Ensembling, Stacking, and the Meta-Learner}{7}{section.2.5}%
 \contentsline {section}{\numberline {2.6}Probability Calibration}{7}{section.2.6}%
 \contentsline {section}{\numberline {2.7}Backtest Hygiene and Lookahead Bias}{7}{section.2.7}%
 \contentsline {section}{\numberline {2.8}Macro Cues and the Indian Calendar}{8}{section.2.8}%
 \contentsline {section}{\numberline {2.9}Indian-Market Prior Work}{8}{section.2.9}%
-\contentsline {section}{\numberline {2.10}What V3 Inherits and What It Changes}{8}{section.2.10}%
-\contentsline {chapter}{\numberline {3}The V3 Pipeline: Data, Features, Models, Validation, Calibration}{10}{chapter.3}%
+\contentsline {section}{\numberline {2.10}What This System Inherits and What It Changes}{9}{section.2.10}%
+\contentsline {chapter}{\numberline {3}The Pipeline: Data, Features, Models, Validation, Calibration}{10}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Pipeline Overview}{11}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Universe and Acquisition}{11}{section.3.2}%
 \contentsline {subsection}{\numberline {3.2.1}Universe}{11}{subsection.3.2.1}%
@@ -29,70 +28,76 @@
 \contentsline {subsection}{\numberline {3.3.1}Feature Families}{13}{subsection.3.3.1}%
 \contentsline {subsection}{\numberline {3.3.2}The Target}{14}{subsection.3.3.2}%
 \contentsline {subsection}{\numberline {3.3.3}Leakage Audit}{15}{subsection.3.3.3}%
-\contentsline {section}{\numberline {3.4}The Five-Model Committee}{15}{section.3.4}%
-\contentsline {section}{\numberline {3.5}Meta-Learner and Calibration}{16}{section.3.5}%
-\contentsline {subsection}{\numberline {3.5.1}Logistic Stacking}{16}{subsection.3.5.1}%
-\contentsline {subsection}{\numberline {3.5.2}Temperature Scaling}{17}{subsection.3.5.2}%
-\contentsline {section}{\numberline {3.6}Walk-Forward Validation}{17}{section.3.6}%
-\contentsline {subsection}{\numberline {3.6.1}Protocol}{17}{subsection.3.6.1}%
-\contentsline {subsection}{\numberline {3.6.2}What is Saved per Window}{18}{subsection.3.6.2}%
-\contentsline {section}{\numberline {3.7}Gating: Confidence Threshold and Minimum Move}{18}{section.3.7}%
-\contentsline {section}{\numberline {3.8}Portfolio Backtest Engine}{18}{section.3.8}%
-\contentsline {section}{\numberline {3.9}Parallelisation and Reproducibility}{18}{section.3.9}%
-\contentsline {subsection}{\numberline {3.9.1}Parallelisation}{19}{subsection.3.9.1}%
-\contentsline {subsection}{\numberline {3.9.2}Crash Resume}{19}{subsection.3.9.2}%
-\contentsline {subsection}{\numberline {3.9.3}Reproducibility}{19}{subsection.3.9.3}%
-\contentsline {section}{\numberline {3.10}Outputs: The Run Artefact Set}{19}{section.3.10}%
-\contentsline {chapter}{\numberline {4}Empirical Results}{21}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Aggregate Out-of-Sample Performance}{21}{section.4.1}%
-\contentsline {subsection}{\numberline {4.1.1}Per-Model Accuracy Comparison}{21}{subsection.4.1.1}%
-\contentsline {subsection}{\numberline {4.1.2}Top 10 Symbols by OOS Accuracy}{22}{subsection.4.1.2}%
-\contentsline {section}{\numberline {4.2}The Gated Signal: Where the Edge Lies}{22}{section.4.2}%
-\contentsline {subsection}{\numberline {4.2.1}Bootstrap Confidence Interval on Signal Days}{23}{subsection.4.2.1}%
-\contentsline {subsection}{\numberline {4.2.2}Economic Significance of the Gate Threshold}{23}{subsection.4.2.2}%
-\contentsline {section}{\numberline {4.3}Portfolio Backtest Results}{23}{section.4.3}%
-\contentsline {subsection}{\numberline {4.3.1}Equity Curve and Summary Statistics}{23}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Top Ranked Symbols in the Cross-Section}{24}{subsection.4.3.2}%
-\contentsline {section}{\numberline {4.4}Regime-Conditional Performance}{25}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}Regime Classification and Results}{25}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}Statistical Significance: Diebold--Mariano Tests}{26}{subsection.4.4.2}%
-\contentsline {section}{\numberline {4.5}Feature Importance Analysis}{26}{section.4.5}%
-\contentsline {section}{\numberline {4.6}Cross-Sectional and Per-Symbol Visualisations}{27}{section.4.6}%
-\contentsline {section}{\numberline {4.7}Per-Symbol Case Studies}{30}{section.4.7}%
-\contentsline {subsection}{\numberline {4.7.1}SBIN (State Bank of India)}{30}{subsection.4.7.1}%
-\contentsline {subsection}{\numberline {4.7.2}HDFCBANK}{31}{subsection.4.7.2}%
-\contentsline {subsection}{\numberline {4.7.3}CHOLAFIN: Highest Backtest Sharpe}{32}{subsection.4.7.3}%
-\contentsline {subsection}{\numberline {4.7.4}BRITANNIA: Highest OOS Accuracy}{33}{subsection.4.7.4}%
-\contentsline {section}{\numberline {4.8}Probability Calibration Quality}{33}{section.4.8}%
-\contentsline {section}{\numberline {4.9}Comparison with the V2 Prototype}{33}{section.4.9}%
-\contentsline {section}{\numberline {4.10}Summary}{34}{section.4.10}%
-\contentsline {chapter}{\numberline {5}Live Deployment: Paper Trading, Promotion Gate, and the Angel One SmartAPI Bridge}{35}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Architecture}{35}{section.5.1}%
-\contentsline {section}{\numberline {5.2}End-to-End Algo-Trading Flow}{35}{section.5.2}%
-\contentsline {section}{\numberline {5.3}Components}{36}{section.5.3}%
-\contentsline {section}{\numberline {5.4}The Indian Brokerage Cost Model}{37}{section.5.4}%
-\contentsline {section}{\numberline {5.5}The Paper Trader and the Ledger}{39}{section.5.5}%
-\contentsline {section}{\numberline {5.6}The Promotion Gate}{39}{section.5.6}%
-\contentsline {section}{\numberline {5.7}The Angel One SmartAPI Bridge}{40}{section.5.7}%
-\contentsline {section}{\numberline {5.8}The FastAPI Backend and the Vite/React Dashboard}{41}{section.5.8}%
-\contentsline {section}{\numberline {5.9}Operational Cadence}{41}{section.5.9}%
-\contentsline {section}{\numberline {5.10}What Live Trading Does Not Currently Cover}{41}{section.5.10}%
-\contentsline {chapter}{\numberline {6}Discussion, Limitations, and Future Work}{43}{chapter.6}%
-\contentsline {section}{\numberline {6.1}What the Thesis Demonstrates}{43}{section.6.1}%
-\contentsline {section}{\numberline {6.2}What is Genuinely New Over the V2 Prototype}{43}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Honest Limitations}{44}{section.6.3}%
-\contentsline {subsection}{\numberline {6.3.1}The All-Days Headline is Marginal}{44}{subsection.6.3.1}%
-\contentsline {subsection}{\numberline {6.3.2}Two-and-a-Half Year Out-of-Sample Window}{44}{subsection.6.3.2}%
-\contentsline {subsection}{\numberline {6.3.3}Always-Up Beats the Model on the Pooled DM Test}{45}{subsection.6.3.3}%
-\contentsline {subsection}{\numberline {6.3.4}Deep Models Underperformed in the Meta-Stack}{45}{subsection.6.3.4}%
-\contentsline {subsection}{\numberline {6.3.5}Single Probability Threshold for All Symbols}{45}{subsection.6.3.5}%
-\contentsline {subsection}{\numberline {6.3.6}Live Layer is Built but Not Yet Promoted}{45}{subsection.6.3.6}%
-\contentsline {section}{\numberline {6.4}Roadmap}{45}{section.6.4}%
-\contentsline {section}{\numberline {6.5}Closing Remarks}{46}{section.6.5}%
+\contentsline {section}{\numberline {3.4}FinBERT-India: Domain-Adapted Sentiment Module}{15}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Base Model and Domain Adaptation Rationale}{15}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Training Corpus}{16}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Fine-Tuning Procedure}{16}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Validation Performance}{17}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}Inference Path and Backfill}{17}{subsection.3.4.5}%
+\contentsline {section}{\numberline {3.5}The Five-Model Ensemble}{17}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Meta-Learner and Calibration}{18}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1}Logistic Stacking}{18}{subsection.3.6.1}%
+\contentsline {subsection}{\numberline {3.6.2}Temperature Scaling}{19}{subsection.3.6.2}%
+\contentsline {section}{\numberline {3.7}Walk-Forward Validation}{19}{section.3.7}%
+\contentsline {subsection}{\numberline {3.7.1}Protocol}{19}{subsection.3.7.1}%
+\contentsline {subsection}{\numberline {3.7.2}What is Saved per Window}{20}{subsection.3.7.2}%
+\contentsline {section}{\numberline {3.8}Gating: Confidence Threshold and Minimum Move}{20}{section.3.8}%
+\contentsline {section}{\numberline {3.9}Portfolio Backtest Engine}{20}{section.3.9}%
+\contentsline {section}{\numberline {3.10}Parallelisation and Reproducibility}{20}{section.3.10}%
+\contentsline {subsection}{\numberline {3.10.1}Parallelisation}{21}{subsection.3.10.1}%
+\contentsline {subsection}{\numberline {3.10.2}Crash Resume}{21}{subsection.3.10.2}%
+\contentsline {subsection}{\numberline {3.10.3}Reproducibility}{21}{subsection.3.10.3}%
+\contentsline {section}{\numberline {3.11}Outputs: The Run Artefact Set}{21}{section.3.11}%
+\contentsline {chapter}{\numberline {4}Empirical Results}{23}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Aggregate Out-of-Sample Performance}{23}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Per-Model Accuracy Comparison}{23}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}Top 10 Tickers by OOS Accuracy}{24}{subsection.4.1.2}%
+\contentsline {section}{\numberline {4.2}The Gated Signal: Where the Edge Lies}{24}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Bootstrap Confidence Interval on Signal Days}{25}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Economic Significance of the Gate Threshold}{25}{subsection.4.2.2}%
+\contentsline {section}{\numberline {4.3}Portfolio Backtest Results}{25}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Equity Curve and Summary Statistics}{25}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Top Ranked Tickers in the Cross-Section}{26}{subsection.4.3.2}%
+\contentsline {section}{\numberline {4.4}Regime-Conditional Performance}{27}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Regime Classification and Results}{27}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Statistical Significance: Diebold--Mariano Tests}{28}{subsection.4.4.2}%
+\contentsline {section}{\numberline {4.5}Feature Importance Analysis}{28}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Cross-Sectional and Per-Ticker Visualisations}{29}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Per-Ticker Case Studies}{32}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}SBIN (State Bank of India)}{32}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}HDFCBANK}{34}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}CHOLAFIN: Highest Backtest Sharpe}{35}{subsection.4.7.3}%
+\contentsline {subsection}{\numberline {4.7.4}BRITANNIA: Highest OOS Accuracy}{35}{subsection.4.7.4}%
+\contentsline {section}{\numberline {4.8}Probability Calibration Quality}{36}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Comparison with the Prior Prototype}{36}{section.4.9}%
+\contentsline {section}{\numberline {4.10}Summary}{37}{section.4.10}%
+\contentsline {chapter}{\numberline {5}Live Deployment: Paper Trading, Promotion Gate, and the Angel One SmartAPI Bridge}{39}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Architecture}{39}{section.5.1}%
+\contentsline {section}{\numberline {5.2}End-to-End Algo-Trading Flow}{39}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Components}{40}{section.5.3}%
+\contentsline {section}{\numberline {5.4}The Indian Brokerage Cost Model}{41}{section.5.4}%
+\contentsline {section}{\numberline {5.5}The Paper Trader and the Ledger}{43}{section.5.5}%
+\contentsline {section}{\numberline {5.6}The Promotion Gate}{43}{section.5.6}%
+\contentsline {section}{\numberline {5.7}The Angel One SmartAPI Bridge}{44}{section.5.7}%
+\contentsline {section}{\numberline {5.8}The FastAPI Backend and the Vite/React Dashboard}{45}{section.5.8}%
+\contentsline {section}{\numberline {5.9}Operational Cadence}{45}{section.5.9}%
+\contentsline {section}{\numberline {5.10}What Live Trading Does Not Currently Cover}{45}{section.5.10}%
+\contentsline {chapter}{\numberline {6}Discussion, Limitations, and Future Work}{46}{chapter.6}%
+\contentsline {section}{\numberline {6.1}What the Thesis Demonstrates}{46}{section.6.1}%
+\contentsline {section}{\numberline {6.2}What is Genuinely New Over the Prior Prototype}{46}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Honest Limitations}{47}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}The All-Days Headline is Marginal}{47}{subsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.3.2}Two-and-a-Half Year Out-of-Sample Window}{47}{subsection.6.3.2}%
+\contentsline {subsection}{\numberline {6.3.3}Always-Up Beats the Model on the Pooled DM Test}{48}{subsection.6.3.3}%
+\contentsline {subsection}{\numberline {6.3.4}Deep Models Underperformed in the Meta-Stack}{48}{subsection.6.3.4}%
+\contentsline {subsection}{\numberline {6.3.5}Single Probability Threshold for All Tickers}{48}{subsection.6.3.5}%
+\contentsline {subsection}{\numberline {6.3.6}Live Layer is Built but Not Yet Promoted}{48}{subsection.6.3.6}%
+\contentsline {section}{\numberline {6.4}Roadmap}{48}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Closing Remarks}{49}{section.6.5}%
 \setcounter {tocdepth}{0}
-\contentsline {chapter}{Appendix A: Per-Symbol OOS Summary}{48}{appendix*.40}%
-\contentsline {chapter}{Appendix B: Configuration Snapshot}{50}{table.Alph0.1}%
-\contentsline {chapter}{Appendix C: NSE Calendar Dates}{51}{table.Alph0.1}%
-\contentsline {chapter}{Appendix D: Run Artefacts}{52}{table.Alph0.1}%
-\contentsline {chapter}{Appendix E: Software Stack}{53}{table.Alph0.1}%
-\contentsline {chapter}{Appendix F: Glossary}{53}{table.caption.41}%
+\contentsline {chapter}{Appendix A: Per-Ticker OOS Summary}{51}{appendix*.40}%
+\contentsline {chapter}{Appendix B: Configuration Snapshot}{53}{table.Alph0.1}%
+\contentsline {chapter}{Appendix C: NSE Calendar Dates}{54}{table.Alph0.1}%
+\contentsline {chapter}{Appendix D: Run Artefacts}{55}{table.Alph0.1}%
+\contentsline {chapter}{Appendix E: Software Stack}{56}{table.Alph0.1}%
+\contentsline {chapter}{Appendix F: Glossary and Abbreviations}{56}{table.caption.41}%

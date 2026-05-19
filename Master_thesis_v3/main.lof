@@ -2,18 +2,18 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {3.1}{\ignorespaces End-to-end V3 pipeline}}{11}{figure.caption.7}%
+\contentsline {figure}{\numberline {3.1}{\ignorespaces End-to-end pipeline overview.}}{11}{figure.caption.7}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Cross-stock OOS accuracy distribution}}{27}{figure.caption.23}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces Per-model per-symbol accuracy heatmap}}{28}{figure.caption.24}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces Per-model performance distribution}}{29}{figure.caption.25}%
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Direction-accuracy distribution across the panel}}{29}{figure.caption.26}%
-\contentsline {figure}{\numberline {4.5}{\ignorespaces SBIN: per-fold OOS accuracy and confusion matrix}}{30}{figure.caption.28}%
-\contentsline {figure}{\numberline {4.6}{\ignorespaces SBIN: confidence timeline}}{31}{figure.caption.29}%
-\contentsline {figure}{\numberline {4.7}{\ignorespaces HDFCBANK: per-fold OOS accuracy and confusion matrix}}{32}{figure.caption.31}%
-\contentsline {figure}{\numberline {4.8}{\ignorespaces CHOLAFIN: per-fold accuracy and confidence timeline}}{32}{figure.caption.32}%
-\contentsline {figure}{\numberline {4.9}{\ignorespaces BRITANNIA: per-fold OOS accuracy and confusion matrix}}{33}{figure.caption.33}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Cross-stock OOS accuracy across the 100-ticker panel.}}{30}{figure.caption.23}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Per-model per-ticker accuracy heatmap (LightGBM vs.\ XGBoost).}}{31}{figure.caption.24}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Per-model performance distribution across the panel.}}{32}{figure.caption.25}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Direction-accuracy distribution across the 100-ticker panel.}}{32}{figure.caption.26}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces SBIN: per-fold OOS accuracy and aggregate confusion matrix.}}{33}{figure.caption.28}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces SBIN: signal-day confidence timeline.}}{34}{figure.caption.29}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces HDFCBANK: per-fold OOS accuracy and aggregate confusion matrix.}}{35}{figure.caption.31}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces CHOLAFIN: per-fold accuracy and confidence timeline.}}{35}{figure.caption.32}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces BRITANNIA: per-fold OOS accuracy and aggregate confusion matrix.}}{36}{figure.caption.33}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Live deployment architecture}}{35}{figure.caption.35}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces End-to-end algo-trading flow}}{36}{figure.caption.36}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Live deployment architecture.}}{39}{figure.caption.35}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces End-to-end algo-trading flow.}}{40}{figure.caption.36}%
 \addvspace {10\p@ }

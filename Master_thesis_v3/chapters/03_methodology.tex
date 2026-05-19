@@ -1,6 +1,6 @@
-\chapter{The V3 Pipeline: Data, Features, Models, Validation, Calibration} \label{chapter3}
+\chapter{The Pipeline: Data, Features, Models, Validation, Calibration} \label{chapter3}
 
-This chapter describes the V3 pipeline as it executes on the canonical run analysed in Chapter~\ref{chapter4}. Every numerical setting cited corresponds to a value stored in the system configuration; every structured output cited is produced as a side-effect of the run. The chapter is organised top-down: pipeline overview, universe and acquisition, feature engineering with the leakage audit, the five models, the meta-learner, the calibration step, the walk-forward protocol, the backtest engine, and the parallelisation and reproducibility infrastructure.
+This chapter describes the pipeline as it executes on the canonical run analysed in Chapter~\ref{chapter4}. Every numerical setting cited corresponds to a value stored in the system configuration; every structured output cited is produced as a side-effect of the run. The chapter is organised top-down: pipeline overview, universe and acquisition, feature engineering with the leakage audit, the five-model ensemble, the meta-learner, the calibration step, the walk-forward protocol, the backtest engine, and the parallelisation and reproducibility infrastructure.
 
 \section{Pipeline Overview}
 
@@ -22,7 +22,7 @@ This chapter describes the V3 pipeline as it executes on the canonical run analy
 \node[stage, right=of cues] (cal)  {NSE calendar\\\tiny Expiry, RBI, Budget, Results};
 
 % Row 2: raw store
-\node[data,  below=of cues] (raw) {Raw OHLCV Store\\\tiny incremental per-symbol parquet};
+\node[data,  below=of cues] (raw) {Raw OHLCV Store\\\tiny incremental per-ticker parquet};
 
 % Row 3: feature pipeline
 \node[stage, below=of raw] (feat) {Feature engine ($\sim$200 features)\\\tiny + leakage audit};
@@ -33,7 +33,7 @@ This chapter describes the V3 pipeline as it executes on the canonical run analy
 
 % Row 5: committee
 \node[model, below=of wf, minimum width=120mm, minimum height=14mm] (committee)
-  {\textbf{Five-model committee per (symbol, fold)}\\
+  {\textbf{Five-model ensemble per (ticker, fold)}\\
    \tiny LightGBM\,$\cdot$\,XGBoost\,$\cdot$\,BiLSTM\,$\cdot$\,TCN-Transformer\,$\cdot$\,N-BEATS};
 
 % Row 6: meta + temp
@@ -66,7 +66,7 @@ This chapter describes the V3 pipeline as it executes on the canonical run analy
 
 \end{tikzpicture}
 \end{adjustbox}
-\caption[End-to-end V3 pipeline]{End-to-end V3 pipeline: acquisition (yfinance + global cues + NSE calendar) $\to$ leakage-audited features $\to$ walk-forward training of the five-model committee $\to$ meta-stacking with temperature-scaled probability $\to$ gate $\to$ deployment chain (backtest, paper trader, promotion gate, Angel One).}
+\caption{End-to-end pipeline overview.}
 \label{fig:pipeline_overview}
 \end{figure}
 
@@ -74,11 +74,11 @@ This chapter describes the V3 pipeline as it executes on the canonical run analy
 
 \subsection{Universe}
 
-The configured universe is the Nifty-100 (Nifty-50 + Nifty Next-50) of the National Stock Exchange of India, grouped into 14 sector buckets (banking, IT, automobiles, FMCG, pharma, energy, metals, telecom, capital goods, cement, consumer durables, real estate, conglomerate / infra, defence). On the latest full run (\texttt{20260513\_164028}), all $100$ symbols passed the post-feature minimum-history filter. Table~\ref{tab:universe_sectors} reports the sector distribution.
+The configured universe is the Nifty-100 (Nifty-50 + Nifty Next-50) of the National Stock Exchange of India, grouped into 14 sector buckets (banking, IT, automobiles, FMCG, pharma, energy, metals, telecom, capital goods, cement, consumer durables, real estate, conglomerate / infra, defence). On the latest full run (May 2026), all $100$ tickers passed the post-feature minimum-history filter. Table~\ref{tab:universe_sectors} reports the sector distribution.
 
 \begin{table}[H]
 \centering
-\caption{Nifty-100 sector distribution used in V3}
+\caption{Nifty-100 sector distribution}
 \label{tab:universe_sectors}
 \renewcommand{\arraystretch}{1.3}
 \begin{adjustbox}{max width=\textwidth}
@@ -109,17 +109,17 @@ Defence              & 2  & BEL, HAL \\
 
 \subsection{Acquisition}
 
-Per-symbol OHLCV is downloaded from Yahoo Finance~\cite{yfinance} with a 0.3-second inter-request delay, parallelised through an 8-worker thread pool (I/O-bound). Each symbol's history is stored as an incremental parquet: subsequent runs read the existing record, identify the latest date, and fetch only new rows. Two global datasets are refreshed once per run: (i) global market cues comprising S\&P~500, Nasdaq, US VIX, DXY, Crude, Nikkei, Nifty-50, and Nifty Bank; and (ii) the USD/INR exchange rate. Data start date is 1 January 2018.
+Per-ticker OHLCV is downloaded from Yahoo Finance~\cite{yfinance} with a 0.3-second inter-request delay, parallelised through an 8-worker thread pool (I/O-bound). Each ticker's history is stored as an incremental parquet: subsequent runs read the existing record, identify the latest date, and fetch only new rows. Two global datasets are refreshed once per run: (i) global market cues comprising S\&P~500, Nasdaq, US VIX, DXY, Crude, Nikkei, Nifty-50, and Nifty Bank; and (ii) the USD/INR exchange rate. Data start date is 1 January 2018.
 
 \section{Feature Engineering}
 
 \subsection{Feature Families}
 
-The feature engine computes \(\sim\)200 features per row from the OHLCV plus the merged exogenous cues. The families are summarised in Table~\ref{tab:feature_families}. The post-engineering matrix is reduced by per-fold feature selection to 50 features; on the canonical run, the per-symbol selected count is $47$ or $50$ depending on whether the symbol belongs to the IT sector (where USD/INR and Nasdaq features are force-included) or the general sector bucket.
+The feature engine computes \(\sim\)200 features per row from the OHLCV plus the merged exogenous cues. The families are summarised in Table~\ref{tab:feature_families}. The post-engineering matrix is reduced by per-fold feature selection to 50 features; on the canonical run, the per-ticker selected count is $47$ or $50$ depending on whether the ticker belongs to the IT sector (where USD/INR and Nasdaq features are force-included) or the general sector bucket.
 
 \begin{table}[H]
 \centering
-\caption{Feature families in the V3 engine}
+\caption{Feature families in the pipeline}
 \label{tab:feature_families}
 \renewcommand{\arraystretch}{1.4}
 \begin{adjustbox}{max width=\textwidth}
@@ -152,17 +152,17 @@ Days with $|r_{t+1}| < 0.004$ are retained in training and labelled by their sig
 
 \subsection{Leakage Audit}
 
-Table~\ref{tab:leakage_audit} documents the five places where look-ahead could enter and how V3 prevents it.
+Table~\ref{tab:leakage_audit} documents the five places where look-ahead could enter and how the pipeline prevents it.
 
 \begin{table}[H]
 \centering
-\caption{Leakage audit and corresponding controls in V3}
+\caption{Leakage audit and corresponding pipeline controls}
 \label{tab:leakage_audit}
 \renewcommand{\arraystretch}{1.25}
 \footnotesize
 \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
 \toprule
-\textbf{Risk} & \textbf{Where it would enter} & \textbf{V3 control} \\
+\textbf{Risk} & \textbf{Where it would enter} & \textbf{Pipeline control} \\
 \midrule
 Target shift              & A feature shifted by $-N$ would share a future row with the target. & Target built by a single forward label shift applied after all features. No feature uses a forward shift. \\
 Scaler fit                & Fitting a scaler on the whole panel leaks the test-period mean into train. & Robust scaler fit on the training window only; transform applied to validation and test. \\
@@ -174,13 +174,58 @@ Temperature scaling       & Fitting $T$ on the test set would inflate the gate. 
 \end{tabularx}
 \end{table}
 
-\section{The Five-Model Committee}
+\section{FinBERT-India: Domain-Adapted Sentiment Module}
+\label{sec:finbert_india}
 
-V3 trains five heterogeneous binary classifiers per (symbol, fold). The tree pair (LightGBM, XGBoost) consumes a two-dimensional PCA-projected matrix; the three deep-sequence models (BiLSTM, TCN-Transformer, N-BEATS) consume a three-dimensional tensor with sequence length $T=20$ built by a sliding window over the scaled (non-PCA) features. The committee specification is in Table~\ref{tab:model_committee}.
+A common gap in the Indian-market literature is the absence of a sentiment signal channel: prior studies treat the problem as purely OHLCV-driven. To address this gap, a domain-adapted sentiment encoder, FinBERT-India, was constructed; the trained checkpoint ships with the accompanying source tree. The module is described in this section for completeness, but it is important to state up front that the sentiment channel has \textbf{not} yet been integrated into the walk-forward feature pipeline, and therefore did \emph{not} contribute to the May 2026 canonical results reported in Chapter~\ref{chapter4}. The system as evaluated is a pure price, macro, and calendar baseline; the sentiment integration is documented as immediate future work in Chapter~\ref{chapter6}.
+
+\subsection{Base Model and Domain Adaptation Rationale}
+
+The base model is \texttt{ProsusAI/finbert}~\cite{araci2019finbert}, a BERT-base encoder pre-trained on English financial corpora (Financial PhraseBank, Reuters TRC2-financial). FinBERT outperforms general-purpose BERT on English financial sentiment but, out of the box, is mis-calibrated on Indian-market text: it does not handle India-specific vocabulary such as \enquote{NPA}, \enquote{CASA ratio}, \enquote{FII outflow}, \enquote{RBI MPC verdict}, \enquote{rupee depreciation}, or Indian-broker phrasings of earnings beats and misses. The objective of fine-tuning is to transfer the financial-sentiment prior of FinBERT to the Indian-market lexicon while preserving the original three-way label scheme.
+
+\subsection{Training Corpus}
+
+A hand-curated corpus of \textbf{687 labelled Indian-finance sentences} was compiled, balanced across ten sectors: banking, IT, pharma, FMCG, auto, metals, telecom, power, real estate, and oil~\&~gas. Each sentence is a single financial-news headline-style sentence of 4--15 words (mean 10.7) labelled into one of three classes by domain-aware annotation:
+\begin{itemize}\itemsep1pt
+    \item \textbf{Positive (bullish)}: 198 samples (28.8\%). Examples: \enquote{HDFC Bank Q4 profit jumps 23 percent year on year beating estimates}; \enquote{TCS Q4 revenue beats estimates deal wins at record 11 billion dollars}.
+    \item \textbf{Negative (bearish)}: 238 samples (34.6\%). Examples: \enquote{SBI gross NPA surges to 5.1 percent from 3.8 percent previous quarter}; \enquote{Infosys cuts FY guidance citing weak banking sector spending in US}.
+    \item \textbf{Neutral (informational)}: 251 samples (36.5\%). Examples: \enquote{HDFC Bank board meeting scheduled April 18 to consider Q4 FY26 results}; \enquote{TCS to announce quarterly results on April 10 2026}.
+\end{itemize}
+
+The corpus deliberately concentrates on phrasings that are specific to Indian market reportage: result-day verdicts, RBI MPC outcomes, F\&O expiry commentary, FII/DII flow updates, asset-quality ratios, and rupee-INR moves. These are exactly the phrasings that an off-the-shelf English-trained FinBERT mis-classifies.
+
+\subsection{Fine-Tuning Procedure}
+
+Training was performed with the HuggingFace \texttt{Trainer} API. Key details:
+
+\begin{itemize}\itemsep1pt
+    \item \textbf{Split}: 80\%/20\% stratified by class, fixed seed 42; $n_{\text{train}}=549$, $n_{\text{val}}=138$.
+    \item \textbf{Optimisation}: AdamW with learning rate $1\times10^{-5}$, weight decay $0.01$, batch size 16, 8 epochs.
+    \item \textbf{Label remapping}: the training corpus uses the ordering $\{0\!=\!\text{neg},\,1\!=\!\text{neu},\,2\!=\!\text{pos}\}$ but FinBERT's pre-trained classification head outputs $\{0\!=\!\text{pos},\,1\!=\!\text{neg},\,2\!=\!\text{neu}\}$. Training labels are remapped to FinBERT's order before training so that the pre-trained classification head is preserved rather than randomly re-initialised.
+    \item \textbf{Tokeniser}: the original FinBERT WordPiece tokeniser (max length 128 tokens) is retained without modification.
+\end{itemize}
+
+\subsection{Validation Performance}
+
+On the held-out validation split (138 sentences), the fine-tuned FinBERT-India model attains:
+\begin{itemize}\itemsep1pt
+    \item Validation accuracy: \textbf{84.06\%}
+    \item Macro F1-score: \textbf{84.10\%}
+\end{itemize}
+
+These metrics are recorded alongside the trained weights in the repository for reproducibility. The accuracy comfortably exceeds the random baseline ($\sim 33\%$ for three balanced classes), confirming that the model has learnt non-trivial Indian-finance sentiment structure from the small but domain-focused fine-tuning corpus.
+
+\subsection{Inference Path and Backfill}
+
+A companion backfill script consumes Yahoo Finance news headlines per ticker, runs each headline through FinBERT-India, and writes a daily-aggregated sentiment record per ticker to a sentiment-history store. Each daily record contains a positive--neutral--negative probability distribution and a single signed sentiment score per ticker; these are designed as drop-in features that, once integrated into the walk-forward feature pipeline (Section~\ref{sec:walkforward}), will be subject to the same per-fold scaler, PCA, and leakage-audit discipline as the OHLCV and macro features. The marginal contribution of the sentiment channel to OOS accuracy and to the gated bootstrap accuracy is the immediate next experiment.
+
+\section{The Five-Model Ensemble}
+
+The system trains five heterogeneous binary classifiers per (ticker, fold). The tree pair (LightGBM, XGBoost) consumes a two-dimensional PCA-projected matrix; the three deep-sequence models (BiLSTM, TCN-Transformer, N-BEATS) consume a three-dimensional tensor with sequence length $T=20$ built by a sliding window over the scaled (non-PCA) features. The ensemble specification is in Table~\ref{tab:model_committee}.
 
 \begin{table}[H]
 \centering
-\caption{The five-model V3 committee}
+\caption{The five-model ensemble}
 \label{tab:model_committee}
 \renewcommand{\arraystretch}{1.4}
 \begin{adjustbox}{max width=\textwidth}
@@ -198,13 +243,13 @@ N-BEATS & N-BEATS          & 3 residual backcast blocks, 4 FC layers per block, 
 \end{adjustbox}
 \end{table}
 
-Storage budget is preserved by saving deep-learning model weights only for the \emph{last} fold per symbol (used for the production copy and live inference); intermediate-fold weights are discarded. This reduces checkpoint storage from $N_\mathrm{folds} \times N_\mathrm{DL}$ per symbol to $1 \times N_\mathrm{DL}$ per symbol, a $\sim$83\% reduction.
+Storage budget is preserved by saving deep-learning model weights only for the \emph{last} fold per ticker (used for the production copy and live inference); intermediate-fold weights are discarded. This reduces checkpoint storage from $N_\mathrm{folds} \times N_\mathrm{DL}$ per ticker to $1 \times N_\mathrm{DL}$ per ticker, a $\sim$83\% reduction.
 
 \section{Meta-Learner and Calibration}
 
 \subsection{Logistic Stacking}
 
-For each fold, the LightGBM and XGBoost out-of-fold validation probabilities are stacked into a 2-feature design matrix; a logistic regression ($\ell_2$ regularisation, $C=1$) is fit to map these probabilities to the validation labels. The three deep-learning probabilities are admitted into the stack only if their validation accuracy clears a sanity floor (otherwise their column is dropped to avoid feeding pure noise to the meta-learner). On the canonical run, the deep-learning pass-through floor was not consistently met across symbols, so the dominant meta-signal flowed through the tree stack; the resulting meta-probability therefore primarily reflects the logistic blend of LightGBM and XGBoost.
+For each fold, the LightGBM and XGBoost out-of-fold validation probabilities are stacked into a 2-feature design matrix; a logistic regression ($\ell_2$ regularisation, $C=1$) is fit to map these probabilities to the validation labels. The three deep-learning probabilities are admitted into the stack only if their validation accuracy clears a sanity floor (otherwise their column is dropped to avoid feeding pure noise to the meta-learner). On the canonical run, the deep-learning pass-through floor was not consistently met across tickers, so the dominant meta-signal flowed through the tree stack; the resulting meta-probability therefore primarily reflects the logistic blend of LightGBM and XGBoost.
 
 \subsection{Temperature Scaling}
 
@@ -214,16 +259,16 @@ T^\star \;=\; \arg\min_{T \in [0.05, 5]} \; \mathrm{NLL}\!\left(\sigma(z_v / T),
 \]
 using one-dimensional scalar optimisation, and apply $\hat p = \sigma(\mathrm{logit}(p) / T^\star)$ to the test slice. Temperature scaling preserves the model's ranking (so the AUC and the argmax accuracy are unchanged); it shifts the entire probability distribution toward observed frequencies so that the gate threshold $0.58$ becomes operationally meaningful.
 
-\section{Walk-Forward Validation}
+\section{Walk-Forward Validation}\label{sec:walkforward}
 
 \subsection{Protocol}
 
-For each symbol with $N$ rows after feature alignment, V3 generates six chronological folds. Fold $k$ ($k=1,\dots,6$) uses
+For each ticker with $N$ rows after feature alignment, the walk-forward protocol generates six chronological folds. Fold $k$ ($k=1,\dots,6$) uses
 \[
     \mathrm{train\_ratio}_k \;=\; 0.70 + 0.05\,(k-1), \quad
     \mathrm{train\_size}_k \;=\; \lfloor N \cdot \mathrm{train\_ratio}_k \rfloor,
 \]
-with the next $10\%$ of rows used as validation and the remainder up to the next fold boundary used as test. Concretely, for a 1{,}115-row symbol (SBIN) the train sizes are roughly $\{702, 753, 803, 853, 903, 954\}$ and the test sizes $\{112, 111, 111, 112, 112, 56\}$; the per-fold detail for SBIN appears in Table~\ref{tab:sbin_wf_example}.
+with the next $10\%$ of rows used as validation and the remainder up to the next fold boundary used as test. Concretely, for a 1{,}115-row ticker (SBIN) the train sizes are roughly $\{702, 753, 803, 853, 903, 954\}$ and the test sizes $\{112, 111, 111, 112, 112, 56\}$; the per-fold detail for SBIN appears in Table~\ref{tab:sbin_wf_example}.
 
 \begin{table}[H]
 \centering
@@ -252,7 +297,7 @@ The expanding-window form (as opposed to a sliding window) is chosen because the
 
 \subsection{What is Saved per Window}
 
-Each (symbol, fold) pair saves the LightGBM and XGBoost models, the meta-learner, and (for the last fold only) the deep-learning weight snapshots to a per-fold checkpoint directory. The same fold writes one row to a per-symbol fold summary containing per-model accuracies, AUC, F1, precision, recall, confusion counts, the fitted temperature $T^\star$, predicted-class shares (up / down / neutral), and directional accuracies by predicted class. All per-symbol per-fold rows are concatenated post-run into a panel-wide fold detail record.
+Each (ticker, fold) pair saves the LightGBM and XGBoost models, the meta-learner, and (for the last fold only) the deep-learning weight snapshots to a per-fold checkpoint directory. The same fold writes one row to a per-ticker fold summary containing per-model accuracies, AUC, F1, precision, recall, confusion counts, the fitted temperature $T^\star$, predicted-class shares (up / down / neutral), and directional accuracies by predicted class. All per-ticker per-fold rows are concatenated post-run into a panel-wide fold detail record.
 
 \section{Gating: Confidence Threshold and Minimum Move}
 
@@ -266,21 +311,21 @@ Here $\hat p(t)$ is the temperature-scaled meta-probability and $\widehat{\Delta
 
 \section{Portfolio Backtest Engine}
 
-The portfolio engine runs cross-sectionally: each day, all symbols whose gate is active are ranked by a 20-day rolling Sharpe ratio and the top 15 are held in equal weight. Per-symbol backtest statistics reported include: number of trades, total and annualised return, win rate, average win and loss percentages, profit factor, Sharpe ratio, maximum drawdown, Calmar ratio, a tradeable flag, a top-15 cross-sectional flag, Sharpe rank, and directional accuracy on signal days. The daily portfolio equity track and an aggregate backtest summary --- containing the bootstrap accuracy confidence interval, Nifty buy-and-hold reference return, portfolio total return, Sharpe ratio, and maximum drawdown --- are also written at the end of each run.
+The portfolio engine runs cross-sectionally: each day, all tickers whose gate is active are ranked by a 20-day rolling Sharpe ratio and the top 15 are held in equal weight. Per-ticker backtest statistics reported include: number of trades, total and annualised return, win rate, average win and loss percentages, profit factor, Sharpe ratio, maximum drawdown, Calmar ratio, a tradeable flag, a top-15 cross-sectional flag, Sharpe rank, and directional accuracy on signal days. The daily portfolio equity track and an aggregate backtest summary, containing the bootstrap accuracy confidence interval, Nifty buy-and-hold reference return, portfolio total return, Sharpe ratio, and maximum drawdown, are also written at the end of each run.
 
 \section{Parallelisation and Reproducibility}
 
 \subsection{Parallelisation}
 
-Data downloads run in an 8-worker thread pool (I/O-bound). Per-symbol model training runs in a separate process pool with configurable worker count (default 4, set to 3 on the canonical run). Each worker process is initialised with a fixed thread budget of $\lfloor n_{\mathrm{cpu}} / n_{\mathrm{workers}} \rfloor$ for all native numerical libraries, preventing core over-subscription. TensorFlow is configured to run CPU-only with on-demand memory allocation, avoiding GPU memory reservation overhead. Per-symbol execution logs are captured to individual log files.
+Data downloads run in an 8-worker thread pool (I/O-bound). Per-ticker model training runs in a separate process pool with configurable worker count (default 4, set to 3 on the canonical run). Each worker process is initialised with a fixed thread budget of $\lfloor n_{\mathrm{cpu}} / n_{\mathrm{workers}} \rfloor$ for all native numerical libraries, preventing core over-subscription. TensorFlow is configured to run CPU-only with on-demand memory allocation, avoiding GPU memory reservation overhead. Per-ticker execution logs are captured to individual log files.
 
 \subsection{Crash Resume}
 
-The pipeline supports a resume flag that skips any symbol that already has a completed fold summary on disk. This made recovery from an out-of-memory failure on the first 8-worker attempt to a successful 3-worker completion straightforward.
+The pipeline supports a resume flag that skips any ticker that already has a completed fold summary on disk. This made recovery from an out-of-memory failure on the first 8-worker attempt to a successful 3-worker completion straightforward.
 
 \subsection{Reproducibility}
 
-An immutable configuration record written at the start of each run captures the random seed, the data start date, the universe, the minimum-move threshold ($\delta=0.004$), the confidence threshold ($0.58$), the train ratios, the calibration method, the worker counts, and the elapsed wall time. The latest full run completed on a 12-core machine ($n_\mathrm{workers}=4$, $n_\mathrm{jobs}=2$ per worker) covering all 100 symbols. All random-number generators (NumPy, scikit-learn, XGBoost, LightGBM, TensorFlow) are seeded from a fixed value of $42$.
+An immutable configuration record written at the start of each run captures the random seed, the data start date, the universe, the minimum-move threshold ($\delta=0.004$), the confidence threshold ($0.58$), the train ratios, the calibration method, the worker counts, and the elapsed wall time. The latest full run completed on a 12-core machine ($n_\mathrm{workers}=4$, $n_\mathrm{jobs}=2$ per worker) covering all 100 tickers. All random-number generators (NumPy, scikit-learn, XGBoost, LightGBM, TensorFlow) are seeded from a fixed value of $42$.
 
 \section{Outputs: The Run Artefact Set}
 
@@ -297,18 +342,18 @@ A full run writes the artefact tree in Table~\ref{tab:run_artefacts}. Each artef
 \textbf{Output} & \textbf{Contents} \\
 \midrule
 Run configuration record     & Fixed configuration: random seed, train ratios, gate thresholds, universe, elapsed time, trained-at timestamp. \\
-Symbol manifest              & List of trained symbols with status (trained / skipped). \\
-Per-symbol summary           & Out-of-sample accuracy, F1, fold count, prediction count, feature count, row count, and status for each symbol; plus a panel average row. \\
-Panel fold detail            & Every (symbol, fold) row concatenated: per-model accuracy, AUC, F1, confusion matrix, temperature $T^\star$, predicted-class shares, directional accuracy by class. \\
-Model-level aggregation      & Per-model mean/median/max/min/std aggregated across all symbol-fold cells. \\
-Next-day signal file         & Post-train next-day forecast for each symbol: direction, action, calibrated confidence, predicted price and range, ATR, regime, temperature, gate flag. \\
-Per-symbol backtest report   & Trades, returns, win rate, profit factor, Sharpe, max drawdown, Calmar, signal-day directional accuracy. \\
+Ticker manifest              & List of trained tickers with status (trained / skipped). \\
+Per-ticker summary           & Out-of-sample accuracy, F1, fold count, prediction count, feature count, row count, and status for each ticker; plus a panel average row. \\
+Panel fold detail            & Every (ticker, fold) row concatenated: per-model accuracy, AUC, F1, confusion matrix, temperature $T^\star$, predicted-class shares, directional accuracy by class. \\
+Model-level aggregation      & Per-model mean/median/max/min/std aggregated across all ticker-fold cells. \\
+Next-day signal file         & Post-train next-day forecast for each ticker: direction, action, calibrated confidence, predicted price and range, ATR, regime, temperature, gate flag. \\
+Per-ticker backtest report   & Trades, returns, win rate, profit factor, Sharpe, max drawdown, Calmar, signal-day directional accuracy. \\
 Portfolio equity track       & Daily portfolio return and equity value (equal-weight top-15 cross-section). \\
 Backtest summary             & Bootstrap accuracy CI, Nifty buy-and-hold reference, portfolio total return, Sharpe, max drawdown. \\
 Regime diagnostic report     & Bull / sideways / bear Sharpe, max drawdown, annual return. \\
-Diebold--Mariano report      & Per-symbol and pooled DM statistic and $p$-value against three baselines. \\
+Diebold--Mariano report      & Per-ticker and pooled DM statistic and $p$-value against three baselines. \\
 Panel-level plots            & Cross-stock comparison and model comparison heatmap. \\
-Per-symbol directory         & Six-fold detail, per-fold predictions, per-symbol summary, and plots. \\
+Per-ticker directory         & Six-fold detail, per-fold predictions, per-ticker summary, and plots. \\
 \bottomrule
 \end{tabularx}
 \end{table}

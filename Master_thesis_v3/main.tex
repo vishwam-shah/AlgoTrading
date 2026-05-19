@@ -86,7 +86,7 @@
 \fancyhf{}
 \fancyhead[R]{\fontsize{8}{8}\selectfont\itshape\nouppercase{\textcolor{internationalkleinblue}{\leftmark}}}
 \fancyfoot[L]{\fontsize{8}{8}\selectfont\itshape\textcolor{internationalkleinblue}{PDEU}}
-\fancyfoot[C]{\fontsize{6}{6}\selectfont\itshape\textcolor{internationalkleinblue}{V3 Positional Trading System -- Walk-Forward Validation \& Live Deployment}}
+\fancyfoot[C]{\fontsize{6}{6}\selectfont\itshape\textcolor{internationalkleinblue}{NSE Positional Trading System -- Walk-Forward Validation \& Live Deployment}}
 \fancyfoot[R]{\fontsize{8}{8}\selectfont\thepage}
 
 \renewcommand{\headrulewidth}{2pt}
@@ -150,6 +150,11 @@
 
 % ================== DOCUMENT START ==================
 \begin{document}
+
+% ========== BLANK FIRST PAGE ==========
+\thispagestyle{empty}
+\mbox{}
+\clearpage
 
 % ========== FRONT MATTER ==========
 \input{chapters/00_frontmatter}

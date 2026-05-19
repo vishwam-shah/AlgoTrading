@@ -1,124 +1,124 @@
 \appendix
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
-\chapter*{Appendix A: Per-Symbol OOS Summary (all 100 symbols)}
-\addcontentsline{toc}{chapter}{Appendix A: Per-Symbol OOS Summary}
+\chapter*{Appendix A: Per-Ticker OOS Summary (all 100 tickers)}
+\addcontentsline{toc}{chapter}{Appendix A: Per-Ticker OOS Summary}
 
-The table below reproduces the per-symbol summary from the latest full run (run ID \texttt{20260513\_164028}), covering all 100 trained symbols plus the panel average. Columns: out-of-sample accuracy (on raw 0.5 cutoff, no gating), out-of-sample F1, number of folds, number of predictions, number of features used, number of rows after feature alignment, run status.
+The table below reproduces the per-ticker summary from the canonical full run (May 2026), covering all 100 trained tickers plus the panel average. Columns: out-of-sample accuracy (on the raw 0.5 cutoff, no gating), out-of-sample F1, number of expanding-window folds, number of out-of-sample predictions, and number of features used after per-fold selection.
 
 \begin{small}
-\begin{longtable}{l r r r r r l}
+\begin{longtable}{l r r r r r}
 \toprule
-\textbf{Symbol} & \textbf{oos\_acc} & \textbf{oos\_f1} & \textbf{folds} & \textbf{n\_pred} & \textbf{n\_feat} & \textbf{n\_rows} \\
+\textbf{Ticker} & \textbf{oos\_acc} & \textbf{oos\_f1} & \textbf{folds} & \textbf{n\_pred} & \textbf{n\_feat} \\
 \midrule
 \endfirsthead
 \toprule
-\textbf{Symbol} & \textbf{oos\_acc} & \textbf{oos\_f1} & \textbf{folds} & \textbf{n\_pred} & \textbf{n\_feat} & \textbf{n\_rows} \\
+\textbf{Ticker} & \textbf{oos\_acc} & \textbf{oos\_f1} & \textbf{folds} & \textbf{n\_pred} & \textbf{n\_feat} \\
 \midrule
 \endhead
 \bottomrule
 \endfoot
-ABB         & 0.464 & 0.559 & 6 & 789  & 50 & 1433 \\
-ADANIENT    & 0.490 & 0.543 & 6 & 796  & 50 & 1445 \\
-ADANIPORTS  & 0.547 & 0.578 & 6 & 684  & 50 & 1243 \\
-ALKEM       & 0.514 & 0.643 & 6 & 646  & 50 & 1173 \\
-AMBUJACEM   & 0.542 & 0.482 & 6 & 677  & 50 & 1229 \\
-ASIANPAINT  & 0.556 & 0.573 & 6 & 729  & 50 & 1324 \\
-AUBANK      & 0.483 & 0.449 & 6 & 698  & 47 & 1268 \\
-AUROPHARMA  & 0.514 & 0.600 & 6 & 704  & 50 & 1278 \\
-AXISBANK    & 0.533 & 0.622 & 6 & 638  & 47 & 1157 \\
-BAJAJ-AUTO  & 0.459 & 0.607 & 6 & 629  & 50 & 1141 \\
-BAJAJFINSV  & 0.483 & 0.559 & 6 & 640  & 47 & 1163 \\
-BAJFINANCE  & 0.523 & 0.526 & 6 & 677  & 47 & 1229 \\
-BANDHANBNK  & 0.550 & 0.502 & 6 & 717  & 47 & 1301 \\
-BEL         & 0.556 & 0.677 & 6 & 689  & 50 & 1252 \\
-BERGEPAINT  & 0.455 & 0.560 & 6 & 737  & 50 & 1339 \\
-BHARTIARTL  & 0.497 & 0.631 & 6 & 630  & 50 & 1144 \\
-BHEL        & 0.466 & 0.565 & 6 & 847  & 50 & 1539 \\
-BOSCHLTD    & 0.503 & 0.621 & 6 & 749  & 50 & 1360 \\
-BPCL        & 0.508 & 0.605 & 6 & 677  & 50 & 1230 \\
-BRITANNIA   & 0.524 & 0.544 & 6 & 592  & 50 & 1075 \\
-CHOLAFIN    & 0.548 & 0.599 & 6 & 704  & 47 & 1277 \\
-CIPLA       & 0.480 & 0.605 & 6 & 623  & 50 & 1132 \\
-COALINDIA   & 0.460 & 0.565 & 6 & 654  & 50 & 1188 \\
-COFORGE     & 0.566 & 0.686 & 6 & 715  & 50 & 1297 \\
-COLPAL      & 0.446 & 0.488 & 6 & 590  & 50 & 1072 \\
-CUMMINSIND  & 0.564 & 0.713 & 6 & 691  & 50 & 1256 \\
-DIVISLAB    & 0.498 & 0.557 & 6 & 731  & 50 & 1327 \\
-DLF         & 0.529 & 0.631 & 6 & 836  & 50 & 1517 \\
-DMART       & 0.465 & 0.475 & 6 & 781  & 50 & 1417 \\
-DRREDDY     & 0.523 & 0.610 & 6 & 629  & 50 & 1141 \\
-EICHERMOT   & 0.562 & 0.647 & 6 & 660  & 50 & 1197 \\
-ETERNAL     & 0.485 & 0.586 & 6 & 433  & 50 &  785 \\
-EXIDEIND    & 0.550 & 0.587 & 6 & 676  & 50 & 1227 \\
-FEDERALBNK  & 0.538 & 0.645 & 6 & 682  & 47 & 1239 \\
-GAIL        & 0.535 & 0.658 & 6 & 809  & 50 & 1469 \\
-GODREJCP    & 0.509 & 0.555 & 6 & 654  & 50 & 1188 \\
-GODREJPROP  & 0.460 & 0.582 & 6 & 820  & 50 & 1489 \\
-GRASIM      & 0.538 & 0.649 & 6 & 649  & 50 & 1180 \\
-HAL         & 0.497 & 0.609 & 6 & 700  & 50 & 1272 \\
-HAVELLS     & 0.447 & 0.502 & 6 & 748  & 50 & 1357 \\
-HCLTECH     & 0.536 & 0.670 & 6 & 634  & 50 & 1151 \\
-HDFCBANK    & 0.550 & 0.594 & 6 & 585  & 47 & 1063 \\
-HDFCLIFE    & 0.503 & 0.527 & 6 & 624  & 47 & 1133 \\
-HEROMOTOCO  & 0.535 & 0.533 & 6 & 664  & 50 & 1206 \\
-HINDALCO    & 0.589 & 0.708 & 6 & 691  & 50 & 1254 \\
-HINDUNILVR  & 0.509 & 0.502 & 6 & 579  & 50 & 1051 \\
-ICICIBANK   & 0.519 & 0.605 & 6 & 611  & 47 & 1109 \\
-ICICIGI     & 0.525 & 0.593 & 6 & 621  & 47 & 1127 \\
-IDFCFIRSTB  & 0.515 & 0.512 & 6 & 688  & 47 & 1250 \\
-INDUSINDBK  & 0.444 & 0.551 & 6 & 666  & 47 & 1210 \\
-INDUSTOWER  & 0.499 & 0.487 & 6 & 693  & 50 & 1257 \\
-INFY        & 0.501 & 0.589 & 6 & 649  & 50 & 1177 \\
-IRFC        & 0.532 & 0.458 & 6 & 451  & 50 &  819 \\
-ITC         & 0.581 & 0.660 & 6 & 611  & 50 & 1110 \\
-JSWSTEEL    & 0.543 & 0.615 & 6 & 667  & 50 & 1211 \\
-KOTAKBANK   & 0.535 & 0.454 & 6 & 630  & 47 & 1144 \\
-LICHSGFIN   & 0.474 & 0.560 & 6 & 779  & 47 & 1415 \\
-LT          & 0.547 & 0.670 & 6 & 655  & 50 & 1189 \\
-LTIM        & 0.521 & 0.653 & 6 & 675  & 50 & 1226 \\
-LUPIN       & 0.473 & 0.577 & 6 & 649  & 50 & 1179 \\
-M\&M        & 0.531 & 0.655 & 6 & 682  & 50 & 1237 \\
-MANAPPURAM  & 0.584 & 0.644 & 6 & 706  & 47 & 1282 \\
-MARICO      & 0.529 & 0.549 & 6 & 607  & 50 & 1103 \\
-MARUTI      & 0.490 & 0.560 & 6 & 627  & 50 & 1139 \\
-MOTHERSON   & 0.485 & 0.585 & 6 & 734  & 50 & 1333 \\
-MPHASIS     & 0.500 & 0.582 & 6 & 688  & 50 & 1249 \\
-MUTHOOTFIN  & 0.572 & 0.680 & 6 & 675  & 47 & 1226 \\
-NAUKRI      & 0.526 & 0.618 & 6 & 789  & 50 & 1433 \\
-NESTLEIND   & 0.477 & 0.586 & 6 & 577  & 50 & 1048 \\
-NMDC        & 0.550 & 0.624 & 6 & 724  & 50 & 1315 \\
-NTPC        & 0.502 & 0.656 & 6 & 640  & 50 & 1162 \\
-OFSS        & 0.508 & 0.526 & 6 & 655  & 50 & 1190 \\
-ONGC        & 0.472 & 0.599 & 6 & 676  & 50 & 1228 \\
-PAGEIND     & 0.481 & 0.473 & 6 & 765  & 50 & 1389 \\
-PERSISTENT  & 0.549 & 0.691 & 6 & 690  & 50 & 1253 \\
-PIDILITIND  & 0.530 & 0.614 & 6 & 704  & 50 & 1278 \\
-POLYCAB     & 0.547 & 0.685 & 6 & 640  & 50 & 1162 \\
-POWERGRID   & 0.453 & 0.608 & 6 & 627  & 50 & 1137 \\
-RBLBANK     & 0.507 & 0.536 & 6 & 742  & 47 & 1348 \\
-RELIANCE    & 0.472 & 0.512 & 6 & 638  & 50 & 1159 \\
-SAIL        & 0.550 & 0.631 & 6 & 720  & 50 & 1308 \\
-SBILIFE     & 0.546 & 0.634 & 6 & 635  & 47 & 1153 \\
-SBIN        & 0.509 & 0.612 & 6 & 664  & 47 & 1205 \\
-SHREECEM    & 0.546 & 0.617 & 6 & 636  & 50 & 1156 \\
-SHRIRAMFIN  & 0.528 & 0.656 & 6 & 709  & 47 & 1288 \\
-SIEMENS     & 0.499 & 0.627 & 6 & 790  & 50 & 1436 \\
-SUNPHARMA   & 0.542 & 0.663 & 6 & 605  & 50 & 1100 \\
-TATACONSUM  & 0.482 & 0.532 & 6 & 612  & 50 & 1111 \\
-TATAELXSI   & 0.487 & 0.359 & 6 & 676  & 50 & 1227 \\
-TATAPOWER   & 0.486 & 0.610 & 6 & 799  & 50 & 1450 \\
-TATASTEEL   & 0.512 & 0.609 & 6 & 777  & 50 & 1412 \\
-TCS         & 0.450 & 0.453 & 6 & 620  & 50 & 1126 \\
-TECHM       & 0.507 & 0.581 & 6 & 649  & 50 & 1179 \\
-TITAN       & 0.503 & 0.642 & 6 & 768  & 50 & 1395 \\
-TORNTPHARM  & 0.514 & 0.630 & 6 & 611  & 50 & 1109 \\
-TVSMOTOR    & 0.529 & 0.685 & 6 & 664  & 50 & 1206 \\
-ULTRACEMCO  & 0.510 & 0.620 & 6 & 621  & 50 & 1128 \\
-VEDL        & 0.513 & 0.600 & 6 & 711  & 50 & 1292 \\
-VOLTAS      & 0.474 & 0.565 & 6 & 770  & 50 & 1399 \\
-WIPRO       & 0.501 & 0.553 & 6 & 655  & 50 & 1189 \\
+ABB         & 0.464 & 0.594 & 6 & 732 & 50 \\
+ADANIENT    & 0.529 & 0.537 & 6 & 737 & 50 \\
+ADANIPORTS  & 0.480 & 0.547 & 6 & 636 & 50 \\
+ALKEM       & 0.489 & 0.629 & 6 & 603 & 50 \\
+AMBUJACEM   & 0.514 & 0.523 & 6 & 627 & 50 \\
+ASIANPAINT  & 0.503 & 0.494 & 6 & 676 & 50 \\
+AUBANK      & 0.552 & 0.608 & 6 & 649 & 47 \\
+AUROPHARMA  & 0.508 & 0.560 & 6 & 658 & 50 \\
+AXISBANK    & 0.519 & 0.627 & 6 & 591 & 47 \\
+BAJAJ-AUTO  & 0.487 & 0.643 & 6 & 579 & 50 \\
+BAJAJFINSV  & 0.500 & 0.582 & 6 & 594 & 47 \\
+BAJFINANCE  & 0.480 & 0.502 & 6 & 623 & 47 \\
+BANDHANBNK  & 0.516 & 0.471 & 6 & 669 & 47 \\
+BEL         & 0.534 & 0.652 & 6 & 640 & 50 \\
+BERGEPAINT  & 0.472 & 0.478 & 6 & 685 & 50 \\
+BHARTIARTL  & 0.496 & 0.635 & 6 & 587 & 50 \\
+BHEL        & 0.492 & 0.609 & 6 & 786 & 50 \\
+BOSCHLTD    & 0.450 & 0.590 & 6 & 698 & 50 \\
+BPCL        & 0.500 & 0.574 & 6 & 630 & 50 \\
+BRITANNIA   & 0.563 & 0.527 & 6 & 552 & 50 \\
+CHOLAFIN    & 0.541 & 0.619 & 6 & 656 & 47 \\
+CIPLA       & 0.520 & 0.634 & 6 & 579 & 50 \\
+COALINDIA   & 0.465 & 0.623 & 6 & 607 & 50 \\
+COFORGE     & 0.518 & 0.657 & 6 & 666 & 50 \\
+COLPAL      & 0.411 & 0.515 & 6 & 547 & 50 \\
+CUMMINSIND  & 0.559 & 0.706 & 6 & 640 & 50 \\
+DIVISLAB    & 0.540 & 0.602 & 6 & 685 & 50 \\
+DLF         & 0.498 & 0.638 & 6 & 777 & 50 \\
+DMART       & 0.475 & 0.506 & 6 & 724 & 50 \\
+DRREDDY     & 0.482 & 0.594 & 6 & 583 & 50 \\
+EICHERMOT   & 0.580 & 0.644 & 6 & 614 & 50 \\
+ETERNAL     & 0.470 & 0.581 & 6 & 400 & 50 \\
+EXIDEIND    & 0.575 & 0.602 & 6 & 631 & 50 \\
+FEDERALBNK  & 0.557 & 0.643 & 6 & 634 & 47 \\
+GAIL        & 0.520 & 0.635 & 6 & 748 & 50 \\
+GODREJCP    & 0.445 & 0.501 & 6 & 607 & 50 \\
+GODREJPROP  & 0.473 & 0.588 & 6 & 766 & 50 \\
+GRASIM      & 0.567 & 0.679 & 6 & 605 & 50 \\
+HAL         & 0.452 & 0.542 & 6 & 653 & 50 \\
+HAVELLS     & 0.494 & 0.567 & 6 & 699 & 50 \\
+HCLTECH     & 0.521 & 0.674 & 6 & 589 & 50 \\
+HDFCBANK    & 0.544 & 0.589 & 6 & 539 & 47 \\
+HDFCLIFE    & 0.441 & 0.479 & 6 & 583 & 47 \\
+HEROMOTOCO  & 0.471 & 0.537 & 6 & 616 & 50 \\
+HINDALCO    & 0.540 & 0.678 & 6 & 645 & 50 \\
+HINDUNILVR  & 0.528 & 0.492 & 6 & 534 & 50 \\
+ICICIBANK   & 0.547 & 0.618 & 6 & 567 & 47 \\
+ICICIGI     & 0.476 & 0.537 & 6 & 576 & 47 \\
+IDFCFIRSTB  & 0.503 & 0.481 & 6 & 646 & 47 \\
+INDUSINDBK  & 0.468 & 0.562 & 6 & 618 & 47 \\
+INDUSTOWER  & 0.508 & 0.550 & 6 & 644 & 50 \\
+INFY        & 0.502 & 0.572 & 6 & 605 & 50 \\
+IRFC        & 0.564 & 0.403 & 6 & 422 & 50 \\
+ITC         & 0.548 & 0.617 & 6 & 566 & 50 \\
+JSWSTEEL    & 0.517 & 0.601 & 6 & 621 & 50 \\
+KOTAKBANK   & 0.501 & 0.373 & 6 & 585 & 47 \\
+LICHSGFIN   & 0.485 & 0.569 & 6 & 724 & 47 \\
+LT          & 0.535 & 0.663 & 6 & 609 & 50 \\
+LTIM        & 0.531 & 0.665 & 6 & 625 & 50 \\
+LUPIN       & 0.554 & 0.663 & 6 & 607 & 50 \\
+M\&M        & 0.491 & 0.624 & 6 & 633 & 50 \\
+MANAPPURAM  & 0.555 & 0.658 & 6 & 660 & 47 \\
+MARICO      & 0.517 & 0.532 & 6 & 565 & 50 \\
+MARUTI      & 0.494 & 0.547 & 6 & 579 & 50 \\
+MOTHERSON   & 0.433 & 0.552 & 6 & 684 & 50 \\
+MPHASIS     & 0.497 & 0.590 & 6 & 640 & 50 \\
+MUTHOOTFIN  & 0.585 & 0.703 & 6 & 627 & 47 \\
+NAUKRI      & 0.501 & 0.616 & 6 & 739 & 50 \\
+NESTLEIND   & 0.482 & 0.617 & 6 & 533 & 50 \\
+NMDC        & 0.562 & 0.672 & 6 & 674 & 50 \\
+NTPC        & 0.497 & 0.651 & 6 & 594 & 50 \\
+OFSS        & 0.444 & 0.530 & 6 & 612 & 50 \\
+ONGC        & 0.462 & 0.600 & 6 & 630 & 50 \\
+PAGEIND     & 0.477 & 0.495 & 6 & 711 & 50 \\
+PERSISTENT  & 0.567 & 0.706 & 6 & 642 & 50 \\
+PIDILITIND  & 0.488 & 0.555 & 6 & 651 & 50 \\
+POLYCAB     & 0.537 & 0.671 & 6 & 594 & 50 \\
+POWERGRID   & 0.475 & 0.608 & 6 & 581 & 50 \\
+RBLBANK     & 0.499 & 0.502 & 6 & 693 & 47 \\
+RELIANCE    & 0.505 & 0.570 & 6 & 592 & 50 \\
+SAIL        & 0.556 & 0.614 & 6 & 671 & 50 \\
+SBILIFE     & 0.507 & 0.589 & 6 & 592 & 47 \\
+SBIN        & 0.549 & 0.662 & 6 & 616 & 47 \\
+SHREECEM    & 0.562 & 0.632 & 6 & 594 & 50 \\
+SHRIRAMFIN  & 0.503 & 0.623 & 6 & 660 & 47 \\
+SIEMENS     & 0.512 & 0.623 & 6 & 737 & 50 \\
+SUNPHARMA   & 0.520 & 0.673 & 6 & 561 & 50 \\
+TATACONSUM  & 0.468 & 0.543 & 6 & 566 & 50 \\
+TATAELXSI   & 0.512 & 0.407 & 6 & 627 & 50 \\
+TATAPOWER   & 0.481 & 0.562 & 6 & 744 & 50 \\
+TATASTEEL   & 0.549 & 0.603 & 6 & 727 & 50 \\
+TCS         & 0.533 & 0.505 & 6 & 578 & 50 \\
+TECHM       & 0.527 & 0.647 & 6 & 605 & 50 \\
+TITAN       & 0.522 & 0.636 & 6 & 715 & 50 \\
+TORNTPHARM  & 0.572 & 0.666 & 6 & 570 & 50 \\
+TVSMOTOR    & 0.550 & 0.705 & 6 & 622 & 50 \\
+ULTRACEMCO  & 0.504 & 0.629 & 6 & 577 & 50 \\
+VEDL        & 0.508 & 0.595 & 6 & 665 & 50 \\
+VOLTAS      & 0.497 & 0.534 & 6 & 720 & 50 \\
+WIPRO       & 0.498 & 0.565 & 6 & 607 & 50 \\
 \midrule
-\textbf{AVERAGE} & \textbf{0.512} & \textbf{0.588} & \textbf{6} & \textbf{67{,}830 total} & \textbf{49.4} & \textbf{1232} \\
+\textbf{AVERAGE} & \textbf{0.510} & \textbf{0.588} & \textbf{6} & \textbf{63{,}082 total} & \textbf{49.4} \\
 \end{longtable}
 \end{small}
 
@@ -132,7 +132,7 @@ Key configuration values for the canonical run:
     \item Walk-forward parameters: initial train ratio 0.70, expansion step 0.05, maximum train ratio 0.95; yields 6 folds.
     \item Minimum train samples: \(400\); minimum test samples per fold: \(30\).
     \item Gate parameters: minimum predicted move $\delta = 0.004$; confidence threshold 0.58.
-    \item Top-$N$ features per fold: 50. Force-include sets: global macro cues for all symbols (15 features), USD/INR and Nasdaq cues for IT sector (9 features), RBI and DXY cues for banking sector (9 features).
+    \item Top-$N$ features per fold: 50. Force-include sets: global macro cues for all tickers (15 features), USD/INR and Nasdaq cues for IT sector (9 features), RBI and DXY cues for banking sector (9 features).
     \item Global cue instruments: S\&P~500, Nasdaq Composite, VIX, DXY, Brent Crude, Nikkei~225, Nifty~50, Nifty~Bank.
     \item LightGBM and XGBoost: 1000 boosted rounds, depth 5, lr 0.01, subsample 0.8, colsample 0.8, $\alpha=0.3$, $\lambda=1.5$, early stopping 50 rounds.
     \item Deep models: input sequence length 20 days, batch size 32, maximum 100 epochs, early stopping patience 8, learning rate reduction factor 0.5 with patience 8, $\ell_2 = 10^{-4}$.
@@ -174,18 +174,18 @@ Key configuration values for the canonical run:
 The canonical run produces the following committed artefacts, which together support all quantitative claims in Chapter~\ref{chapter4}:
 
 \begin{itemize}
-    \item \textbf{Per-symbol OOS summary} (100 rows + panel average): out-of-sample accuracy, F1, and prediction count per symbol; source of Table~\ref{tab:aggregate_oos} and Appendix A.
-    \item \textbf{Per-fold window detail} ($\sim$600 rows across 100 symbols): per-symbol per-fold accuracy and calibration metrics; source of Tables~\ref{tab:sbin_windows} and~\ref{tab:hdfcbank_summary}.
+    \item \textbf{Per-ticker OOS summary} (100 rows + panel average): out-of-sample accuracy, F1, and prediction count per ticker; source of Table~\ref{tab:aggregate_oos} and Appendix A.
+    \item \textbf{Per-fold window detail} ($\sim$600 rows across 100 tickers): per-ticker per-fold accuracy and calibration metrics; source of Tables~\ref{tab:sbin_windows} and~\ref{tab:hdfcbank_summary}.
     \item \textbf{Per-model panel comparison} (2 rows): LightGBM vs.\ XGBoost panel-aggregate accuracy and F1; source of Table~\ref{tab:model_comparison}.
     \item \textbf{Backtest summary}: bootstrap confidence intervals, portfolio return, Sharpe ratio, and maximum drawdown; source of Table~\ref{tab:backtest_summary}.
-    \item \textbf{Per-symbol backtest results} (100 rows): per-symbol return, Sharpe, drawdown; source of Table~\ref{tab:top_backtest}.
+    \item \textbf{Per-ticker backtest results} (100 rows): per-ticker return, Sharpe, drawdown; source of Table~\ref{tab:top_backtest}.
     \item \textbf{Daily equity curve}: cross-sectional portfolio value over the out-of-sample window.
     \item \textbf{Regime-conditional diagnostics} (3 rows, one per regime): Sharpe, drawdown, and return decomposed by bull/sideways/bear; source of Table~\ref{tab:regime_table}.
-    \item \textbf{Per-symbol DM statistics} (100 rows): Diebold--Mariano test statistics against the three baselines.
+    \item \textbf{Per-ticker DM statistics} (100 rows): Diebold--Mariano test statistics against the three baselines.
     \item \textbf{Pooled diagnostics summary}: consolidated regime table and pooled DM test results.
     \item \textbf{Next-day signal file} (100 rows): forward-looking gate-filtered forecast for the next trading session.
     \item \textbf{Cross-sectional charts}: cross-stock accuracy comparison and cross-model accuracy heatmap.
-    \item \textbf{Per-symbol artefacts}: per-fold calibration record, out-of-sample predictions, summary statistics, and diagnostic plots for each of the 100 trained symbols.
+    \item \textbf{Per-ticker artefacts}: per-fold calibration record, out-of-sample predictions, summary statistics, and diagnostic plots for each of the 100 trained tickers.
 \end{itemize}
 
 \section*{Appendix E: Software Stack}
@@ -193,7 +193,7 @@ The canonical run produces the following committed artefacts, which together sup
 
 \begin{table}[H]
 \centering
-\caption{Software dependencies.}
+\caption[]{Software dependencies.}
 \renewcommand{\arraystretch}{1.3}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabularx}{\textwidth}{l X X}
@@ -213,20 +213,137 @@ Broker     & Angel One \texttt{smartapi-python} SDK & Live order routing. \\
 \end{adjustbox}
 \end{table}
 
-\section*{Appendix F: Glossary}
-\addcontentsline{toc}{chapter}{Appendix F: Glossary}
+\section*{Appendix F: Glossary and List of Abbreviations}
+\addcontentsline{toc}{chapter}{Appendix F: Glossary and Abbreviations}
+
+The following table expands every non-trivial abbreviation used in the body of this thesis. Stock tickers (e.g.\ SBIN, INFY, TCS) are omitted as they are reproduced in full in Appendix~A.
+
+\subsection*{F.1 General and methodological}
 
 \begin{description}
-    \item[OOS] Out-of-sample (here, the held-out test slice of each walk-forward fold).
-    \item[Walk-forward, expanding window] Chronological train/val/test splits where the train slice grows fold-by-fold; the model is retrained from scratch per fold.
-    \item[Temperature scaling] $\hat p = \sigma(\mathrm{logit}(p) / T^\star)$ with $T^\star$ fit on the validation slice by NLL minimisation. Preserves argmax, contracts/expands probabilities to match observed frequencies.
-    \item[Diebold--Mariano (DM)] A pooled test of equal predictive accuracy between a candidate and a benchmark, on per-period loss differences.
-    \item[STT] Securities Transaction Tax, Indian sell-side levy of $0.1\%$ on delivery sells.
-    \item[SmartAPI] Angel One's broker REST/WebSocket API used by V3 for live order routing and instrument master access.
-    \item[Brier score] $\mathrm{Brier} = \frac{1}{N}\sum_i (p_i - y_i)^2$. Used in the promotion-gate's $\leq 0.05$ drift threshold.
-    \item[Calmar] Annualised return divided by maximum drawdown.
-    \item[Sharpe] Annualised return divided by annualised volatility, with risk-free rate set to zero in the V3 reporting.
+    \item[OOS] \textbf{Out-of-Sample} -- the held-out test slice of each walk-forward fold, i.e.\ data the model has never seen during training or validation.
+    \item[IS] \textbf{In-Sample} -- the training portion of a fold.
+    \item[WF / WFV] \textbf{Walk-Forward / Walk-Forward Validation} -- chronological train/validation/test splits where the train slice grows fold-by-fold; the model is retrained from scratch per fold.
+    \item[CV] \textbf{Cross-Validation}.
+    \item[CI] \textbf{Confidence Interval}.
+    \item[NLL] \textbf{Negative Log-Likelihood} -- the loss minimised when fitting the temperature-scaling parameter $T^\star$.
+    \item[DM] \textbf{Diebold--Mariano test} -- a pooled test of equal predictive accuracy between a candidate model and a benchmark, on per-period loss differences.
+    \item[ES] \textbf{Early Stopping} (during gradient-boosted or neural-net training).
+    \item[KPI] \textbf{Key Performance Indicator} -- the pre-registered metrics on the promotion gate that block live capital until met.
+\end{description}
+
+\subsection*{F.2 Models, learners, and architectures}
+
+\begin{description}
+    \item[ML] \textbf{Machine Learning}.
+    \item[DL] \textbf{Deep Learning}.
+    \item[ANN] \textbf{Artificial Neural Network}.
+    \item[RNN] \textbf{Recurrent Neural Network}.
+    \item[LSTM] \textbf{Long Short-Term Memory} -- a recurrent architecture with gated memory cells.
+    \item[BiLSTM] \textbf{Bidirectional LSTM} -- two LSTMs reading the sequence forwards and backwards, concatenated.
+    \item[GRU] \textbf{Gated Recurrent Unit} -- a lighter recurrent alternative to LSTM.
+    \item[CNN] \textbf{Convolutional Neural Network}.
+    \item[CNN--LSTM / CNN--GRU] Hybrid: a 1-D convolutional front-end feeding a recurrent backbone.
+    \item[TCN] \textbf{Temporal Convolutional Network} -- a dilated, causal 1-D CNN designed for sequence modelling.
+    \item[N-BEATS] \textbf{Neural Basis Expansion Analysis for Time Series} -- a deep stack of fully connected blocks producing backcast/forecast basis expansions.
+    \item[XGBoost / XGB] \textbf{Extreme Gradient Boosting} -- regularised gradient-boosted decision trees.
+    \item[LightGBM / LGBM] \textbf{Light Gradient Boosting Machine} -- histogram-based, leaf-wise gradient boosting.
+    \item[RF] \textbf{Random Forest}.
+    \item[SVM] \textbf{Support Vector Machine}.
+    \item[NB] \textbf{Naive Bayes}.
+    \item[BERT] \textbf{Bidirectional Encoder Representations from Transformers} -- a transformer-based language model (referenced in the literature survey).
+    \item[RL] \textbf{Reinforcement Learning}.
+    \item[GARCH] \textbf{Generalised Autoregressive Conditional Heteroskedasticity} -- a volatility model.
+    \item[AR / AR(1)] \textbf{Autoregressive} model (of order one) -- a classical time-series baseline.
+    \item[PCA] \textbf{Principal Component Analysis} -- linear orthogonal projection used in the XGBoost branch.
+    \item[AUC] \textbf{Area Under the (ROC) Curve}.
+\end{description}
+
+\subsection*{F.3 Features, signals, and indicators}
+
+\begin{description}
+    \item[OHLC / OHLCV] \textbf{Open, High, Low, Close (Volume)} bar fields.
+    \item[SMA] \textbf{Simple Moving Average}.
+    \item[EMA] \textbf{Exponential Moving Average}.
+    \item[MA] \textbf{Moving Average} (generic).
+    \item[MACD] \textbf{Moving Average Convergence--Divergence}.
+    \item[RSI] \textbf{Relative Strength Index}.
+    \item[ATR] \textbf{Average True Range} -- a volatility measure used for stop sizing.
+    \item[OBV] \textbf{On-Balance Volume}.
+    \item[CMF] \textbf{Chaikin Money Flow}.
+    \item[MFI] \textbf{Money Flow Index}.
+    \item[VWAP] \textbf{Volume-Weighted Average Price}.
+    \item[ADX] \textbf{Average Directional Index}.
+    \item[CCI] \textbf{Commodity Channel Index}.
+\end{description}
+
+\subsection*{F.4 Risk, performance, and trading metrics}
+
+\begin{description}
+    \item[Sharpe ratio] Annualised return divided by annualised volatility, with risk-free rate set to zero.
+    \item[Calmar ratio] Annualised return divided by maximum drawdown.
+    \item[MaxDD / DD] \textbf{Maximum Drawdown} -- the largest peak-to-trough decline of the equity curve.
     \item[Profit factor] $\sum \text{gross wins} / |\sum \text{gross losses}|$ across closed trades.
-    \item[F\&O expiry] Last Thursday of the calendar month for NSE monthly equity derivatives.
-    \item[RBI MPC] Reserve Bank of India Monetary Policy Committee.
+    \item[Brier score] $\mathrm{Brier} = \frac{1}{N}\sum_i (p_i - y_i)^2$; used in the promotion-gate's $\leq 0.05$ drift threshold.
+    \item[Temperature scaling] $\hat p = \sigma(\mathrm{logit}(p) / T^\star)$ with $T^\star$ fit on the validation slice by NLL minimisation. Preserves argmax, contracts/expands probabilities to match observed frequencies.
+    \item[EMH] \textbf{Efficient Market Hypothesis}.
+    \item[CAGR] \textbf{Compound Annual Growth Rate}.
+\end{description}
+
+\subsection*{F.5 Indian markets, regulators, and microstructure}
+
+\begin{description}
+    \item[NSE] \textbf{National Stock Exchange of India}.
+    \item[BSE] \textbf{Bombay Stock Exchange}.
+    \item[SEBI] \textbf{Securities and Exchange Board of India} -- the Indian capital-markets regulator.
+    \item[RBI] \textbf{Reserve Bank of India} -- the central bank.
+    \item[MPC] \textbf{Monetary Policy Committee} (of the RBI).
+    \item[F\&O] \textbf{Futures and Options}; F\&O expiry refers to the last Thursday of each calendar month for monthly equity derivatives.
+    \item[STT] \textbf{Securities Transaction Tax} -- Indian sell-side levy of $0.1\%$ on delivery sells.
+    \item[GST] \textbf{Goods and Services Tax} -- applied to brokerage and exchange charges.
+    \item[FII] \textbf{Foreign Institutional Investor}.
+    \item[DII] \textbf{Domestic Institutional Investor}.
+    \item[NBFC] \textbf{Non-Banking Financial Company}.
+    \item[NPA] \textbf{Non-Performing Asset}.
+    \item[CASA] \textbf{Current Account, Savings Account} -- low-cost deposit ratio for banks.
+    \item[FMCG] \textbf{Fast-Moving Consumer Goods}.
+    \item[IT] \textbf{Information Technology} sector.
+    \item[FY / FY26] \textbf{Financial Year} (FY26 = the year ending 31 March 2026).
+    \item[MIS] \textbf{Margin Intraday Square-off} -- Angel One's intraday product code.
+\end{description}
+
+\subsection*{F.6 Global macro instruments (used as exogenous cues)}
+
+\begin{description}
+    \item[S\&P 500 / SP500] Standard \& Poor's 500 US equity index.
+    \item[Nasdaq] Nasdaq Composite Index (US technology-heavy).
+    \item[Nikkei 225] Tokyo Stock Exchange flagship index.
+    \item[VIX] CBOE Volatility Index (S\&P~500 implied volatility).
+    \item[DXY] US Dollar Index against a basket of major currencies.
+    \item[Brent / Crude] Brent crude oil futures.
+    \item[USD/INR] US Dollar to Indian Rupee exchange rate.
+\end{description}
+
+\subsection*{F.7 Engineering, deployment, and APIs}
+
+\begin{description}
+    \item[API] \textbf{Application Programming Interface}.
+    \item[REST] \textbf{Representational State Transfer} -- HTTP-based API style used by the backend and SmartAPI.
+    \item[SDK] \textbf{Software Development Kit}.
+    \item[SmartAPI] Angel One's broker REST/WebSocket API used for live order routing and instrument master access.
+    \item[TOTP] \textbf{Time-based One-Time Password} -- the rotating 6-digit code used during SmartAPI login.
+    \item[MPIN] \textbf{Mobile Personal Identification Number} -- Angel One's account PIN.
+    \item[CPU / GPU] \textbf{Central / Graphics Processing Unit}.
+    \item[IO] Input/Output (here, columnar parquet read/write).
+\end{description}
+
+\subsection*{F.8 Institutional and document}
+
+\begin{description}
+    \item[PDEU] \textbf{Pandit Deendayal Energy University} (Gandhinagar).
+    \item[SOT] \textbf{School of Technology}, PDEU.
+    \item[ICT] \textbf{Information and Communication Technology} (the awarding department).
+    \item[HOD] \textbf{Head of Department}.
+    \item[LOF] \textbf{List of Figures}; \textbf{LOT} \textbf{List of Tables}.
+    \item[IEEE / ACM / ICLR / ICML / SIGKDD] Standard publication venues / sponsoring societies referenced in the bibliography.
 \end{description}
